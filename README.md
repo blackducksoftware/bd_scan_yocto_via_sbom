@@ -40,7 +40,7 @@ Run the utility using python:
       Create BD Yocto project from license.manifest
       
       optional arguments:
-        -h, --help            show this help message and exit
+        -h, --help            Show this help message and exit
         --blackduck_url BLACKDUCK_URL
                               Black Duck server URL (REQUIRED - can use BLACKDUCK_URL env var)
         --blackduck_api_token BLACKDUCK_API_TOKEN
@@ -59,6 +59,9 @@ Run the utility using python:
                               CVE check output file
         -o OUTPUT, --output OUTPUT
                               Specify output SBOM SPDX file for manual upload (if specified then BD project will not be created automatically and CVE patching not supported)
+        --get_oe_data         Download and use OE data to check layers, versions & revisions
+        --oe_data_folder FOLDER
+                              Folder to contain OE data files - if files do not exist they will be downloaded, if files exist then will be used without download
         --debug               Debug logging mode
         --logfile LOGFILE     Logging output file
 
@@ -93,3 +96,13 @@ specify the BD credentials or use this option to create an output SBOM file.
 : Output file from run of the `cve_check` custom class which generates a list of patched CVEs. Usually located in the
 folder `build/tmp/deploy/images/XXX`.
 
+--get_oe_data:
+
+: Download all layers/recipes/layers from layers.openembedded.org APIs to review origin layers and revision to 
+ensure more accurate matching and complete BOMs.
+
+--oe_data_folder:
+
+: Create OE data files in the specified folder if not already existing. If OE data files exist already in this folder,
+use them to review layers and revisions to ensure more accurate matching and complete BOMs. Allows offline usage
+of OE data or reduction of large data transfers if script is run frequently.

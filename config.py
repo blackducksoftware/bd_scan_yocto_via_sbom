@@ -28,6 +28,11 @@ parser.add_argument("-o", "--output",
                     help="Specify output SBOM SPDX file for manual upload (if specified then BD project will not "
                          "be created automatically and CVE patching not supported)",
                     default="")
+parser.add_argument("--get_oe_data",
+                    help="Download and use OE data to check layers, versions & revisions", action='store_true')
+parser.add_argument("--oe_data_folder",
+                    help="Folder to contain OE data files - if files do not exist they will be downloaded, "
+                         "if files exist then will be used without download", default="")
 
 parser.add_argument("--debug", help="Debug logging mode", action='store_true')
 parser.add_argument("--logfile", help="Logging output file", default="")
@@ -122,6 +127,11 @@ def check_args():
     if global_values.output_file == '' and (global_values.bd_url == '' or global_values.bd_api == ''):
         logging.error("Black Duck URL/API and output file not specified - nothing to do")
         terminate = True
+
+    if args.get_oe_data:
+        global_values.get_oe_data = True
+
+    global_values.oe_data_folder = args.oe_data_folder
 
     if terminate:
         sys.exit(2)

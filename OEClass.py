@@ -3,6 +3,8 @@ import requests
 import json
 import logging
 import re
+
+import global_values
 from RecipeClass import Recipe
 
 
@@ -20,8 +22,13 @@ class OE:
 
     @staticmethod
     def get_oe_layers():
-        lfile = 'oe_layers.json'
-        if not os.path.exists(lfile):
+        oe_data_file_exists = False
+        if global_values.oe_data_folder != '':
+            lfile = os.path.join(global_values.oe_data_folder, 'oe_layers.json')
+            if os.path.exists(lfile):
+                oe_data_file_exists = True
+
+        if not oe_data_file_exists:
             try:
                 url = "https://layers.openembedded.org/layerindex/api/layerItems/"
                 r = requests.get(url)
@@ -31,9 +38,11 @@ class OE:
                 layer_dict = json.loads(r.text)
                 json_object = json.dumps(layer_dict, indent=4)
 
-                # Writing to sample.json
-                with open(lfile, "w") as outfile:
-                    outfile.write(json_object)
+                if global_values.oe_data_folder != '':
+                    # Writing to sample.json
+                    with open(lfile, "w") as outfile:
+                        outfile.write(json_object)
+
                 return layer_dict
 
             except ConnectionError as e:
@@ -50,8 +59,14 @@ class OE:
 
     @staticmethod
     def get_oe_recipes():
+        oe_data_file_exists = False
+        if global_values.oe_data_folder != '':
+            lfile = os.path.join(global_values.oe_data_folder, 'oe_recipes.json')
+            if os.path.exists(lfile):
+                oe_data_file_exists = True
+
         lfile = 'oe_recipes.json'
-        if not os.path.exists(lfile):
+        if not oe_data_file_exists:
             try:
                 url = "https://layers.openembedded.org/layerindex/api/recipes"
                 r = requests.get(url)
@@ -61,9 +76,10 @@ class OE:
                 recipe_dict = json.loads(r.text)
                 json_object = json.dumps(recipe_dict, indent=4)
 
-                # Writing to sample.json
-                with open(lfile, "w") as outfile:
-                    outfile.write(json_object)
+                if global_values.oe_data_folder != '':
+                    # Writing to sample.json
+                    with open(lfile, "w") as outfile:
+                        outfile.write(json_object)
 
                 return recipe_dict
 
@@ -82,8 +98,13 @@ class OE:
 
     @staticmethod
     def get_oe_layerbranches():
-        lfile = 'oe_layerbranches.json'
-        if not os.path.exists(lfile):
+        oe_data_file_exists = False
+        if global_values.oe_data_folder != '':
+            lfile = os.path.join(global_values.oe_data_folder, 'oe_layerbranches.json')
+            if os.path.exists(lfile):
+                oe_data_file_exists = True
+
+        if not oe_data_file_exists:
             try:
                 url = "https://layers.openembedded.org/layerindex/api/layerBranches"
                 r = requests.get(url)
@@ -93,9 +114,10 @@ class OE:
                 layerbranches_dict = json.loads(r.text)
                 json_object = json.dumps(layerbranches_dict, indent=4)
 
-                # Writing to sample.json
-                with open(lfile, "w") as outfile:
-                    outfile.write(json_object)
+                if global_values.oe_data_folder != '':
+                    # Writing to sample.json
+                    with open(lfile, "w") as outfile:
+                        outfile.write(json_object)
 
                 return layerbranches_dict
 
@@ -114,8 +136,13 @@ class OE:
 
     @staticmethod
     def get_oe_branches():
-        lfile = 'oe_branches.json'
-        if not os.path.exists(lfile):
+        oe_data_file_exists = False
+        if global_values.oe_data_folder != '':
+            lfile = os.path.join(global_values.oe_data_folder, 'oe_branches.json')
+            if os.path.exists(lfile):
+                oe_data_file_exists = True
+
+        if not oe_data_file_exists:
             try:
                 url = "https://layers.openembedded.org/layerindex/api/branches"
                 r = requests.get(url)
@@ -125,9 +152,10 @@ class OE:
                 branches_dict = json.loads(r.text)
                 json_object = json.dumps(branches_dict, indent=4)
 
-                # Writing to sample.json
-                with open(lfile, "w") as outfile:
-                    outfile.write(json_object)
+                if global_values.oe_data_folder != '':
+                    # Writing to sample.json
+                    with open(lfile, "w") as outfile:
+                        outfile.write(json_object)
 
                 return branches_dict
 
@@ -218,11 +246,8 @@ class OE:
             best_layer = {}
             best_layer_pref = -1
             best_branch_sort_priority = 999
-            exact_match = False
             if recipename in self.recipename_dict.keys():
                 for oe_recipe in self.recipename_dict[recipename]:
-                    if recipename == 'python3-ply':
-                        print()
                     add_match = False
                     oe_layer = self.get_layer_by_layerbranchid(oe_recipe['layerbranch'])
                     oe_branch = self.get_branch_by_layerbranchid(oe_recipe['layerbranch'])
@@ -260,11 +285,7 @@ class OE:
 
             # No exact match found - choose the first recipe
             if best_recipe != {}:
-                if exact_match:
-                    logging.debug(f"Recipe {recipename}: {layername}/{recipename}/{version} - matched EXACTLY "
-                                  f"{best_layer['name']}/{best_recipe['pn']}/{best_recipe['pv']}-{best_recipe['pr']}")
-                else:
-                    logging.debug(f"Recipe {recipename}: {layername}/{recipename}/{version} - PARTIAL OE match "
+                logging.debug(f"Recipe {recipename}: {layername}/{recipename}/{version} - OE match "
                                   f"{best_layer['name']}/{best_recipe['pn']}/{best_recipe['pv']}-{best_recipe['pr']}")
             else:
                 logging.debug(f"Recipe {recipename}: {layername}/{recipename}/{version} - NO MATCH in OE data")
