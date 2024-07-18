@@ -4,6 +4,7 @@ import config
 from RecipeListClass import RecipeList
 from SBOMClass import SBOM
 from BOMClass import BOM
+from OEClass import OE
 import logging
 # from blackduck import Client
 import sys
@@ -14,7 +15,11 @@ def main():
 
     logging.info(f"Processing files '{global_values.license_manifest}' and '{global_values.bitbake_layers}' ...")
     reclist = RecipeList(global_values.license_manifest, global_values.bitbake_layers)
-    reclist.print_recipes()
+    # reclist.print_recipes()
+
+    oe_class = OE()
+    reclist.check_recipes_in_oe(oe_class)
+    logging.info("Done")
 
     sbom = SBOM(global_values.bd_project, global_values.bd_version)
     sbom.process_recipes(reclist.recipes)
