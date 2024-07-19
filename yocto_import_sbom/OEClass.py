@@ -4,8 +4,8 @@ import json
 import logging
 import re
 
-import global_values
-from RecipeClass import Recipe
+from . import global_values
+from .RecipeClass import Recipe
 
 
 class OE:

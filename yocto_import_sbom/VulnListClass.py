@@ -1,4 +1,4 @@
-from VulnClass import Vuln
+from .VulnClass import Vuln
 
 class VulnList:
     def __init__(self):

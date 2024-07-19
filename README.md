@@ -1,7 +1,7 @@
 # Synopsys Scan Yocto Script - bd_yocto_import_sbom.py
 
 # PROVISION OF THIS SCRIPT
-This script is provided under the Apache v2 OSS license (see LICENSE file).
+This script is provided under the MIT license (see LICENSE file).
 
 It does not represent any extension of licensed functionality of Synopsys software itself and is provided as-is, without warranty or liability.
 

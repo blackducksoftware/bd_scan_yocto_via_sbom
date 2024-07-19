@@ -1,10 +1,6 @@
-from RecipeClass import Recipe
-# import global_values
+from .RecipeClass import Recipe
 import logging
 import sys
-import requests
-import json
-import os
 
 
 class RecipeList:

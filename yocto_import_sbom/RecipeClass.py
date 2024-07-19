@@ -1,9 +1,5 @@
-# import global_values
 import re
-# import global_values
 import logging
-# from thefuzz import fuzz
-# from VulnListClass import VulnList
 
 
 class Recipe:

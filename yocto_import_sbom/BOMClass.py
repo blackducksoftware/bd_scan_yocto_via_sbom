@@ -1,8 +1,8 @@
-from ComponentListClass import ComponentList
-from ComponentClass import Component
-from VulnListClass import VulnList
+from .ComponentListClass import ComponentList
+from .ComponentClass import Component
+from .VulnListClass import VulnList
 # from VulnClass import Vuln
-import global_values
+from . import global_values
 import logging
 from blackduck import Client
 import sys

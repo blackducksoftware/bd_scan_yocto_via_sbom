@@ -1,12 +1,10 @@
-import global_values
-# from BOMClass import BOM
-import config
-from RecipeListClass import RecipeList
-from SBOMClass import SBOM
-from BOMClass import BOM
-from OEClass import OE
+from . import global_values
+from . import config
+from .RecipeListClass import RecipeList
+from .SBOMClass import SBOM
+from .BOMClass import BOM
+from .OEClass import OE
 import logging
-# from blackduck import Client
 import sys
 
 

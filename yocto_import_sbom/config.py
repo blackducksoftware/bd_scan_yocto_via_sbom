@@ -3,7 +3,7 @@ import argparse
 import sys
 import logging
 
-import global_values
+from . import global_values
 
 parser = argparse.ArgumentParser(description='Create BD Yocto project from license.manifest', prog='bd-yocto-import-sbom')
 

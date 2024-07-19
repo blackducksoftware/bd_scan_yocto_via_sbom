@@ -1,5 +1,3 @@
-# import re
-# import global_values
 import logging
 import sys
 import datetime
