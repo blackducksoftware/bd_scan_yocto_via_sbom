@@ -10,6 +10,7 @@ class RecipeList:
         self.process_bitbake_file(bitbake_layers_file)
 
     def process_licman_file(self, lic_manifest_file):
+        recipes_total = 0
         try:
             with open(lic_manifest_file, "r") as lfile:
                 lines = lfile.readlines()
@@ -28,11 +29,14 @@ class RecipeList:
                         recipe = line.split(': ')[1]
 
                     if recipe != '' and ver != '':
+                        recipes_total += 1
                         rec_obj = Recipe(recipe, ver)
                         if not self.check_recipe_exists(recipe):
                             self.recipes.append(rec_obj)
                         ver = ''
                         recipe = ''
+
+                logging.info(f"- {recipes_total} packages found in licman file ({self.count()} recipes)")
 
         except Exception as e:
             logging.error(f"Cannot read license manifest file '{lic_manifest_file}' - error '{e}'")
@@ -62,6 +66,7 @@ class RecipeList:
                 elif rline.endswith(": ==="):
                     bstart = True
 
+            logging.info(f"- {self.count_recipes_without_layer()} recipes without layer reported from layer file")
         except Exception as e:
             logging.error(f"Cannot process bitbake-layers output file '{bitbake_file} - error {e}")
             sys.exit(2)
@@ -71,6 +76,13 @@ class RecipeList:
     def count(self):
         return len(self.recipes)
 
+    def count_recipes_without_layer(self):
+        count_nolayer = 0
+        for recipe in self.recipes:
+            if recipe.layer == '':
+                count_nolayer += 1
+        return count_nolayer
+
     def check_recipe_exists(self, recipe_name):
         for recipe in self.recipes:
             if recipe.name == recipe_name:
@@ -78,10 +90,12 @@ class RecipeList:
         return False
 
     def add_layer_to_recipe(self, rec, layer, ver):
+        epoch, version = Recipe.get_epoch_and_version(ver)
         for recipe in self.recipes:
             if recipe.name == rec:
                 recipe.add_layer(layer)
-                if recipe.version != ver and recipe.version in ver:
+                recipe.epoch = epoch
+                if recipe.version != version and recipe.version in version:
                     recipe.version = ver
                 return
 
@@ -98,4 +112,4 @@ class RecipeList:
 
     def check_recipes_in_oe(self, oe):
         for recipe in self.recipes:
-            recipe.oe_recipe, recipe.oe_layer, recipe.recipe_in_oe = oe.get_recipe(recipe.layer, recipe.name, recipe.version)
+            recipe.oe_recipe, recipe.oe_layer, recipe.recipe_in_oe = oe.get_recipe(recipe)

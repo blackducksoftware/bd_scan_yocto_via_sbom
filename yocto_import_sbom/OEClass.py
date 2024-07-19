@@ -233,21 +233,20 @@ class OE:
             logging.warning(f"Cannot get branch by layerbranchid {e}")
         return {}
 
-    def get_recipe(self, layername, recipename, version):
+    def get_recipe(self, recipe):
         # Returns:
         # - recipe dict
         # - layer dict
         # - exactmatch (boolean)
         try:
-            if layername == 'meta':
-                layername = 'openembedded-core'
-
             best_recipe = {}
             best_layer = {}
             best_layer_pref = -1
             best_branch_sort_priority = 999
-            if recipename in self.recipename_dict.keys():
-                for oe_recipe in self.recipename_dict[recipename]:
+            recipe_exists_in_oe = False
+            if recipe.name in self.recipename_dict.keys():
+                recipe_exists_in_oe = True
+                for oe_recipe in self.recipename_dict[recipe.name]:
                     add_match = False
                     oe_layer = self.get_layer_by_layerbranchid(oe_recipe['layerbranch'])
                     oe_branch = self.get_branch_by_layerbranchid(oe_recipe['layerbranch'])
@@ -260,16 +259,15 @@ class OE:
                     if oe_layer == {}:
                         continue
 
-                    oe_ver = oe_recipe['pv']
-                    oe_ver = Recipe.filter_version_string(oe_ver)
-                    if oe_ver == version:
+                    oe_epoch, oe_ver = Recipe.get_epoch_and_version(oe_recipe['pv'])
+                    if oe_ver == recipe.version:
                         # Exact match
                         if (oe_layer['index_preference'] >= best_layer_pref and
                                 branch_sort_priority < best_branch_sort_priority):
                             add_match = True
                     else:
                         # No exact match
-                        ver_split = re.split(r"[+\-]", version)
+                        ver_split = re.split(r"[+\-]", recipe.version)
                         oever_split = re.split(r"[+\-]", oe_recipe['pv'])
                         if ver_split[0] == oever_split[0]:
                             # if oe_layer['name'] == layername:
@@ -284,11 +282,22 @@ class OE:
                         best_branch_sort_priority = branch_sort_priority
 
             # No exact match found - choose the first recipe
-            if best_recipe != {}:
-                logging.debug(f"Recipe {recipename}: {layername}/{recipename}/{version} - OE match "
-                                  f"{best_layer['name']}/{best_recipe['pn']}/{best_recipe['pv']}-{best_recipe['pr']}")
+            if recipe.epoch != '':
+                recipe_ver = f"{recipe.epoch}:{recipe.orig_version}"
             else:
-                logging.debug(f"Recipe {recipename}: {layername}/{recipename}/{version} - NO MATCH in OE data")
+                recipe_ver = recipe.orig_version
+
+            if best_recipe != {}:
+                if best_recipe['pe'] != '':
+                    best_ver = f"{best_recipe['pe']}:{best_recipe['pv']}"
+                else:
+                    best_ver = best_recipe['pv']
+
+                logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - OE match "
+                                  f"{best_layer['name']}/{best_recipe['pn']}/{best_ver}-{best_recipe['pr']}")
+            else:
+                logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - "
+                              f"NO MATCH in OE data (recipe exists in OE {recipe_exists_in_oe})")
             return best_recipe, best_layer, False
 
         except KeyError as e:
