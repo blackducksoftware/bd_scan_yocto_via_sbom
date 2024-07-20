@@ -33,6 +33,9 @@ parser.add_argument("--get_oe_data",
 parser.add_argument("--oe_data_folder",
                     help="Folder to contain OE data files - if files do not exist they will be downloaded, "
                          "if files exist then will be used without download", default="")
+parser.add_argument("--max_oe_version_distance",
+                    help="Where no exact match, use closest previous recipe version up to specified distance."
+                         "Distance is calculated as (MAJOR*100000 + MINOR*1000 + PATCH).", default=0)
 
 parser.add_argument("--debug", help="Debug logging mode", action='store_true')
 parser.add_argument("--logfile", help="Logging output file", default="")
@@ -130,6 +133,8 @@ def check_args():
 
     if args.get_oe_data:
         global_values.get_oe_data = True
+
+    global_values.max_oe_version_distance = int(args.max_oe_version_distance)
 
     global_values.oe_data_folder = args.oe_data_folder
 

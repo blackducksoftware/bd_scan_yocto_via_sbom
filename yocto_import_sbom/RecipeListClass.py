@@ -112,4 +112,4 @@ class RecipeList:
 
     def check_recipes_in_oe(self, oe):
         for recipe in self.recipes:
-            recipe.oe_recipe, recipe.oe_layer, recipe.recipe_in_oe = oe.get_recipe(recipe)
+            recipe.oe_recipe, recipe.oe_layer = oe.get_recipe(recipe)

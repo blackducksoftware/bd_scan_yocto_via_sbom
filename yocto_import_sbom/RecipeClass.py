@@ -10,7 +10,6 @@ class Recipe:
         self.version = self.filter_version_string(version)
         self.layer = ''
         self.spdxid = ''
-        self.recipe_in_oe = False
         self.oe_layer = {}
         self.oe_recipe = {}
 

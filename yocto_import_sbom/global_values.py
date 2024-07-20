@@ -11,3 +11,4 @@ cve_check_file = ""
 output_file = ""
 get_oe_data = False
 oe_data_folder = ''
+max_oe_version_distance = 0

@@ -1,4 +1,4 @@
-# Synopsys Scan Yocto Script - bd_yocto_import_sbom.py
+# Synopsys Scan Yocto Script - bd_yocto_import_sbom.py v1.0
 
 # PROVISION OF THIS SCRIPT
 This script is provided under the MIT license (see LICENSE file).
@@ -62,6 +62,10 @@ Run the utility using python:
         --get_oe_data         Download and use OE data to check layers, versions & revisions
         --oe_data_folder FOLDER
                               Folder to contain OE data files - if files do not exist they will be downloaded, if files exist then will be used without download
+        --max_oe_version_distance NUMERIC_VALUE
+                              Enable close recipe version matching against OE Data. By default, OE recipe versions must match exactly.
+                              Setting this value >0 will enable close recipe version matching, with the value being calculated as
+                              (MAJOR*100000 + MINOR*1000 + PATCH).
         --debug               Debug logging mode
         --logfile LOGFILE     Logging output file
 
@@ -106,3 +110,16 @@ ensure more accurate matching and complete BOMs.
 : Create OE data files in the specified folder if not already existing. If OE data files exist already in this folder,
 use them to review layers and revisions to ensure more accurate matching and complete BOMs. Allows offline usage
 of OE data or reduction of large data transfers if script is run frequently.
+
+--max_oe_version_distance NUMERIC_VALUE:
+
+: Specify a numeric value to enable close (previous) recipe version matching against OE data.
+By default, when `--get_oe_data` is specified, OE recipe versions must match the version exactly to replace layers and revision values.
+Setting this value >0 will allow close (previous) recipe version matching.
+Version strings are assumed to be of the format MAJOR.MINOR.PATCH with other trailing values. This value is calculated by 
+(MAJOR_DISTANCE*100000 + MINOR_DISTANCE*1000 + PATCH_DISTANCE) by comparing the OE recipe version against the recipe version found in the project.
+
+### EXAMPLE DISTANCE CALCULATIONS
+- Recipe version is 3.2.4 - closest previous OE recipe version is 3.2.1: distance=3
+- Recipe version is 3.2.4 - closest previous OE recipe version is 3.0.1: distance=2003
+- Recipe version is 3.2.4 - closest previous OE recipe version is 2.0.1: distance=102003

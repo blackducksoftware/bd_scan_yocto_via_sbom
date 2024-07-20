@@ -3,6 +3,8 @@ import requests
 import json
 import logging
 import re
+from semver import Version
+from typing import Optional, Tuple
 
 from . import global_values
 from .RecipeClass import Recipe
@@ -237,17 +239,22 @@ class OE:
         # Returns:
         # - recipe dict
         # - layer dict
-        # - exactmatch (boolean)
         try:
             best_recipe = {}
             best_layer = {}
             best_layer_pref = -1
             best_branch_sort_priority = 999
+
+            exact_recipe = {}
+            exact_layer = {}
+            exact_layer_pref = -1
+            exact_branch_sort_priority = 999
+            exact_match = False
+
             recipe_exists_in_oe = False
             if recipe.name in self.recipename_dict.keys():
                 recipe_exists_in_oe = True
                 for oe_recipe in self.recipename_dict[recipe.name]:
-                    add_match = False
                     oe_layer = self.get_layer_by_layerbranchid(oe_recipe['layerbranch'])
                     oe_branch = self.get_branch_by_layerbranchid(oe_recipe['layerbranch'])
                     if oe_branch is not None and oe_branch['sort_priority'] is not None \
@@ -259,33 +266,41 @@ class OE:
                     if oe_layer == {}:
                         continue
 
-                    oe_epoch, oe_ver = Recipe.get_epoch_and_version(oe_recipe['pv'])
-                    if oe_ver == recipe.version:
+                    oe_ver = Recipe.filter_version_string(oe_recipe['pv'])
+                    epoch_match = True
+                    if recipe.epoch != '' and oe_recipe['pe'] != '' and recipe.epoch != oe_recipe['pe']:
+                        # not an epoch match
+                        epoch_match = False
+
                         # Exact match
-                        if (oe_layer['index_preference'] >= best_layer_pref and
-                                branch_sort_priority < best_branch_sort_priority):
-                            add_match = True
-                    else:
+                    if (epoch_match and oe_ver == recipe.version and epoch_match and
+                            oe_layer['index_preference'] >= exact_layer_pref and
+                            branch_sort_priority < exact_branch_sort_priority):
+                        exact_recipe = oe_recipe
+                        exact_layer = oe_layer
+                        exact_layer_pref = oe_layer['index_preference']
+                        exact_branch_sort_priority = branch_sort_priority
+                        exact_match = True
+
+                    if not exact_match:
                         # No exact match
                         ver_split = re.split(r"[+\-]", recipe.version)
-                        oever_split = re.split(r"[+\-]", oe_recipe['pv'])
+                        oever_split = re.split(r"[+\-]", oe_ver)
                         if ver_split[0] == oever_split[0]:
-                            # if oe_layer['name'] == layername:
-                            # logging.debug(f"Recipe {recipename}: {layername}/{recipename}/{version} - matched EXACTLY in OE data")
-                            # return recipe, oe_layer, True
-                            if oe_layer['index_preference'] > best_layer_pref and oe_recipe['pv'] != '':
-                                add_match = True
-                    if add_match:
-                        best_recipe = oe_recipe
-                        best_layer = oe_layer
-                        best_layer_pref = oe_layer['index_preference']
-                        best_branch_sort_priority = branch_sort_priority
+                            if oe_layer['index_preference'] > best_layer_pref and oe_ver != '':
+                                best_recipe = oe_recipe
+                                best_layer = oe_layer
+                                best_layer_pref = oe_layer['index_preference']
+                                best_branch_sort_priority = branch_sort_priority
 
-            # No exact match found - choose the first recipe
             if recipe.epoch != '':
                 recipe_ver = f"{recipe.epoch}:{recipe.orig_version}"
             else:
                 recipe_ver = recipe.orig_version
+
+            if exact_match:
+                best_recipe = exact_recipe
+                best_layer = exact_layer
 
             if best_recipe != {}:
                 if best_recipe['pe'] != '':
@@ -296,11 +311,125 @@ class OE:
                 logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - OE match "
                                   f"{best_layer['name']}/{best_recipe['pn']}/{best_ver}-{best_recipe['pr']}")
             else:
+                if recipe_exists_in_oe:
+                    return self.get_nearest_oe_recipe(recipe)
+
                 logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - "
-                              f"NO MATCH in OE data (recipe exists in OE {recipe_exists_in_oe})")
-            return best_recipe, best_layer, False
+                              f"Recipe does not exist in OE Data")
+            return best_recipe, best_layer
 
         except KeyError as e:
             logging.warning(f"Cannot get recipe by name,version {e}")
 
-        return {}, {}, False
+        return {}, {}
+
+
+    def get_nearest_oe_recipe(self, recipe):
+        # No exact match found
+        # need to look for closest version match
+
+        logging.debug(f"Trying closest OE match for {recipe.name}/{recipe.version}")
+        try:
+            best_recipe = {}
+            best_layer = {}
+            best_distance = 999999
+
+            if not Version.is_valid(recipe.version):
+                rec_semver, rest = self.coerce(recipe.version)
+            else:
+                rec_semver = Version.parse(recipe.version)
+
+            if recipe.name in self.recipename_dict.keys():
+                for oe_recipe in self.recipename_dict[recipe.name]:
+                    oe_layer = self.get_layer_by_layerbranchid(oe_recipe['layerbranch'])
+                    # oe_branch = self.get_branch_by_layerbranchid(oe_recipe['layerbranch'])
+
+                    if oe_layer == {} or oe_recipe['pv'] == '':
+                        continue
+
+                    oe_ver = Recipe.filter_version_string(oe_recipe['pv'])
+                    if not Version.is_valid(oe_ver):
+                        oe_semver, rest = self.coerce(oe_ver)
+                    else:
+                        oe_semver = Version.parse(oe_ver)
+
+                    if oe_semver is None:
+                        continue
+
+                    distance = ((rec_semver.major - oe_semver.major) * 10000 + (rec_semver.minor - oe_semver.minor)
+                                * 100 + (rec_semver.patch - oe_semver.patch))
+                    if distance > 0 and distance < best_distance:
+                        best_recipe = oe_recipe
+                        best_layer = oe_layer
+                        best_distance = distance
+
+            if recipe.epoch != '':
+                recipe_ver = f"{recipe.epoch}:{recipe.orig_version}"
+            else:
+                recipe_ver = recipe.orig_version
+
+            if best_recipe != {}:
+                if best_recipe['pe'] != '':
+                    best_ver = f"{best_recipe['pe']}:{best_recipe['pv']}"
+                else:
+                    best_ver = best_recipe['pv']
+            else:
+                logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - "
+                              f"No close (previous) OE version match found")
+                return {}, {}
+
+            if best_distance > global_values.max_oe_version_distance:
+                logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - "
+                              f"Recipe {best_layer['name']}/{best_recipe['pn']}/{best_ver}-{best_recipe['pr']} "
+                              f"exists in OE data but distance {best_distance} exceeds specified max version "
+                              f"distance {global_values.max_oe_version_distance}")
+                return {}, {}
+
+            logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - OE near match "
+                          f"{best_layer['name']}/{best_recipe['pn']}/{best_ver}-{best_recipe['pr']} - "
+                          f"(Distance {best_distance})")
+
+            return best_recipe, best_layer
+
+        except KeyError as e:
+            logging.warning(f"Error getting nearest OE recipe - {e}")
+
+    @staticmethod
+    def coerce(version: str) -> Tuple[Version, Optional[str]]:
+        """
+        Convert an incomplete version string into a semver-compatible Version
+        object
+
+        * Tries to detect a "basic" version string (``major.minor.patch``).
+        * If not enough components can be found, missing components are
+            set to zero to obtain a valid semver version.
+
+        :param str version: the version string to convert
+        :return: a tuple with a :class:`Version` instance (or ``None``
+            if it's not a version) and the rest of the string which doesn't
+            belong to a basic version.
+        :rtype: tuple(:class:`Version` | None, str)
+        """
+        BASEVERSION = re.compile(
+            r"""[vV]?
+                (?P<major>0|[1-9]\d*)
+                (\.
+                (?P<minor>0|[1-9]\d*)
+                (\.
+                    (?P<patch>0|[1-9]\d*)
+                )?
+                )?
+            """,
+            re.VERBOSE,
+        )
+
+        match = BASEVERSION.search(version)
+        if not match:
+            return (None, version)
+
+        ver = {
+            key: 0 if value is None else value for key, value in match.groupdict().items()
+        }
+        ver = Version(**ver)
+        rest = match.string[match.end():]  # noqa:E203
+        return ver, rest

@@ -18,7 +18,7 @@ def main():
     if global_values.get_oe_data:
         oe_class = OE()
         reclist.check_recipes_in_oe(oe_class)
-        logging.info("Done")
+        logging.info("Done processing OE data")
     else:
         logging.info("Skipping connection to OE APIs to verify origin layers and revisions")
 
