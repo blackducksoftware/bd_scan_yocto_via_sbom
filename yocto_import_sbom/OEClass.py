@@ -235,7 +235,7 @@ class OE:
             logging.warning(f"Cannot get branch by layerbranchid {e}")
         return {}
 
-    def get_recipe(self, recipe):
+    def get_recipe_old(self, recipe):
         # Returns:
         # - recipe dict
         # - layer dict
@@ -395,7 +395,95 @@ class OE:
             logging.warning(f"Error getting nearest OE recipe - {e}")
 
     @staticmethod
-    def coerce(version: str) -> Tuple[Version, Optional[str]]:
+    def get_branch_priority(self, branch):
+        if branch is not None and branch['sort_priority'] is not None \
+                and str(branch['sort_priority']).isnumeric():
+            branch_sort_priority = branch['sort_priority']
+        else:
+            branch_sort_priority = 999
+        return branch_sort_priority
+
+    def get_recipe(self, recipe):
+        # need to look for closest version match
+
+        logging.debug(f"Trying closest OE match for {recipe.name}/{recipe.version}")
+
+        epoch_match = False
+        try:
+            best_recipe = {}
+            best_layer = {}
+            best_version_distance = 999999
+
+            if not Version.is_valid(recipe.version):
+                rec_semver, rest = self.coerce_version(recipe.version)
+            else:
+                rec_semver = Version.parse(recipe.version)
+
+            if recipe.name in self.recipename_dict.keys():
+                for oe_recipe in self.recipename_dict[recipe.name]:
+                    oe_layer = self.get_layer_by_layerbranchid(oe_recipe['layerbranch'])
+                    oe_branch = self.get_branch_by_layerbranchid(oe_recipe['layerbranch'])
+                    branch_sort_priority = self.get_branch_priority(oe_branch)
+
+                    if oe_layer == {} or oe_recipe['pv'] == '':
+                        continue
+
+                    oe_ver = Recipe.filter_version_string(oe_recipe['pv'])
+                    if not Version.is_valid(oe_ver):
+                        oe_semver, rest = self.coerce_version(oe_ver)
+                    else:
+                        oe_semver = Version.parse(oe_ver)
+
+                    if oe_semver is None:
+                        continue
+
+                    if recipe.epoch == oe_recipe['pe']:
+                        # epoch match
+                        epoch_match = True
+                    if oe_ver == recipe.version:
+                        ver_distance = 0
+                    else:
+                        ver_distance = ((rec_semver.major - oe_semver.major) * 10000 + (rec_semver.minor - oe_semver.minor)
+                                    * 100 + (rec_semver.patch - oe_semver.patch))
+
+                    if ver_distance < best_distance:
+                        best_recipe = oe_recipe
+                        best_layer = oe_layer
+                        best_distance = ver_distance
+
+            if recipe.epoch != '':
+                recipe_ver = f"{recipe.epoch}:{recipe.orig_version}"
+            else:
+                recipe_ver = recipe.orig_version
+
+            if best_recipe != {}:
+                if best_recipe['pe'] != '':
+                    best_ver = f"{best_recipe['pe']}:{best_recipe['pv']}"
+                else:
+                    best_ver = best_recipe['pv']
+            else:
+                logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - "
+                              f"No close (previous) OE version match found")
+                return {}, {}
+
+            if best_distance > global_values.max_oe_version_distance:
+                logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - "
+                              f"Recipe {best_layer['name']}/{best_recipe['pn']}/{best_ver}-{best_recipe['pr']} "
+                              f"exists in OE data but distance {best_distance} exceeds specified max version "
+                              f"distance {global_values.max_oe_version_distance}")
+                return {}, {}
+
+            logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - OE near match "
+                          f"{best_layer['name']}/{best_recipe['pn']}/{best_ver}-{best_recipe['pr']} - "
+                          f"(Distance {best_distance})")
+
+            return best_recipe, best_layer
+
+        except KeyError as e:
+            logging.warning(f"Error getting nearest OE recipe - {e}")
+
+    @staticmethod
+    def coerce_version(version: str) -> Tuple[Version, Optional[str]]:
         """
         Convert an incomplete version string into a semver-compatible Version
         object
