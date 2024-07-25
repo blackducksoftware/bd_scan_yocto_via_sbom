@@ -111,15 +111,19 @@ ensure more accurate matching and complete BOMs.
 use them to review layers and revisions to ensure more accurate matching and complete BOMs. Allows offline usage
 of OE data or reduction of large data transfers if script is run frequently.
 
---max_oe_version_distance NUMERIC_VALUE:
+--max_oe_version_distance MAJOR.MINOR.PATCH:
 
-: Specify a numeric value to enable close (previous) recipe version matching against OE data.
+: Specify version distance to enable close (previous) recipe version matching against OE data.
 By default, when `--get_oe_data` is specified, OE recipe versions must match the version exactly to replace layers and revision values.
-Setting this value >0 will allow close (previous) recipe version matching.
-Version strings are assumed to be of the format MAJOR.MINOR.PATCH with other trailing values. This value is calculated by 
-(MAJOR_DISTANCE*100000 + MINOR_DISTANCE*1000 + PATCH_DISTANCE) by comparing the OE recipe version against the recipe version found in the project.
+Setting this value will allow close (previous) recipe version matching.
+The value needs to be of the format MAJOR.MINOR.PATCH (e.g. '0.10.0').
+CAUTION - setting this value to a large value will cause versions of components to be matched against previous recipes maintained in the OE data,
+which may lead to different levels of reported vulnerabilities. It is preferable to maintain close relation between the matched
+versions and the ones in the project and then to identify unmatched components which can be added as custom components or manually. Consequently
+only consider using values which allow versions from different MINOR or MAJOR versions in exceptional circumstances (meaning the supplied
+value should probably be in the range 0.0.1 to 0.0.10).
 
 ### EXAMPLE DISTANCE CALCULATIONS
-- Recipe version is 3.2.4 - closest previous OE recipe version is 3.2.1: distance=3
-- Recipe version is 3.2.4 - closest previous OE recipe version is 3.0.1: distance=2003
-- Recipe version is 3.2.4 - closest previous OE recipe version is 2.0.1: distance=102003
+- Recipe version is 3.2.4 - closest previous OE recipe version is 3.2.1: Distance value would need to be minimum 0.0.3
+- Recipe version is 3.2.4 - closest previous OE recipe version is 3.0.1: Distance value would need to be minimum 0.2.0
+- Recipe version is 3.2.4 - closest previous OE recipe version is 2.0.1: Distance value would need to be minimum 1.0.0

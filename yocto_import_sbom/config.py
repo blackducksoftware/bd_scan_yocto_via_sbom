@@ -4,6 +4,7 @@ import sys
 import logging
 
 from . import global_values
+from .OEClass import OE
 
 parser = argparse.ArgumentParser(description='Create BD Yocto project from license.manifest', prog='bd-yocto-import-sbom')
 
@@ -35,7 +36,7 @@ parser.add_argument("--oe_data_folder",
                          "if files exist then will be used without download", default="")
 parser.add_argument("--max_oe_version_distance",
                     help="Where no exact match, use closest previous recipe version up to specified distance."
-                         "Distance is calculated as (MAJOR*100000 + MINOR*1000 + PATCH).", default=0)
+                         "Distance should be specified as MAJOR.MINOR.PATCH (e.g. 0.1.0)", default='0.0.0')
 
 parser.add_argument("--debug", help="Debug logging mode", action='store_true')
 parser.add_argument("--logfile", help="Logging output file", default="")
@@ -134,7 +135,11 @@ def check_args():
     if args.get_oe_data:
         global_values.get_oe_data = True
 
-    global_values.max_oe_version_distance = int(args.max_oe_version_distance)
+    distarr = OE.calc_specified_version_distance(args.max_oe_version_distance)
+    if distarr[0] == -1:
+        logging.error(f"Invalid max_oe_version_distance '{args.max_oe_version_distance}' specified - should be MAJOR.MINOR.PATCH with numeric values")
+        terminate = True
+    global_values.max_oe_version_distance = distarr
 
     global_values.oe_data_folder = args.oe_data_folder
 
