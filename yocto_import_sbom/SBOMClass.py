@@ -5,15 +5,12 @@ from random import randint
 import json
 
 
-# import requests
-# import tempfile
-
-
 class SBOM:
     def __init__(self, proj, ver):
         self.package_id = self.create_spdx_ident()
         hex_string = self.create_spdx_ident()
         self.namespace = f"https://blackducksoftware.github.io/spdx/{proj}-{hex_string}"
+        self.file = ''
 
         mytime = datetime.datetime.now()
         mytime.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
@@ -82,7 +79,7 @@ class SBOM:
         if recipe.oe_recipe == {}:
             recipe_layer = recipe.layer
             recipe_name = recipe.name
-            if recipe.epoch != '':
+            if recipe.epochbitbake_layers_file:
                 recipe_version = f"{recipe.epoch}:{recipe.version}"
             else:
                 recipe_version = recipe.version
@@ -92,11 +89,11 @@ class SBOM:
             if recipe_layer == 'openembedded-core':
                 recipe_layer = 'meta'
             recipe_name = recipe.oe_recipe['pn']
-            if recipe.oe_recipe['pe'] != '':
+            if recipe.oe_recipe['pe']:
                 recipe_version = f"{recipe.oe_recipe['pe']}:{recipe.oe_recipe['pv']}"
             else:
                 recipe_version = recipe.oe_recipe['pv']
-            if recipe.oe_recipe['pr'] != '':
+            if recipe.oe_recipe['pr']:
                 recipe_pr = recipe.oe_recipe['pr']
             else:
                 recipe_pr = 'r0'
@@ -123,7 +120,7 @@ class SBOM:
             "name": self.quote(recipe_name),
             "versionInfo": self.quote(f"{recipe_version}")
         }
-        self.json["packages"].append(package_json)
+        self.json['packages'].append(package_json)
         rel_json = {
             "spdxElementId": self.quote(f"SPDXRef-package-{spdxid}"),
             "relationshipType": "DYNAMIC_LINK",
@@ -136,7 +133,7 @@ class SBOM:
             self.add_package(recipe)
 
     def output(self, output_file):
-        if output_file == '':
+        if not output_file:
             output_file = 'sbom.json'
 
         try:
@@ -147,7 +144,8 @@ class SBOM:
             logging.error('Unable to create output SPDX file \n' + str(e))
             sys.exit(3)
 
-        return output_file
+        self.file = output_file
+        return
 
     @staticmethod
     def filter_special_chars(val):

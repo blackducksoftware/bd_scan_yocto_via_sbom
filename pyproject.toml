@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bd_yocto_import_sbom"
-version = "1.0"
+version = "1.0.1"
 authors = [
   { name="Matthew Brady", email="mbrad@synopsys.com" },
 ]
@@ -18,7 +18,8 @@ classifiers = [
 ]
 dependencies = [
     "blackduck>=1.1.3",
-    "requests"
+    "requests",
+    "semver"
 ]
 
 [project.urls]

@@ -12,6 +12,7 @@ class Recipe:
         self.spdxid = ''
         self.oe_layer = {}
         self.oe_recipe = {}
+        self.matched_oe = False
 
     def add_layer(self, layer):
         self.layer = layer

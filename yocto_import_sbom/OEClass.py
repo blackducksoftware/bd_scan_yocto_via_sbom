@@ -4,29 +4,27 @@ import json
 import logging
 import re
 from semver import Version
-from typing import Optional, Tuple
 
-from . import global_values
 from .RecipeClass import Recipe
 
 
 class OE:
-    def __init__(self):
+    def __init__(self, conf):
         logging.info(f"Processing OE recipes and layers ...")
-        self.layers = self.get_oe_layers()
+        self.layers = self.get_oe_layers(conf)
         self.layerid_dict = self.process_layers()
-        self.layerbranches = self.get_oe_layerbranches()
+        self.layerbranches = self.get_oe_layerbranches(conf)
         self.layerbranchid_dict = self.process_layerbranches()
-        self.recipes = self.get_oe_recipes()
+        self.recipes = self.get_oe_recipes(conf)
         self.recipename_dict = self.process_recipes()
-        self.branches = self.get_oe_branches()
+        self.branches = self.get_oe_branches(conf)
         self.branchid_dict = self.process_branches()
 
     @staticmethod
-    def get_oe_layers():
+    def get_oe_layers(conf):
         oe_data_file_exists = False
-        if global_values.oe_data_folder != '':
-            lfile = os.path.join(global_values.oe_data_folder, 'oe_layers.json')
+        if conf.oe_data_folder:
+            lfile = os.path.join(conf.oe_data_folder, 'oe_layers.json')
             if os.path.exists(lfile):
                 oe_data_file_exists = True
 
@@ -40,7 +38,7 @@ class OE:
                 layer_dict = json.loads(r.text)
                 json_object = json.dumps(layer_dict, indent=4)
 
-                if global_values.oe_data_folder != '':
+                if conf.oe_data_folder:
                     # Writing to sample.json
                     with open(lfile, "w") as outfile:
                         outfile.write(json_object)
@@ -60,10 +58,10 @@ class OE:
         return {}
 
     @staticmethod
-    def get_oe_recipes():
+    def get_oe_recipes(conf):
         oe_data_file_exists = False
-        if global_values.oe_data_folder != '':
-            lfile = os.path.join(global_values.oe_data_folder, 'oe_recipes.json')
+        if conf.oe_data_folder:
+            lfile = os.path.join(conf.oe_data_folder, 'oe_recipes.json')
             if os.path.exists(lfile):
                 oe_data_file_exists = True
 
@@ -78,7 +76,7 @@ class OE:
                 recipe_dict = json.loads(r.text)
                 json_object = json.dumps(recipe_dict, indent=4)
 
-                if global_values.oe_data_folder != '':
+                if conf.oe_data_folder:
                     # Writing to sample.json
                     with open(lfile, "w") as outfile:
                         outfile.write(json_object)
@@ -99,10 +97,10 @@ class OE:
         return {}
 
     @staticmethod
-    def get_oe_layerbranches():
+    def get_oe_layerbranches(conf):
         oe_data_file_exists = False
-        if global_values.oe_data_folder != '':
-            lfile = os.path.join(global_values.oe_data_folder, 'oe_layerbranches.json')
+        if conf.oe_data_folder:
+            lfile = os.path.join(conf.oe_data_folder, 'oe_layerbranches.json')
             if os.path.exists(lfile):
                 oe_data_file_exists = True
 
@@ -116,7 +114,7 @@ class OE:
                 layerbranches_dict = json.loads(r.text)
                 json_object = json.dumps(layerbranches_dict, indent=4)
 
-                if global_values.oe_data_folder != '':
+                if conf.oe_data_folder:
                     # Writing to sample.json
                     with open(lfile, "w") as outfile:
                         outfile.write(json_object)
@@ -137,10 +135,10 @@ class OE:
         return {}
 
     @staticmethod
-    def get_oe_branches():
+    def get_oe_branches(conf):
         oe_data_file_exists = False
-        if global_values.oe_data_folder != '':
-            lfile = os.path.join(global_values.oe_data_folder, 'oe_branches.json')
+        if conf.oe_data_folder:
+            lfile = os.path.join(conf.oe_data_folder, 'oe_branches.json')
             if os.path.exists(lfile):
                 oe_data_file_exists = True
 
@@ -154,7 +152,7 @@ class OE:
                 branches_dict = json.loads(r.text)
                 json_object = json.dumps(branches_dict, indent=4)
 
-                if global_values.oe_data_folder != '':
+                if conf.oe_data_folder:
                     # Writing to sample.json
                     with open(lfile, "w") as outfile:
                         outfile.write(json_object)
@@ -235,15 +233,14 @@ class OE:
             logging.warning(f"Cannot get branch by layerbranchid {e}")
         return {}
 
-    def compare_recipes(self, recipe, oe_recipe, best_oe_recipe):
+    def compare_recipes(self, conf, recipe, oe_recipe, best_oe_recipe):
         try:
             if best_oe_recipe != {}:
-                logging.debug(f"Comparing {recipe.name}/{recipe.version} to {oe_recipe['pn']}/{oe_recipe['pv']} (best so far = {best_oe_recipe['pn']}/{best_oe_recipe['pv']})")
+                logging.debug(f"Comparing {recipe.name}/{recipe.version} to {oe_recipe['pn']}/{oe_recipe['pv']} "
+                              f"(best so far = {best_oe_recipe['pn']}/{best_oe_recipe['pv']})")
             else:
                 logging.debug(f"Comparing {recipe.name}/{recipe.version} to {oe_recipe['pn']}/{oe_recipe['pv']}")
 
-            if oe_recipe['pn'] == 'socat' and oe_recipe['pv'] == '1.7.3.3':
-                print()
             oe_ver_equal = False
             pref = False
 
@@ -265,11 +262,11 @@ class OE:
                     oe_semver, oe_rest = self.coerce_version(oe_ver)
                     best_oe_semver, best_oe_rest = self.coerce_version(best_oe_ver)
                     if semver is not None and oe_semver is not None and oe_semver <= semver:
-                        if self.check_semver_distance(semver, oe_semver):
+                        if self.check_semver_distance(conf, semver, oe_semver):
                             if best_oe_semver is not None:
                                 if oe_semver == best_oe_semver:
                                     oe_ver_equal = True
-                                elif oe_semver <= semver and oe_semver > best_oe_semver:
+                                elif semver >= oe_semver > best_oe_semver:
                                     if (semver.major - best_oe_semver.major) > (semver.major - oe_semver.major):
                                         pref = True
                                     elif (semver.minor - best_oe_semver.minor) > (semver.minor - oe_semver.minor):
@@ -279,8 +276,8 @@ class OE:
                             else:
                                 pref = True
 
-            if not pref and oe_ver_equal and recipe.epoch != '' and oe_recipe['pe'] != '':
-                if best_oe_recipe['pe'] != '' and recipe.epoch != '' and oe_recipe['pe'] != '':
+            if not pref and oe_ver_equal and recipe.epoch and oe_recipe['pe']:
+                if best_oe_recipe['pe'] and recipe.epoch and oe_recipe['pe']:
                     if (int(oe_recipe['pe']) <= int(recipe.epoch) and (int(recipe.epoch) - int(oe_recipe['pe'])) <=
                             (int(recipe.epoch) - int(best_oe_recipe['pe']))):
                         pref = True
@@ -318,24 +315,24 @@ class OE:
             branch_sort_priority = 999
         return branch_sort_priority
 
-    def get_recipe(self, recipe):
+    def get_recipe(self, conf, recipe):
         # need to look for closest version match
-        epoch_match = False
         try:
             best_recipe = {}
 
             if recipe.name in self.recipename_dict.keys():
                 for oe_recipe in self.recipename_dict[recipe.name]:
-                    if self.compare_recipes(recipe, oe_recipe, best_recipe):
+                    if self.compare_recipes(conf, recipe, oe_recipe, best_recipe):
                         best_recipe = oe_recipe
+                        recipe.matched_oe = True
 
-            if recipe.epoch != '':
+            if recipe.epochbitbake_layers_file:
                 recipe_ver = f"{recipe.epoch}:{recipe.orig_version}"
             else:
                 recipe_ver = recipe.orig_version
 
             if best_recipe != {}:
-                if best_recipe['pe'] != '':
+                if best_recipe['pe']:
                     best_ver = f"{best_recipe['pe']}:{best_recipe['pv']}"
                 else:
                     best_ver = best_recipe['pv']
@@ -355,17 +352,16 @@ class OE:
                           f"{best_layer['name']}/{best_recipe['pn']}/{best_ver}-{best_recipe['pr']}")
             return best_recipe, best_layer
 
-
         except KeyError as e:
             logging.warning(f"Error getting nearest OE recipe - {e}")
 
     @staticmethod
-    def coerce_version(version: str) -> Tuple[Version, Optional[str]]:
-        if version == '':
-            return (None, '')
+    def coerce_version(version: str):
+        if not version:
+            return None, ''
 
         if Version.is_valid(version):
-            return (Version.parse(version), '')
+            return Version.parse(version), ''
 
         """
         Convert an incomplete version string into a semver-compatible Version
@@ -381,7 +377,7 @@ class OE:
             belong to a basic version.
         :rtype: tuple(:class:`Version` | None, str)
         """
-        BASEVERSION = re.compile(
+        baseversion = re.compile(
             r"""[vV]?0?
                 (?P<major>0|[1-9]\d*)
                 (\.0?
@@ -394,23 +390,23 @@ class OE:
             re.VERBOSE,
         )
 
-        match = BASEVERSION.search(version)
+        match = baseversion.search(version)
         if not match:
-            return (None, version)
+            return None, version
 
         ver = {
             key: 0 if value is None else value for key, value in match.groupdict().items()
         }
         ver = Version(**ver)
         rest = match.string[match.end():]  # noqa:E203
-        return (ver, rest)
+        return ver, rest
 
     @staticmethod
     def calc_specified_version_distance(distance_str):
         arr = distance_str.split('.')
         for entry in arr:
             if not entry.isnumeric():
-                return [-1,-1,-1]
+                return [-1, -1, -1]
 
         if len(arr) == 3:
             return [int(arr[0]), int(arr[1]), int(arr[2])]
@@ -419,16 +415,19 @@ class OE:
         elif len(arr) == 1:
             return [0, 0, int(arr[0])]
         else:
-            return [0,0,0]
+            return [0, 0, 0]
 
     @staticmethod
-    def check_semver_distance(ver1, ver2):
+    def check_semver_distance(conf, ver1, ver2):
         # Is ver2 less than ver1 AND
         # ver2 is within the distance of ver1
-        if global_values.max_oe_version_distance[0] > 0 and ver1.major - ver2.major <= global_values.max_oe_version_distance[0]:
+        if (conf.max_oe_version_distance[0] > 0 and
+                ver1.major - ver2.major <= conf.max_oe_version_distance[0]):
             return True
-        elif global_values.max_oe_version_distance[1] > 0 and ver1.major - ver2.major <= global_values.max_oe_version_distance[1]:
+        elif (conf.max_oe_version_distance[1] > 0 and
+              ver1.major - ver2.major <= conf.max_oe_version_distance[1]):
             return True
-        elif global_values.max_oe_version_distance[2] > 0 and ver1.major - ver2.major <=  global_values.max_oe_version_distance[2]:
+        elif (conf.max_oe_version_distance[2] > 0 and
+              ver1.major - ver2.major <= conf.max_oe_version_distance[2]):
             return True
         return False

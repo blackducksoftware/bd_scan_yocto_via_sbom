@@ -1,19 +1,20 @@
-from .ComponentListClass import ComponentList
-from .ComponentClass import Component
-from .VulnListClass import VulnList
-# from VulnClass import Vuln
-from . import global_values
 import logging
 from blackduck import Client
 import sys
 import requests
 import time
+import os
+from pathlib import Path
+
+from .ComponentListClass import ComponentList
+from .ComponentClass import Component
+from .VulnListClass import VulnList
 
 
 class BOM:
-    def __init__(self, proj, ver):
-        self.bdprojname = proj
-        self.bdvername = ver
+    def __init__(self, conf):
+        self.bdprojname = conf.bd_project
+        self.bdvername = conf.bd_version
         self.complist = ComponentList()
         self.vulnlist = VulnList()
         self.CVEPatchedVulnList = []
@@ -21,9 +22,9 @@ class BOM:
         self.projver = None
 
         self.bd = Client(
-            token=global_values.bd_api,
-            base_url=global_values.bd_url,
-            verify=(not global_values.bd_trustcert),  # TLS certificate verification
+            token=conf.bd_api,
+            base_url=conf.bd_url,
+            verify=(not conf.bd_trustcert),  # TLS certificate verification
             timeout=60
         )
 
@@ -158,23 +159,23 @@ class BOM:
         return uptodate
 
     @staticmethod
-    def upload_sbom(bd, sbom_file):
-        url = bd.base_url + "/api/scan/data"
+    def upload_sbom(conf, bom, sbom):
+        url = bom.bd.base_url + "/api/scan/data"
         headers = {
-            'X-CSRF-TOKEN': bd.session.auth.csrf_token,
-            'Authorization': f"Bearer  {bd.session.auth.bearer_token}",
+            'X-CSRF-TOKEN': bom.bd.session.auth.csrf_token,
+            'Authorization': f"Bearer  {bom.bd.session.auth.bearer_token}",
             'Accept': '*/*',
         }
 
         try:
-            files = {'file': (sbom_file, open(sbom_file, 'rb'), 'application/spdx')}
+            files = {'file': (sbom.file, open(sbom.file, 'rb'), 'application/spdx')}
             multipart_form_data = {
-                'projectName': global_values.bd_project,
-                'versionName': global_values.bd_version
+                'projectName': conf.bd_project,
+                'versionName': conf.bd_version
             }
             # headers['Content-Type'] = 'multipart/form-data; boundary=6o2knFse3p53ty9dmcQvWAIx1zInP11uCfbm'
             response = requests.post(url, headers=headers, files=files, data=multipart_form_data,
-                                     verify=(not global_values.bd_trustcert))
+                                     verify=(not conf.bd_trustcert))
 
             if response.status_code == 201:
                 return True
@@ -222,3 +223,66 @@ class BOM:
                      f" are for recipes in the yocto image")
         self.CVEPatchedVulnList = patched_vulns
         return
+
+    def run_detect_sigscan(self, tdir, conf):
+        import shutil
+
+        cmd = self.get_detect(conf)
+
+        detect_cmd = cmd
+        detect_cmd += f" --detect.source.path='{tdir}' --detect.project.name='{conf.bd_project}' " + \
+                      f"--detect.project.version.name='{conf.bd_version}' "
+        detect_cmd += f"--blackduck.url={conf.bd_url} "
+        detect_cmd += f"--blackduck.api.token={conf.bd_api} "
+        if conf.bd_trustcert:
+            detect_cmd += "--blackduck.trust.cert=true "
+        detect_cmd += "--detect.wait.for.results=true "
+        if 'detect.timeout' not in conf.detect_opts:
+            detect_cmd += "--detect.timeout=1200 "
+
+        if conf.detect_opts:
+            detect_cmd += conf.detect_opts
+
+        logging.debug(f"Detect Sigscan cmd '{detect_cmd}'")
+        # output = subprocess.check_output(detect_cmd, stderr=subprocess.STDOUT)
+        # mystr = output.decode("utf-8").strip()
+        # lines = mystr.splitlines()
+        retval = os.system(detect_cmd)
+        shutil.rmtree(tdir)
+
+        if retval != 0:
+            logging.error("Unable to run Detect Signature scan on package files")
+            return False
+        else:
+            logging.info("Detect scan for Bitbake dependencies completed successfully")
+
+        return True
+
+    @staticmethod
+    def get_detect(conf):
+        cmd = ''
+        if not conf.detect_jar:
+            tdir = os.path.join(str(Path.home()), "synopsys-detect")
+            if not os.path.isdir(tdir):
+                os.mkdir(tdir)
+            tdir = os.path.join(tdir, "download")
+            if not os.path.isdir(tdir):
+                os.mkdir(tdir)
+            if not os.path.isdir(tdir):
+                logging.error("Cannot create synopsys-detect folder in $HOME")
+                sys.exit(2)
+            shpath = os.path.join(tdir, 'detect9.sh')
+
+            j = requests.get("https://detect.synopsys.com/detect9.sh")
+            if j.ok:
+                open(shpath, 'wb').write(j.content)
+                if not os.path.isfile(shpath):
+                    logging.error("Cannot download Synopsys Detect shell script -"
+                                  " download manually and use --detect-jar-path option")
+                    sys.exit(2)
+
+                cmd = "/bin/bash " + shpath + " "
+        else:
+            cmd = "java " + conf.detect_jar
+
+        return cmd

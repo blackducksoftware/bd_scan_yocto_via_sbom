@@ -1,77 +1,16 @@
-from .RecipeClass import Recipe
+import os.path
+import re
 import logging
-import sys
+import shutil
+import tempfile
+
+from .RecipeClass import Recipe
+from .BBClass import BB
 
 
 class RecipeList:
-    def __init__(self, lic_manifest_file, bitbake_layers_file):
+    def __init__(self):
         self.recipes = []
-        self.process_licman_file(lic_manifest_file)
-        self.process_bitbake_file(bitbake_layers_file)
-
-    def process_licman_file(self, lic_manifest_file):
-        recipes_total = 0
-        try:
-            with open(lic_manifest_file, "r") as lfile:
-                lines = lfile.readlines()
-                ver = ''
-                recipe = ''
-                for line in lines:
-                    # PACKAGE NAME: name
-                    # PACKAGE VERSION: ver
-                    # RECIPE NAME: rname
-                    # LICENSE: License
-                    #
-                    line = line.strip()
-                    if line.startswith("PACKAGE VERSION:"):
-                        ver = line.split(': ')[1]
-                    elif line.startswith("RECIPE NAME:"):
-                        recipe = line.split(': ')[1]
-
-                    if recipe != '' and ver != '':
-                        recipes_total += 1
-                        rec_obj = Recipe(recipe, ver)
-                        if not self.check_recipe_exists(recipe):
-                            self.recipes.append(rec_obj)
-                        ver = ''
-                        recipe = ''
-
-                logging.info(f"- {recipes_total} packages found in licman file ({self.count()} recipes)")
-
-        except Exception as e:
-            logging.error(f"Cannot read license manifest file '{lic_manifest_file}' - error '{e}'")
-            sys.exit(2)
-
-        return
-
-    def process_bitbake_file(self, bitbake_file):
-        try:
-            with open(bitbake_file, "r") as bfile:
-                lines = bfile.readlines()
-            rec = ""
-            bstart = False
-            for rline in lines:
-                rline = rline.strip()
-                if bstart:
-                    if rline.endswith(":"):
-                        arr = rline.split(":")
-                        rec = arr[0]
-                    elif rec != "":
-                        arr = rline.split()
-                        if len(arr) > 1:
-                            layer = arr[0]
-                            ver = arr[1]
-                            self.add_layer_to_recipe(rec, layer, ver)
-                        rec = ""
-                elif rline.endswith(": ==="):
-                    bstart = True
-
-            logging.info(f"- {self.count_recipes_without_layer()} recipes without layer reported from layer file")
-        except Exception as e:
-            logging.error(f"Cannot process bitbake-layers output file '{bitbake_file} - error {e}")
-            sys.exit(2)
-
-        return
 
     def count(self):
         return len(self.recipes)
@@ -79,7 +18,7 @@ class RecipeList:
     def count_recipes_without_layer(self):
         count_nolayer = 0
         for recipe in self.recipes:
-            if recipe.layer == '':
+            if not recipe.layer:
                 count_nolayer += 1
         return count_nolayer
 
@@ -110,6 +49,70 @@ class RecipeList:
                 layers.append(recipe.layer)
         return layers
 
-    def check_recipes_in_oe(self, oe):
+    def check_recipes_in_oe(self, conf, oe):
         for recipe in self.recipes:
-            recipe.oe_recipe, recipe.oe_layer = oe.get_recipe(recipe)
+            recipe.oe_recipe, recipe.oe_layer = oe.get_recipe(conf, recipe)
+
+    def scan_pkg_download_files(self, conf, bom):
+        all_pkg_files = BB.get_pkg_files(conf)
+        all_download_files = BB.get_download_files(conf)
+        found_files = self.find_files(conf, all_pkg_files, all_download_files)
+        tdir = self.copy_files(found_files)
+        if tdir and bom.run_detect_sigscan(conf, tdir):
+            return True
+        return False
+
+    def find_files(self, conf, all_download_files, all_pkg_files):
+        found_files = []
+        for recipe in self.recipes:
+            if not conf.scan_all_files and recipe.matched_oe:
+                continue
+            found = False
+            recipe_esc = re.escape(recipe.name)
+            ver_esc = re.escape(recipe.version)
+            download_regex = re.compile(rf"^{recipe_esc}[_-]v?{ver_esc}[.-].*$")
+            pkg_regex = re.compile(rf"^(lib)?{recipe_esc}\d*[_-]v?{ver_esc}[+.-].*\.{conf.image_pkgtype}")
+
+            for path in all_download_files:
+                filename = os.path.basename(path)
+                download_res = download_regex.match(filename)
+                if download_res is not None:
+                    found_files.append(path)
+                    found = True
+                    logging.info(f"- Recipe:{recipe.name}/{recipe.version} - Located download file: {path}")
+
+            if found:
+                continue
+
+            for path in all_pkg_files:
+                filename = os.path.basename(path)
+                # pattern = f"{os.path.join(global_values.pkg_dir, global_values.machine)}/" \
+                #           f"{recipe}[-_]{ver}-*.{global_values.image_pkgtype}"
+                pkg_res = pkg_regex.match(filename)
+
+                if pkg_res is not None:
+                    found_files.append(path)
+                    logging.info(f"- Recipe:{recipe.name}/{recipe.version} - Located package file: {path}")
+                    found = True
+
+            if not found:
+                logging.info(f"- Recipe:{recipe.name}/{recipe.version} - No package file found")
+
+        return found_files
+
+    @staticmethod
+    def copy_files(files):
+        temppkgdir = tempfile.mkdtemp(prefix="bd_sig_pkgs")
+
+        # print(temppkgdir)
+        count = 0
+        for file in files:
+            shutil.copy(file, temppkgdir)
+            count += 1
+
+        logging.info(f"Copying recipe package files")
+        logging.info(f"- Copied {count} package files ...")
+        if count > 0:
+            return temppkgdir
+        else:
+            return ''
