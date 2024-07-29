@@ -30,20 +30,20 @@ class BB:
             return False
 
     def check_bitbake(self):
-        cmd = "bitbake"
-        ret = self.run_cmd(cmd)
-        if ret == b'':
-            logging.error("Command 'bitbake' not available - check environment or use --skip_bitbake and "
-                          "--license_manifest")
-            return False
-
-        cmd = "bitbake-layers"
-        ret = self.run_cmd(cmd)
-        if ret == b'':
-            logging.error("Command 'bitbake-layers' not available - check environment or use --skip_bitbake and "
-                          "--bitbake_layers_file")
-            return False
-
+        # cmd = "bitbake"
+        # ret = self.run_cmd(cmd)
+        # if ret == b'':
+        #     logging.error("Command 'bitbake' not available - check environment or use --skip_bitbake and "
+        #                   "--license_manifest")
+        #     return False
+        #
+        # cmd = "bitbake-layers"
+        # ret = self.run_cmd(cmd)
+        # if ret == b'':
+        #     logging.error("Command 'bitbake-layers' not available - check environment or use --skip_bitbake and "
+        #                   "--bitbake_layers_file")
+        #     return False
+        #
         return True
 
     def run_bitbake_env(self):
@@ -60,9 +60,9 @@ class BB:
         if not ret:
             logging.error("Cannot run 'bitbake-layers show-recipes'")
             return ''
-        lfile_name = tempfile.NamedTemporaryFile(mode="w", delete=False)
-        with open(lfile_name, "w") as lfile:
-            lfile.write(out)
+        lfile = tempfile.NamedTemporaryFile(mode="w", delete=False)
+        lfile.write(out)
+        lfile.close()
 
         return lfile_name
 
