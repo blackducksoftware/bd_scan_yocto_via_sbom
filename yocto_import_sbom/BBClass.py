@@ -64,7 +64,7 @@ class BB:
         lfile.write(out)
         lfile.close()
 
-        return lfile_name
+        return lfile.name
 
     def process_bitbake_env(self, conf):
         lines = self.run_bitbake_env().split('\n')
