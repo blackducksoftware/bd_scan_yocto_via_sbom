@@ -47,22 +47,22 @@ class BB:
         return True
 
     def run_bitbake_env(self):
-        cmd = f"bitbake -e"
-        ret = self.run_cmd(cmd)
-        if ret == b'':
+        cmd = ["bitbake", "-e"]
+        ret, out = self.run_cmd(cmd)
+        if not ret:
             logging.error("Cannot run 'bitbake -e'")
             return ''
-        return ret
+        return out
 
     def run_showlayers(self):
-        cmd = f"bitbake-layers show-recipes"
-        ret = self.run_cmd(cmd)
-        if ret == b'':
+        cmd = ["bitbake-layers", "show-recipes"]
+        ret, out = self.run_cmd(cmd)
+        if not ret:
             logging.error("Cannot run 'bitbake-layers show-recipes'")
             return ''
         lfile_name = tempfile.NamedTemporaryFile(mode="w", delete=False)
-        with open(lfile_name, "wb") as lfile:
-            lfile.write(ret)
+        with open(lfile_name, "w") as lfile:
+            lfile.write(out)
 
         return lfile_name
 
@@ -133,9 +133,19 @@ class BB:
 
     @staticmethod
     def run_cmd(command):
-        proc = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
-        proc_stdout = proc.communicate()[0].strip()
-        return proc_stdout
+        try:
+            ret = subprocess.run(command, capture_output=True, text=True, timeout=20)
+            if ret.returncode != 0:
+                logging.error(f"Run command '{command}' failed with error {ret.returncode} - {ret.stderr}")
+                return False, ''
+            return True, ret.stdout
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Run command '{command}' failed with error {e}")
+            return False, ''
+
+        # proc = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+        # proc_stdout = proc.communicate()[0].strip()
+        # return proc_stdout
 
     @staticmethod
     def process_showlayers(showlayers_file, reclist):
