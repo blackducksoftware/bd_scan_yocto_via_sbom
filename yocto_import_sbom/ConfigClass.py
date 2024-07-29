@@ -139,7 +139,7 @@ class Config:
             self.bd_url = args.blackduck_url
         elif url is not None:
             self.bd_url = url
-            logging.info(f"BLACKDUCK_URL value {url} found")
+            logging.info(f"BLACKDUCK_URL value {url} found from environment")
         elif bd_connect:
             logging.error("Black Duck URL not specified")
             terminate = True
@@ -156,7 +156,7 @@ class Config:
             self.bd_api = args.blackduck_api_token
         elif api is not None:
             self.bd_api = api
-            logging.info(f"BLACKDUCK_API_TOKEN value found")
+            logging.info(f"BLACKDUCK_API_TOKEN value found from environment")
         elif bd_connect:
             logging.error("Black Duck API Token not specified")
             terminate = True

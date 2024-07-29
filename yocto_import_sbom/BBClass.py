@@ -205,13 +205,13 @@ class BB:
                         ver = ''
                         recipe = ''
 
-                logging.info(f"- {recipes_total} packages found in licman file ({reclist.count()} recipes)")
+                logging.info(f"- {recipes_total} packages found in license.manifest file ({reclist.count()} recipes)")
 
         except Exception as e:
             logging.error(f"Cannot read license manifest file '{lic_manifest_file}' - error '{e}'")
             sys.exit(2)
 
-        return
+        return True
 
     @staticmethod
     def check_files(conf):
