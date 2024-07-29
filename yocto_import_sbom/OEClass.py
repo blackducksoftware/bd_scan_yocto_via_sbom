@@ -22,6 +22,7 @@ class OE:
 
     @staticmethod
     def get_oe_layers(conf):
+        logging.info("- Getting OE layers")
         oe_data_file_exists = False
         if conf.oe_data_folder:
             lfile = os.path.join(conf.oe_data_folder, 'oe_layers.json')
@@ -59,6 +60,7 @@ class OE:
 
     @staticmethod
     def get_oe_recipes(conf):
+        logging.info("- Getting OE recipes")
         oe_data_file_exists = False
         if conf.oe_data_folder:
             lfile = os.path.join(conf.oe_data_folder, 'oe_recipes.json')
@@ -98,6 +100,8 @@ class OE:
 
     @staticmethod
     def get_oe_layerbranches(conf):
+        logging.info("- Getting OE layerbranches")
+
         oe_data_file_exists = False
         if conf.oe_data_folder:
             lfile = os.path.join(conf.oe_data_folder, 'oe_layerbranches.json')
@@ -136,6 +140,8 @@ class OE:
 
     @staticmethod
     def get_oe_branches(conf):
+        logging.info("- Getting OE branches")
+
         oe_data_file_exists = False
         if conf.oe_data_folder:
             lfile = os.path.join(conf.oe_data_folder, 'oe_branches.json')
@@ -326,7 +332,7 @@ class OE:
                         best_recipe = oe_recipe
                         recipe.matched_oe = True
 
-            if recipe.epochbitbake_layers_file:
+            if recipe.epoch:
                 recipe_ver = f"{recipe.epoch}:{recipe.orig_version}"
             else:
                 recipe_ver = recipe.orig_version
