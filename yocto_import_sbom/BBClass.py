@@ -28,6 +28,7 @@ class BB:
         self.process_licman_file(conf.license_manifest, reclist)
         if not self.process_showlayers(tfile, reclist):
             return False
+        return True
 
     def check_bitbake(self):
         # cmd = "bitbake"
