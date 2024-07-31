@@ -360,6 +360,7 @@ class OE:
 
         except KeyError as e:
             logging.warning(f"Error getting nearest OE recipe - {e}")
+        return {}, {}
 
     @staticmethod
     def coerce_version(version: str):

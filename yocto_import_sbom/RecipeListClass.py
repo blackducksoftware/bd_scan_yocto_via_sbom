@@ -50,8 +50,12 @@ class RecipeList:
         return layers
 
     def check_recipes_in_oe(self, conf, oe):
+        recipes_in_oe = 0
         for recipe in self.recipes:
             recipe.oe_recipe, recipe.oe_layer = oe.get_recipe(conf, recipe)
+            if recipe.oe_recipe != {}:
+                recipes_in_oe += 1
+        logging.info(f"- {recipes_in_oe} out of {self.count()} total recipes found in OE data")
 
     def scan_pkg_download_files(self, conf, bom):
         all_pkg_files = BB.get_pkg_files(conf)

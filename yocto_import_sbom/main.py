@@ -9,22 +9,25 @@ import sys
 
 
 def main():
+    logging.info("PHASE 0 - Config -----------------------------------------------------")
     conf = Config()
 
-    logging.info(f"Processing files '{conf.license_manifest}' and '{conf.bitbake_layers_file}' ...")
-
+    logging.info("PHASE 1 - Process Project --------------------------------------------")
     reclist = RecipeList()
     bb = BB()
     if not bb.process(conf, reclist):
         sys.exit(2)
 
     if conf.get_oe_data:
+        logging.info("PHASE 2 - Get OE Data ------------------------------------------------")
+
         oe_class = OE(conf)
         reclist.check_recipes_in_oe(conf, oe_class)
         logging.info("Done processing OE data")
     else:
         logging.info("Skipping connection to OE APIs to verify origin layers and revisions")
 
+    logging.info("PHASE 3 - Write SBOM -------------------------------------------------")
     sbom = SBOM(conf.bd_project, conf.bd_version)
     sbom.process_recipes(reclist.recipes)
     sbom.output(conf.output_file)
@@ -35,6 +38,7 @@ def main():
         logging.info("Done")
         sys.exit(0)
 
+    logging.info("PHASE 4 - Upload SBOM ------------------------------------------------")
     bom = BOM(conf)
 
     if bom.upload_sbom(conf, bom, sbom):
@@ -44,11 +48,15 @@ def main():
         sys.exit(2)
 
     if not conf.skip_sig_scan and conf.package_dir and conf.download_dir:
+        logging.info("PHASE 5 - Signature Scan packages ------------------------------------")
+
         if reclist.scan_pkg_download_files(conf, bom):
             logging.error(f"Unable to scan package and download files")
             sys.exit(2)
 
     if conf.cve_check_file:
+        logging.info("PHASE 6 - Apply CVE Patches ------------------------------------------")
+
         bom.get_proj()
         if not bom.wait_for_bom_completion():
             logging.error("Error waiting for project scan completion")
