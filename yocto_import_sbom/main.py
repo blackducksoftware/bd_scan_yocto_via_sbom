@@ -20,20 +20,21 @@ def main():
 
     logging.info("")
     logging.info("--- PHASE 2 - GET OE DATA ------------------------------------------------")
-    if conf.get_oe_data:
-
+    if not conf.skip_oe_data:
         oe_class = OE(conf)
         reclist.check_recipes_in_oe(conf, oe_class)
         logging.info("Done processing OE data")
     else:
         logging.info("Skipping connection to OE APIs to verify origin layers and revisions "
-                     "(use --get_oe_data to enable)")
+                     "(remove --skip_oe_data to enable)")
 
     logging.info("")
     logging.info("--- PHASE 3 - WRITE SBOM -------------------------------------------------")
     sbom = SBOM(conf.bd_project, conf.bd_version)
     sbom.process_recipes(reclist.recipes)
-    sbom.output(conf.output_file)
+    if not sbom.output(conf.output_file):
+        logging.error("Unable to create SBOM file")
+        sys.exit(2)
 
     if conf.output_file:
         # Create SBOM and terminate
@@ -42,6 +43,7 @@ def main():
         logging.info("Done")
         sys.exit(0)
 
+    logging.info("Done creating SBOM file")
     logging.info("")
     logging.info("--- PHASE 4 - UPLOAD SBOM ------------------------------------------------")
     bom = BOM(conf)
@@ -54,12 +56,14 @@ def main():
 
     logging.info("")
     logging.info("--- PHASE 5 - SIGNATURE SCAN PACKAGES ------------------------------------")
-    if not conf.skip_sig_scan and conf.package_dir and conf.download_dir:
-
-        if reclist.scan_pkg_download_files(conf, bom):
-            logging.error(f"Unable to scan package and download files")
-            sys.exit(2)
-        logging.info("Done")
+    if not conf.skip_sig_scan:
+        if conf.package_dir and conf.download_dir:
+            if reclist.scan_pkg_download_files(conf, bom):
+                logging.error(f"Unable to Signature scan package and download files")
+                sys.exit(2)
+            logging.info("Done")
+        else:
+            logging.info("Skipped (package_dir or download_dir not identified)")
     else:
         logging.info("Skipped (--skip_sig_scan specified)")
 

@@ -51,11 +51,28 @@ class RecipeList:
 
     def check_recipes_in_oe(self, conf, oe):
         recipes_in_oe = 0
+        exact_recipes_in_oe = 0
+        changed_layers = 0
+        exact_layers = 0
         for recipe in self.recipes:
-            recipe.oe_recipe, recipe.oe_layer = oe.get_recipe(conf, recipe)
+            recipe.oe_recipe, recipe.oe_layer, exact_ver, exact_layer = oe.get_recipe(conf, recipe)
             if recipe.oe_recipe != {}:
                 recipes_in_oe += 1
-        logging.info(f"- {recipes_in_oe} out of {self.count()} total recipes found in OE data")
+                if not exact_layer:
+                    changed_layers += 1
+                else:
+                    exact_layers += 1
+            if exact_ver:
+                exact_recipes_in_oe += 1
+
+        # logging.info(f"- {recipes_in_oe} out of {self.count()} total recipes found in OE data ({exact_recipes_in_oe} "
+        #              f"exact version matches and {changed_layers} recipe layers modified)")
+        logging.info(f"SUMMARY OE MATCH DATA:")
+        logging.info(f"- {self.count()} Total Recipes")
+        logging.info(f"- {recipes_in_oe} Recipes found in OE Data of which:")
+        logging.info(f"    - {exact_recipes_in_oe} have exact version match")
+        logging.info(f"    - {exact_layers} have the same layer as OE")
+        logging.info(f"    - {changed_layers} exist in different OE layer")
 
     def scan_pkg_download_files(self, conf, bom):
         all_pkg_files = BB.get_pkg_files(conf)

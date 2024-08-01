@@ -43,7 +43,7 @@ class Config:
                             help="OPTIONAL Specify output SBOM SPDX file for manual upload (if specified then BD "
                                  "project will not be created automatically and CVE patching not supported)",
                             default="")
-        parser.add_argument("--get_oe_data",
+        parser.add_argument("--skip_oe_data",
                             help="OPTIONAL Download and use OE data to check layers, versions & revisions",
                             action='store_true')
         parser.add_argument("--oe_data_folder",
@@ -95,7 +95,7 @@ class Config:
         self.machine = args.machine
         self.bitbake_layers_file = ''
         self.cve_check_file = ''
-        self.get_oe_data = False
+        self.skip_oe_data = False
         self.max_oe_version_distance = ''
         self.oe_data_folder = args.oe_data_folder
         self.package_dir = ''
@@ -198,8 +198,8 @@ class Config:
             logging.error("Black Duck URL/API and output file not specified - nothing to do")
             terminate = True
 
-        if args.get_oe_data:
-            self.get_oe_data = True
+        if args.skip_oe_data:
+            self.skip_oe_data = True
 
         distarr = OE.calc_specified_version_distance(args.max_oe_version_distance)
         if distarr[0] == -1:

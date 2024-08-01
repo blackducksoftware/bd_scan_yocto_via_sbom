@@ -79,7 +79,7 @@ class SBOM:
         if recipe.oe_recipe == {}:
             recipe_layer = recipe.layer
             recipe_name = recipe.name
-            if recipe.epochbitbake_layers_file:
+            if recipe.epoch:
                 recipe_version = f"{recipe.epoch}:{recipe.version}"
             else:
                 recipe_version = recipe.version
@@ -142,10 +142,10 @@ class SBOM:
 
         except Exception as e:
             logging.error('Unable to create output SPDX file \n' + str(e))
-            sys.exit(3)
+            return False
 
         self.file = output_file
-        return
+        return True
 
     @staticmethod
     def filter_special_chars(val):

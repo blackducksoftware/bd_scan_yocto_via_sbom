@@ -3,8 +3,8 @@ requires = ["setuptools>=67.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "bd_yocto_import_sbom"
-version = "1.0.1"
+name = "bd_scan_yocto_via_sbom"
+version = "1.0.2"
 authors = [
   { name="Matthew Brady", email="mbrad@synopsys.com" },
 ]
@@ -23,8 +23,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/matthewb66/bd_yocto_import_sbom"
-Issues = "https://github.com/matthewb66/bd_yocto_import_sbom/issues"
+Homepage = "https://github.com/matthewb66/bd_scan_yocto_via_sbom"
+Issues = "https://github.com/matthewb66/bd_scan_yocto_via_sbom/issues"
 
 [project.scripts]
-bd-yocto-import = "yocto_import_sbom:main.main"
+bd-scan-yocto-via-sbom = "yocto_import_sbom:main.main"

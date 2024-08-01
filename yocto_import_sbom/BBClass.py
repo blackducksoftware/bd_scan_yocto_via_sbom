@@ -130,7 +130,7 @@ class BB:
         if not conf.package_dir and conf.deploy_dir:
             temppath = os.path.join(conf.deploy_dir, conf.image_pkgtype)
             if os.path.isdir(temppath):
-                conf.pkg_dir = temppath
+                conf.package_dir = temppath
 
     @staticmethod
     def run_cmd(command):

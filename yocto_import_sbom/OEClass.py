@@ -240,6 +240,11 @@ class OE:
         return {}
 
     def compare_recipes(self, conf, recipe, oe_recipe, best_oe_recipe):
+        # Returns:
+        # - Bool - Match found
+        # - Bool - Exact version match
+        oe_ver_equal = False
+
         try:
             if best_oe_recipe != {}:
                 logging.debug(f"Comparing {recipe.name}/{recipe.version} to {oe_recipe['pn']}/{oe_recipe['pv']} "
@@ -247,7 +252,6 @@ class OE:
             else:
                 logging.debug(f"Comparing {recipe.name}/{recipe.version} to {oe_recipe['pn']}/{oe_recipe['pv']}")
 
-            oe_ver_equal = False
             pref = False
 
             ver = Recipe.filter_version_string(recipe.version)
@@ -307,10 +311,10 @@ class OE:
                     pref = True
 
             if pref:
-                return True
+                return True, oe_ver_equal
         except Exception as e:
             logging.error(f"Error in compare_recipes(): {e}")
-            return False
+        return False, False
 
     @staticmethod
     def get_branch_priority(branch):
@@ -323,12 +327,20 @@ class OE:
 
     def get_recipe(self, conf, recipe):
         # need to look for closest version match
+        # Return:
+        # - OE Recipe
+        # - OE Layer
+        # - Bool exact version match
+        # - Bool exact layer match
         try:
             best_recipe = {}
+            exact_ver = False
+            exact_layer = False
 
             if recipe.name in self.recipename_dict.keys():
                 for oe_recipe in self.recipename_dict[recipe.name]:
-                    if self.compare_recipes(conf, recipe, oe_recipe, best_recipe):
+                    match, exact_ver = self.compare_recipes(conf, recipe, oe_recipe, best_recipe)
+                    if match:
                         best_recipe = oe_recipe
                         recipe.matched_oe = True
 
@@ -345,22 +357,19 @@ class OE:
             else:
                 logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - "
                               f"No close (previous) OE version match found")
-                return {}, {}
-
-            # logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - "
-            #               f"Recipe {best_layer['name']}/{best_recipe['pn']}/{best_ver}-{best_recipe['pr']} "
-            #               f"exists in OE data but distance {best_distance} exceeds specified max version "
-            #               f"distance {global_values.max_oe_version_distance}")
+                return {}, {}, False, False
 
             best_layer = self.get_layer_by_layerbranchid(best_recipe['layerbranch'])
 
             logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - OE near match "
                           f"{best_layer['name']}/{best_recipe['pn']}/{best_ver}-{best_recipe['pr']}")
-            return best_recipe, best_layer
+            if recipe.layer == best_layer['name']:
+                exact_layer = True
+            return best_recipe, best_layer, exact_ver, exact_layer
 
         except KeyError as e:
             logging.warning(f"Error getting nearest OE recipe - {e}")
-        return {}, {}
+        return {}, {}, False, False
 
     @staticmethod
     def coerce_version(version: str):
