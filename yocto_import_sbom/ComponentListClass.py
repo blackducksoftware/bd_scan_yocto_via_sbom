@@ -1,8 +1,3 @@
-# from Component import Component
-# import global_values
-# import logging
-# import requests
-
 class ComponentList:
     components = []
 

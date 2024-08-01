@@ -1,5 +1,6 @@
 import logging
 
+
 class Vuln:
     def __init__(self, data):
         self.data = data
@@ -51,7 +52,8 @@ class Vuln:
         except KeyError:
             return ''
 
-    def get_data(self, bd, url, accept_hdr):
+    @staticmethod
+    def get_data(bd, url, accept_hdr):
         headers = {
             'accept': accept_hdr,
         }
@@ -63,10 +65,9 @@ class Vuln:
             return self.id()
         elif self.data['vulnerabilityWithRemediation']['source'] == 'BDSA':
             rel_vuln = self.related_vuln()
-            if rel_vuln == '':
+            if not rel_vuln:
                 rel_vuln = self.get_linked_vuln(bd)
             return rel_vuln
-
 
     def patch(self, bd):
         status = "PATCHED"
@@ -90,4 +91,3 @@ class Vuln:
 
         logging.info(f"Patched vulnerability {self.id()}")
         return True
-
