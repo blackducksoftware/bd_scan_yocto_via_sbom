@@ -9,25 +9,28 @@ import sys
 
 
 def main():
-    logging.info("PHASE 0 - Config -----------------------------------------------------")
     conf = Config()
 
-    logging.info("PHASE 1 - Process Project --------------------------------------------")
+    logging.info("")
+    logging.info("--- PHASE 1 - PROCESS PROJECT --------------------------------------------")
     reclist = RecipeList()
     bb = BB()
     if not bb.process(conf, reclist):
         sys.exit(2)
 
+    logging.info("")
+    logging.info("--- PHASE 2 - GET OE DATA ------------------------------------------------")
     if conf.get_oe_data:
-        logging.info("PHASE 2 - Get OE Data ------------------------------------------------")
 
         oe_class = OE(conf)
         reclist.check_recipes_in_oe(conf, oe_class)
         logging.info("Done processing OE data")
     else:
-        logging.info("Skipping connection to OE APIs to verify origin layers and revisions")
+        logging.info("Skipping connection to OE APIs to verify origin layers and revisions "
+                     "(use --get_oe_data to enable)")
 
-    logging.info("PHASE 3 - Write SBOM -------------------------------------------------")
+    logging.info("")
+    logging.info("--- PHASE 3 - WRITE SBOM -------------------------------------------------")
     sbom = SBOM(conf.bd_project, conf.bd_version)
     sbom.process_recipes(reclist.recipes)
     sbom.output(conf.output_file)
@@ -35,10 +38,12 @@ def main():
     if conf.output_file:
         # Create SBOM and terminate
         logging.info(f"Specified SBOM output file {sbom.file} created - nothing more to do")
+        logging.info("")
         logging.info("Done")
         sys.exit(0)
 
-    logging.info("PHASE 4 - Upload SBOM ------------------------------------------------")
+    logging.info("")
+    logging.info("--- PHASE 4 - UPLOAD SBOM ------------------------------------------------")
     bom = BOM(conf)
 
     if bom.upload_sbom(conf, bom, sbom):
@@ -47,16 +52,20 @@ def main():
     else:
         sys.exit(2)
 
+    logging.info("")
+    logging.info("--- PHASE 5 - SIGNATURE SCAN PACKAGES ------------------------------------")
     if not conf.skip_sig_scan and conf.package_dir and conf.download_dir:
-        logging.info("PHASE 5 - Signature Scan packages ------------------------------------")
 
         if reclist.scan_pkg_download_files(conf, bom):
             logging.error(f"Unable to scan package and download files")
             sys.exit(2)
+        logging.info("Done")
+    else:
+        logging.info("Skipped (--skip_sig_scan specified)")
 
+    logging.info("")
+    logging.info("--- PHASE 6 - APPLY CVE PATCHES ------------------------------------------")
     if conf.cve_check_file:
-        logging.info("PHASE 6 - Apply CVE Patches ------------------------------------------")
-
         bom.get_proj()
         if not bom.wait_for_bom_completion():
             logging.error("Error waiting for project scan completion")
@@ -68,7 +77,8 @@ def main():
     else:
         logging.info("Skipping CVE processing as no cve_check output file supplied")
 
-    logging.info("Done")
+    logging.info("")
+    logging.info("DONE")
 
 
 if __name__ == '__main__':

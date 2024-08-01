@@ -127,7 +127,9 @@ class Config:
         logging.info("SUPPLIED ARGUMENTS:")
         for arg in vars(args):
             logging.info(f"--{arg}={getattr(args, arg)}")
+
         logging.info('')
+        logging.info("--- PHASE 0 - CONFIG -----------------------------------------------------")
 
         bd_connect = True
         if args.output:
