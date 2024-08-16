@@ -1,3 +1,5 @@
+import logging
+
 class Component:
     def __init__(self, name, version, data):
         self.name = name
@@ -32,3 +34,16 @@ class Component:
             return self.data['ignored']
         except KeyError:
             return False
+
+    def get_origins(self):
+        origlist = []
+        try:
+            if 'origins' not in self.data:
+                return []
+            for origin in self.data['origins']:
+                if origin['externalNamespace'] == 'openembedded':
+                    origlist.append(origin['externalId'])
+            return origlist
+        except KeyError as e:
+            logging.error("Error processing origin")
+            return []
