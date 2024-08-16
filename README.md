@@ -16,23 +16,12 @@ This utility is intended to:
 - Signature scan packages/downloaded archives (not from OE)
 - Apply patches for locally patched CVEs identified from `cve_patch` if this data is available
 
-This utility has some benefits over alternative Black Duck Yocto scan processes (including [Synopsys Detect](https://detect.synopsys.com/doc) and [bd-scan-yocto](https://github.com/matthewb66/bd_scan_yocto)).
+This utility has some benefits over the alternative Black Duck Yocto scan processes [Synopsys Detect](https://detect.synopsys.com/doc) and [bd-scan-yocto](https://github.com/matthewb66/bd_scan_yocto), in particular by matching modified original OE recipes and not needing to specify the Bitbake environment script to run Detect Bitbake dependency scans.
 
-Note that, from Black Duck version 2024.7 onwards, the use of SPDX SBOM upload provides for the optional, automatic creation of custom components 
-for recipes not matched in the BD KB. This would enable the creation of a complete SBOM including 3rd party or local, custom components.
+<!-- Note that, from Black Duck version 2024.7 onwards, the use of SPDX SBOM upload provides for the optional, automatic creation of custom components 
+for recipes not matched in the BD KB. This would enable the creation of a complete SBOM including 3rd party or local, custom components. -->
 
-See the RECOMMENDATIONS section below for guidance on optimising Yocto project scans. 
-
-## OPTIONAL BEHAVIOUR
-
-There are several important options to modify the behaviour of this utility including:
-- Skip use of bitbake command to locate project files by specifying license.manifest and bitbake-layers output file (use `--skip_bitbake`)
-- Use data from the OpenEmbedded API to verify recipes, layers, version to ensure they match known components in the BD KB (use `--skip_oe_data` to skip)
-- Cache OE data in JSON files in a local folder to remove need to download on every run (use `--oe_data_folder FOLDER`)
-- Specify semantic version distance for matching recipes against OE data (default distance is '0.0.0' - use `--max_oe_version_distance X.X.X`)
-- Create SPDX output file and do not upload to Black Duck to create project (use `--output_file OUTPUT`)
-- Specify license.manifest, machine, target, download_dir, package_dir, image_package_type to override values extracted from Bitbake environment
-- Skip Signature scan of downloaded archives and packages (use `--skip_sig_scan`)
+See the RECOMMENDATIONS section below for guidance on optimising Yocto project scans using this utility.
 
 ## INSTALLATION
 
@@ -51,26 +40,39 @@ Alternatively, if you want to manage the repository locally:
 Run the utility as a package:
 
 1. Set the Bitbake environment (for example `source oe-init-build-env`)
-2. Run `bd-scan-yocto-via-sbom OPTIONS`
+2. Invoke virtualenv where utility was installed
+3. Run `bd-scan-yocto-via-sbom OPTIONS`
 
 Alternatively, if you have installed the repository locally:
 
 1. Set the Bitbake environment (for example `source oe-init-build-env`)
-2. Run `python3 run.py OPTIONS`
+2. Invoke virtualenv where utility was installed
+3. Run `python3 run.py OPTIONS`
 
 ## RECOMMENDATIONS
 
 For optimal Yocto scan results, consider the following:
 
-1. The utility will call Bitbake to extract the environment and layer information. You can override values (license.manifest, machine, target, download_dir, package_dir, image_package_type) extracted from the environment using command line options.
+1. The utility will call Bitbake to extract the environment and layer information by default. Locations and other values (license.manifest, machine, target, download_dir, package_dir, image_package_type) extracted from the environment can be overridden using command line options.
 2. Use the `--oe_data_folder FOLDER` option to cache the downloaded OE data (~300MB on every run) noting that the data does not change frequently.
-3. Add the `cve_check` class to the local.conf to ensure patched CVEs are identified and check that PHASE 6 picks up the cve-check file (see CVE PATCHING below).
-4. Use the `--max_oe_version_distance X.X.X` option to specify fuzzy matching for OE recipes (values in the range '0.0.1' to '0.0.10' are recommended).
+3. Add the `cve_check` class to the Bitbake local.conf to ensure patched CVEs are identified, and then check that PHASE 6 picks up the cve-check file (see CVE PATCHING below). Optionally specify the output CVE check file using `--cve_check_file FILE`.
+4. Where recipes have been modified from original versions against the OE data, use the `--max_oe_version_distance X.X.X` option to specify fuzzy matching against OE recipes (distance values in the range '0.0.1' to '0.0.10' are recommended).
+
+## OPTIONAL BEHAVIOUR
+
+There are several additional options to modify the behaviour of this utility including:
+- Skip use of bitbake command to locate project files by specifying license.manifest and bitbake-layers output files (use `--skip_bitbake`)
+- Use data from the OpenEmbedded API to verify original recipes, layers, version to ensure they match known components in the BD KB (use `--skip_oe_data` to skip)
+- Cache OE data in JSON files in a local folder to remove need to download on every run (use `--oe_data_folder FOLDER`)
+- Specify semantic version distance for matching recipes against OE data (default distance is '0.0.0' - use `--max_oe_version_distance X.X.X`)
+- Create SPDX output file for manual upload (do not upload to Black Duck to create project - use `--output_file OUTPUT`)
+- Specify license.manifest, machine, target, download_dir, package_dir, image_package_type to override values extracted from Bitbake environment
+- Skip Signature scan of downloaded archives and packages (use `--skip_sig_scan`)
 
 ## USAGE
 
-      usage: bd-scan-yocto-via-sbom [-h] [--blackduck_url BLACKDUCK_URL] [--blackduck_api_token BLACKDUCK_API_TOKEN] [--blackduck_trust_cert] [-p PROJECT] [-v VERSION] [-l LICENSE_MANIFEST]
-                             [-b BITBAKE_LAYERS] [-c CVE_CHECK_FILE] [-o OUTPUT] [--debug] [--logfile LOGFILE]
+      usage: bd-scan-yocto-via-sbom [-h] [--blackduck_url BLACKDUCK_URL] [--blackduck_api_token BLACKDUCK_API_TOKEN] [--blackduck_trust_cert] [-p PROJECT] [-v VERSION]
+                  [-l LICENSE_MANIFEST] [-b BITBAKE_LAYERS] [-c CVE_CHECK_FILE] [-o OUTPUT] [--debug] [--logfile LOGFILE]
 
       Create BD Yocto project from license.manifest
       
@@ -134,55 +136,42 @@ For optimal Yocto scan results, consider the following:
      --debug               Debug logging mode
      --logfile LOGFILE     Logging output file
 
-## OPTIONS DETAILED DESCRIPTION
+## DETAILED DESCRIPTION OF OPTIONS
 
---blackduck_url, --blackduck_api_token, --blackduck_trust_cert:
+- --blackduck_url, --blackduck_api_token, --blackduck_trust_cert:
+  - Connection credentials to Black Duck server. Can also be picked up from the environment variables BLACKDUCK_URL,
+BLACKDUCK_API_TOKEN and BLACKDUCK_TRUST_CERT. Required to create the BD project version automatically and optionally process CVE patch status; not required if `--output` specified.
 
-: Connection credentials to Black Duck server. Can also be picked up from the environment variables BLACKDUCK_URL,
-BLACKDUCK_API_TOKEN and BLACKDUCK_TRUST_CERT. Required to create the BD project version automatically and optionally 
-process CVE patch status; not required if `--output` specified.
+- --output SBOM_FILE (also -o):
+  - Create an output SBOM file for manual upload; do not create BD project version. 
 
---output SBOM_FILE (also -o):
+- --project PROJECT --version VERSION (also -p -v):
+  - Black Duck project and version to create - REQUIRED
 
-: Create an output SBOM file for manual upload; do not create BD project version. 
+- --license_manifest LICENSE_MANIFEST_FILE (also -l):
+  - Optionally specify yocto license.manifest file created by Bitbake. Usually located in the folder `tmp/deploy/licenses/<yocto-image>-<yocto-machine>/license.manifest`. Should be determined from Bitbake environment by default (unless `--skip_bitbake` used).
 
---project PROJECT --version VERSION (also -p -v):
+- --target TARGET (also -t):
+  - Bitbake target (e.g. `core-image-sato`) - required unless `--skip_bitbake` used.
 
-: Black Duck project and version to create - REQUIRED
-
---license_manifest LICENSE_MANIFEST_FILE (also -l):
-
-: Optionally specify yocto license.manifest file created by Bitbake. Usually located in the folder 
-`tmp/deploy/licenses/<yocto-image>-<yocto-machine>/license.manifest`. Should be determined from Bitbake environment
-by default (unless `--skip_bitbake` used).
-
---target TARGET (also -t):
-
-: Bitbake target (e.g. `core-image-sato`) - required unless `--skip_bitbake` used.
-
---skip_bitbake:
-
-: Do not extract Bitbake environment and layers information using Bitbake commands - requires license.manifest and bitbake-layers
+- --skip_bitbake:
+  - Do not extract Bitbake environment and layers information using Bitbake commands - requires license.manifest and bitbake-layers
 output to be specified.
 
---bitbake_layers_file BITBAKE_OUTPUT_FILE (also -b):
-
-: Optionally specify output of the command `bitbake-layers show-recipes` stored in the specified file.  Should be determined from Bitbake environment
+- --bitbake_layers_file BITBAKE_OUTPUT_FILE (also -b):
+  - Optionally specify output of the command `bitbake-layers show-recipes` stored in the specified file.  Should be determined from Bitbake environment
 by default (unless `--skip_bitbake` used).
 
---cve_checkfile CVE_CHECK_FILE:
-
-: Optionally specify output file from run of the `cve_check` custom class which generates a list of patched CVEs. Usually located in the
+- --cve_checkfile CVE_CHECK_FILE:
+  - Optionally specify output file from run of the `cve_check` custom class which generates a list of patched CVEs. Usually located in the
 folder `build/tmp/deploy/images/XXX`.  Should be determined from Bitbake environment by default (unless `--skip_bitbake` used)
 
---skip_oe_data:
-
-: Do not download layers/recipes/layers from layers.openembedded.org APIs to review origin layers and revisions used in recipes to 
+- --skip_oe_data:
+  - Do not download layers/recipes/layers from layers.openembedded.org APIs to review origin layers and revisions used in recipes to 
 ensure more accurate matching and complete BOMs.
 
---oe_data_folder FOLDER:
-
-: Create OE data files in the specified folder if not already existing. If OE data files exist already in this folder,
+- --oe_data_folder FOLDER:
+  - Create OE data files in the specified folder if not already existing. If OE data files exist already in this folder,
 use them to review layers and revisions to ensure more accurate matching and complete BOMs. Allows offline usage
 of OE data or reduction of large data transfers if script is run frequently.
 
@@ -191,9 +180,9 @@ of OE data or reduction of large data transfers if script is run frequently.
 : Do not send identified package and downloaded archives for Signature scanning. By default, only recipes
 not matched against OE data will be scanned, use `--scan_all_packages` to scan all recipes.
 
---max_oe_version_distance MAJOR.MINOR.PATCH:
 
-: Specify version distance to enable close (previous) recipe version matching against OE data.
+- --max_oe_version_distance MAJOR.MINOR.PATCH:
+  - Specify version distance to enable close (previous) recipe version matching against OE data.
 By default, when `--get_oe_data` is specified, OE recipe versions must match the version exactly to replace layers and revision values.
 Setting this value will allow close (previous) recipe version matching.
 The value needs to be of the format MAJOR.MINOR.PATCH (e.g. '0.10.0').
@@ -207,6 +196,8 @@ value should probably be in the range 0.0.1 to 0.0.10).
 - Recipe version is 3.2.4 - closest previous OE recipe version is 3.2.1: Distance value would need to be minimum 0.0.3
 - Recipe version is 3.2.4 - closest previous OE recipe version is 3.0.1: Distance value would need to be minimum 0.2.0
 - Recipe version is 3.2.4 - closest previous OE recipe version is 2.0.1: Distance value would need to be minimum 1.0.0
+
+Note that lower order values are overriden by higher order (for example distance 1.0.0 is equivalant to 1.999.999).
 
 ## CVE PATCHING
 
