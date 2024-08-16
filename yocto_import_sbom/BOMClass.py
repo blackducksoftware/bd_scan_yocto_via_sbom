@@ -80,6 +80,9 @@ class BOM:
 
         return ret_arr
 
+    def count_comps(self):
+        return self.complist.count()
+
     def get_project(self):
         params = {
             'q': "name:" + self.bdprojname,
@@ -286,3 +289,6 @@ class BOM:
             cmd = "java " + conf.detect_jar
 
         return cmd
+
+    def check_recipe_in_bom(self, name, ver):
+        return self.complist.check_recipe_in_list(name, ver)

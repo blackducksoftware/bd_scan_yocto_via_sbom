@@ -42,6 +42,7 @@ class OE:
                 if conf.oe_data_folder:
                     # Writing to sample.json
                     with open(lfile, "w") as outfile:
+                        logging.info(f"- writing to file {lfile}")
                         outfile.write(json_object)
 
                 return layer_dict
@@ -51,6 +52,7 @@ class OE:
         else:
             try:
                 with open(lfile, "r") as infile:
+                    logging.info(f"- loaded from file {lfile}")
                     return json.load(infile)
 
             except Exception as e:
@@ -67,10 +69,9 @@ class OE:
             if os.path.exists(lfile):
                 oe_data_file_exists = True
 
-        lfile = 'oe_recipes.json'
         if not oe_data_file_exists:
             try:
-                url = "https://layers.openembedded.org/layerindex/api/recipes"
+                url = "https://layers.openembedded.org/layerindex/api/recipes/"
                 r = requests.get(url)
                 if r.status_code != 200:
                     raise Exception(f"Status code {r.status_code}")
@@ -81,6 +82,7 @@ class OE:
                 if conf.oe_data_folder:
                     # Writing to sample.json
                     with open(lfile, "w") as outfile:
+                        logging.info(f"- writing to file {lfile}")
                         outfile.write(json_object)
 
                 return recipe_dict
@@ -90,6 +92,7 @@ class OE:
         else:
             try:
                 with open(lfile, "r") as infile:
+                    logging.info(f"- loaded from file {lfile}")
                     recipe_dict = json.load(infile)
                 return recipe_dict
 
@@ -110,7 +113,7 @@ class OE:
 
         if not oe_data_file_exists:
             try:
-                url = "https://layers.openembedded.org/layerindex/api/layerBranches"
+                url = "https://layers.openembedded.org/layerindex/api/layerBranches/"
                 r = requests.get(url)
                 if r.status_code != 200:
                     raise Exception(f"Status code {r.status_code}")
@@ -121,6 +124,7 @@ class OE:
                 if conf.oe_data_folder:
                     # Writing to sample.json
                     with open(lfile, "w") as outfile:
+                        logging.info(f"- writing to file {lfile}")
                         outfile.write(json_object)
 
                 return layerbranches_dict
@@ -130,6 +134,7 @@ class OE:
         else:
             try:
                 with open(lfile, "r") as infile:
+                    logging.info(f"- loaded from file {lfile}")
                     layerbranches_dict = json.load(infile)
                 return layerbranches_dict
 
@@ -150,7 +155,7 @@ class OE:
 
         if not oe_data_file_exists:
             try:
-                url = "https://layers.openembedded.org/layerindex/api/branches"
+                url = "https://layers.openembedded.org/layerindex/api/branches/"
                 r = requests.get(url)
                 if r.status_code != 200:
                     raise Exception(f"Status code {r.status_code}")
@@ -161,6 +166,7 @@ class OE:
                 if conf.oe_data_folder:
                     # Writing to sample.json
                     with open(lfile, "w") as outfile:
+                        logging.info(f"- writing to file {lfile}")
                         outfile.write(json_object)
 
                 return branches_dict
@@ -170,6 +176,7 @@ class OE:
         else:
             try:
                 with open(lfile, "r") as infile:
+                    logging.info(f"- loaded from file {lfile}")
                     layerbranches_dict = json.load(infile)
                 return layerbranches_dict
 

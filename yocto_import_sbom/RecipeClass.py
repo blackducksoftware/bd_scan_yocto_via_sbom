@@ -13,6 +13,7 @@ class Recipe:
         self.oe_layer = {}
         self.oe_recipe = {}
         self.matched_oe = False
+        self.matched_in_bom = False
 
     def add_layer(self, layer):
         self.layer = layer
@@ -33,3 +34,6 @@ class Recipe:
 
     def print_recipe(self):
         logging.info(f"Processed Recipe '{self.name}': {self.layer}/{self.name}/{self.version}")
+
+    def check_in_bom(self, bom):
+        return bom.check_recipe_in_bom(self.name, self.version)

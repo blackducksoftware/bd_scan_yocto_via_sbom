@@ -86,7 +86,7 @@ class RecipeList:
     def find_files(self, conf, all_download_files, all_pkg_files):
         found_files = []
         for recipe in self.recipes:
-            if not conf.scan_all_files and recipe.matched_oe:
+            if not conf.scan_all_packages and recipe.matched_oe:
                 continue
             found = False
             recipe_esc = re.escape(recipe.name)
@@ -137,3 +137,34 @@ class RecipeList:
             return temppkgdir
         else:
             return ''
+
+    def check_recipes_in_bom(self, bom):
+        not_in_bom = 0
+        not_matched_oe = 0
+        matched_oe_not_in_bom = 0
+        for recipe in self.recipes:
+
+            if not recipe.check_in_bom(bom):
+                not_in_bom += 1
+                if recipe.matched_oe:
+                    matched_oe_not_in_bom += 1
+                    logging.info(f"- Recipe {recipe.name}/{recipe.version}: Matched in OE data but not in BOM")
+                else:
+                    logging.debug(f"- Recipe {recipe.name}/{recipe.version}: Not matched in OE data and not in BOM")
+                    not_matched_oe += 1
+            elif not recipe.matched_oe:
+                not_matched_oe += 1
+                logging.debug(f"- Recipe {recipe.name}/{recipe.version}: Not matched in OE data but in BOM")
+
+
+            else:
+                recipe.matched_in_bom = True
+            #     logging.info(f"- Recipe {recipe.name}/{recipe.version}: Found in BOM")
+
+        logging.info("")
+        logging.info(" Summary of Components Mapped in BOM:")
+        logging.info(f"- Total components in BOM \t\t\t\t\t{bom.count_comps()}")
+        logging.info(f"- Total recipes in Yocto project\t\t\t\t{self.count()}")
+        logging.info(f"- Recipes not in BOM\t\t\t\t\t\t\t{not_in_bom}")
+        logging.info(f"- Recipes not matched from OE data\t\t\t{not_matched_oe}")
+        logging.info(f"- Recipes matched in OE data but not in BOM \t{matched_oe_not_in_bom}")

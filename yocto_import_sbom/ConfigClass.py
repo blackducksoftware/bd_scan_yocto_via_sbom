@@ -104,7 +104,7 @@ class Config:
         self.build_dir = ''
         self.image_package_type = args.image_package_type
         self.skip_sig_scan = False
-        self.scan_all_files = False
+        self.scan_all_packages = False
         self.detect_jar = ''
         self.detect_opts = args.detect_opts
 
@@ -221,7 +221,7 @@ class Config:
         if args.skip_sig_scan:
             self.skip_sig_scan = True
             if args.scan_all_files:
-                self.scan_all_files = True
+                self.scan_all_packages = True
 
         if args.detect_jar_path and not os.path.isfile(args.detect_jar_path):
             logging.error(f"Detect jar file {args.detect_jar_path} does not exist")
