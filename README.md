@@ -1,4 +1,4 @@
-# Synopsys Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.3
+# Synopsys Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.4
 
 # PROVISION OF THIS SCRIPT
 This script is provided under the MIT license (see LICENSE file).
