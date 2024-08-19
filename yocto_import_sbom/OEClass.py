@@ -318,7 +318,7 @@ class OE:
                     pref = True
 
             if pref:
-                return True, oe_ver_equal
+                return True, (ver == oe_ver)
         except Exception as e:
             logging.error(f"Error in compare_recipes(): {e}")
         return False, False
@@ -346,10 +346,13 @@ class OE:
 
             if recipe.name in self.recipename_dict.keys():
                 for oe_recipe in self.recipename_dict[recipe.name]:
-                    match, exact_ver = self.compare_recipes(conf, recipe, oe_recipe, best_recipe)
+                    # print(f"{oe_recipe['pn']} - {oe_recipe['pv']}")
+                    match, exact_ver_temp = self.compare_recipes(conf, recipe, oe_recipe, best_recipe)
                     if match:
                         best_recipe = oe_recipe
                         recipe.matched_oe = True
+                        if exact_ver_temp:
+                            exact_ver = True
 
             if recipe.epoch:
                 recipe_ver = f"{recipe.epoch}:{recipe.orig_version}"
@@ -370,7 +373,7 @@ class OE:
 
             logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - OE near match "
                           f"{best_layer['name']}/{best_recipe['pn']}/{best_ver}-{best_recipe['pr']}")
-            if recipe.layer == best_layer['name']:
+            if recipe.layer == best_layer['name'] or (recipe.layer == 'meta' and best_layer['name'] == 'openembedded-core'):
                 exact_layer = True
             return best_recipe, best_layer, exact_ver, exact_layer
 
@@ -444,13 +447,15 @@ class OE:
     def check_semver_distance(conf, ver1, ver2):
         # Is ver2 less than ver1 AND
         # ver2 is within the distance of ver1
-        if (conf.max_oe_version_distance[0] > 0 and
-                ver1.major - ver2.major <= conf.max_oe_version_distance[0]):
-            return True
-        elif (conf.max_oe_version_distance[1] > 0 and
-              ver1.major - ver2.major <= conf.max_oe_version_distance[1]):
-            return True
-        elif (conf.max_oe_version_distance[2] > 0 and
-              ver1.major - ver2.major <= conf.max_oe_version_distance[2]):
-            return True
+        if conf.max_oe_version_distance[0] > 0:
+            if ver1.major - ver2.major <= conf.max_oe_version_distance[0]:
+                return True
+        elif conf.max_oe_version_distance[1] > 0:
+            if (ver1.major == ver2.major and
+               ver1.minor - ver2.minor <= conf.max_oe_version_distance[1]):
+                return True
+        elif conf.max_oe_version_distance[2] > 0:
+            if (ver1.major == ver2.major and ver1.minor == ver2.minor and
+                    ver1.patch - ver2.patch <= conf.max_oe_version_distance[2]):
+                return True
         return False

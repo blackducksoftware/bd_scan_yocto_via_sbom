@@ -50,7 +50,7 @@ def main():
 
     if bom.upload_sbom(conf, bom, sbom):
         logging.info(f"Uploaded SBOM file '{sbom.file}' to create project "
-                     f"{conf.bd_project}/{conf.bd_version}")
+                     f"'{conf.bd_project}' version '{conf.bd_version}'")
     else:
         sys.exit(2)
 

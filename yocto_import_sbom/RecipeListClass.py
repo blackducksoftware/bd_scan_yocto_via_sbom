@@ -35,7 +35,7 @@ class RecipeList:
                 recipe.add_layer(layer)
                 recipe.epoch = epoch
                 if recipe.version != version and recipe.version in version:
-                    recipe.version = ver
+                    recipe.version = version
                 return
 
     def print_recipes(self):
@@ -67,12 +67,14 @@ class RecipeList:
 
         # logging.info(f"- {recipes_in_oe} out of {self.count()} total recipes found in OE data ({exact_recipes_in_oe} "
         #              f"exact version matches and {changed_layers} recipe layers modified)")
+        logging.info("")
         logging.info(f"SUMMARY OE MATCH DATA:")
         logging.info(f"- {self.count()} Total Recipes")
-        logging.info(f"- {recipes_in_oe} Recipes found in OE Data of which:")
-        logging.info(f"    - {exact_recipes_in_oe} have exact version match")
-        logging.info(f"    - {exact_layers} have the same layer as OE")
-        logging.info(f"    - {changed_layers} exist in different OE layer")
+        logging.info(f"- {recipes_in_oe} Recipes found in OE Data:")
+        logging.info(f"    - {exact_recipes_in_oe} with exact version match")
+        logging.info(f"    - {recipes_in_oe - exact_recipes_in_oe} with close version match (mapped to closest version)")
+        logging.info(f"    - {exact_layers} with the same layer as OE")
+        logging.info(f"    - {changed_layers} exist in different OE layer (mapped to original)")
 
     def scan_pkg_download_files(self, conf, bom):
         all_pkg_files = BB.get_pkg_files(conf)
@@ -163,8 +165,8 @@ class RecipeList:
 
         logging.info("")
         logging.info(" Summary of Components Mapped in BOM:")
-        logging.info(f"- Total components in BOM \t\t\t\t\t{bom.count_comps()}")
-        logging.info(f"- Total recipes in Yocto project\t\t\t\t{self.count()}")
-        logging.info(f"- Recipes not in BOM\t\t\t\t\t\t\t{not_in_bom}")
-        logging.info(f"- Recipes not matched from OE data\t\t\t{not_matched_oe}")
-        logging.info(f"- Recipes matched in OE data but not in BOM \t{matched_oe_not_in_bom}")
+        logging.info(f"- Total components in BOM - {bom.count_comps()}")
+        logging.info(f"- Total recipes in Yocto project - {self.count()}")
+        logging.info(f"- Recipes not in BOM - {not_in_bom}")
+        logging.info(f"- Recipes not matched from OE data - {not_matched_oe}")
+        logging.info(f"- Recipes matched in OE data but not in BOM - {matched_oe_not_in_bom}")
