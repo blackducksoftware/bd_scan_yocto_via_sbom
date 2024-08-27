@@ -218,7 +218,9 @@ class Config:
             terminate = True
         self.max_oe_version_distance = distarr
 
-        self.oe_data_folder = args.oe_data_folder
+        if not os.path.isdir(self.oe_data_folder):
+            logging.error(f"OE_data_folder {self.oe_data_folder} does not exist")
+            terminate = True
 
         if args.package_dir:
             if not os.path.exists(args.package_dir):

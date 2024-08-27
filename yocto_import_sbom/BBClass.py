@@ -135,7 +135,7 @@ class BB:
     @staticmethod
     def run_cmd(command):
         try:
-            ret = subprocess.run(command, capture_output=True, text=True, timeout=20)
+            ret = subprocess.run(command, capture_output=True, text=True, timeout=60)
             if ret.returncode != 0:
                 logging.error(f"Run command '{command}' failed with error {ret.returncode} - {ret.stderr}")
                 return False, ''
@@ -240,13 +240,15 @@ class BB:
                     conf.license_manifest = manifest
 
         imgdir = os.path.join(conf.deploy_dir, "images", machine)
-        cvefile = ""
-
-        if os.path.isdir(imgdir):
-            for file in sorted(os.listdir(imgdir)):
-                if file == conf.target + "-" + machine + ".cve":
-                    cvefile = os.path.join(imgdir, file)
-                    break
+        if conf.cve_check_file != "":
+            cvefile = conf.cve_check_file
+        else:
+            cvefile = ""
+            if os.path.isdir(imgdir):
+                for file in sorted(os.listdir(imgdir)):
+                    if file == conf.target + "-" + machine + ".cve":
+                        cvefile = os.path.join(imgdir, file)
+                        break
 
         if not os.path.isfile(cvefile):
             logging.warning(f"CVE check file {cvefile} could not be located - skipping CVE processing")
