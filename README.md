@@ -1,4 +1,4 @@
-# Synopsys Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.4
+# Synopsys Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.5
 
 # PROVISION OF THIS SCRIPT
 This script is provided under the MIT license (see LICENSE file).
@@ -133,6 +133,8 @@ There are several additional options to modify the behaviour of this utility inc
                            Synopsys Detect jar path
      --detect_opts DETECT_OPTS
                            Additional Synopsys Detect options
+     --api_timeout         Specify API timeout in seconds (default 60) - will be used in
+                           Synopsys Detect as --detect.timeout
      --debug               Debug logging mode
      --logfile LOGFILE     Logging output file
 

@@ -1,8 +1,9 @@
 import logging
-import sys
+# import sys
 import datetime
 from random import randint
 import json
+import tempfile
 
 
 class SBOM:
@@ -133,12 +134,15 @@ class SBOM:
             self.add_package(recipe)
 
     def output(self, output_file):
-        if not output_file:
-            output_file = 'sbom.json'
-
         try:
-            with open(output_file, "w") as ofile:
-                json.dump(self.json, ofile, indent=4, sort_keys=True)
+            if not output_file:
+                lfile = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix='.json')
+                lfile.write(json.dumps(self.json, indent=4))
+                lfile.close()
+                output_file = lfile.name
+            else:
+                with open(output_file, "w") as ofile:
+                    json.dump(self.json, ofile, indent=4)
 
         except Exception as e:
             logging.error('Unable to create output SPDX file \n' + str(e))

@@ -130,8 +130,11 @@ class RecipeList:
         # print(temppkgdir)
         count = 0
         for file in files:
-            shutil.copy(file, temppkgdir)
-            count += 1
+            try:
+                shutil.copy(file, temppkgdir)
+                count += 1
+            except Exception as e:
+                logging.warning(f"Unable to copy package file {file} to temporary scan folder - {e}")
 
         logging.info(f"Copying recipe package files")
         logging.info(f"- Copied {count} package files ...")

@@ -325,7 +325,7 @@ class OE:
 
     @staticmethod
     def get_branch_priority(branch):
-        if branch is not None and branch['sort_priority'] is not None \
+        if branch is not None and 'sort_priority' in branch and branch['sort_priority'] is not None \
                 and str(branch['sort_priority']).isnumeric():
             branch_sort_priority = branch['sort_priority']
         else:
