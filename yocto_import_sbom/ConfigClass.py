@@ -74,6 +74,8 @@ class Config:
                             action='store_true')
         parser.add_argument("--detect_jar_path", help="OPTIONAL Synopsys Detect jar path", default="")
         parser.add_argument("--detect_opts", help="OPTIONAL Additional Synopsys Detect options", default="")
+        parser.add_argument("--api_timeout", help="OPTIONAL API and Detect timeout in seconds (default 60)",
+                            default="60")
 
         parser.add_argument("--debug", help="Debug logging mode", action='store_true')
         parser.add_argument("--logfile", help="Logging output file", default="")
@@ -107,6 +109,7 @@ class Config:
         self.scan_all_packages = False
         self.detect_jar = ''
         self.detect_opts = args.detect_opts
+        self.api_timeout = args.api_timeout
 
         terminate = False
         if args.debug:
@@ -145,6 +148,8 @@ class Config:
         elif bd_connect:
             logging.error("Black Duck URL not specified")
             terminate = True
+        if self.bd_url and self.bd_url[-1] == '/':
+            self.bd_url = self.bd_url[:-1]
 
         if args.project and args.version:
             self.bd_project = args.project

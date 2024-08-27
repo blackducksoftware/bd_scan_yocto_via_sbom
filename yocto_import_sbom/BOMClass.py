@@ -25,7 +25,7 @@ class BOM:
             token=conf.bd_api,
             base_url=conf.bd_url,
             verify=(not conf.bd_trustcert),  # TLS certificate verification
-            timeout=60
+            timeout=conf.api_timeout
         )
 
         try:
@@ -241,7 +241,7 @@ class BOM:
             detect_cmd += "--blackduck.trust.cert=true "
         detect_cmd += "--detect.wait.for.results=true "
         if 'detect.timeout' not in conf.detect_opts:
-            detect_cmd += "--detect.timeout=1200 "
+            detect_cmd += f"--detect.timeout={conf.api_timeout} "
 
         if conf.detect_opts:
             detect_cmd += conf.detect_opts
