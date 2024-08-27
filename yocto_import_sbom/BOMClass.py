@@ -174,7 +174,8 @@ class BOM:
             files = {'file': (sbom.file, open(sbom.file, 'rb'), 'application/spdx')}
             multipart_form_data = {
                 'projectName': conf.bd_project,
-                'versionName': conf.bd_version
+                'versionName': conf.bd_version,
+                'autocreate': conf.sbom_custom_components
             }
             # headers['Content-Type'] = 'multipart/form-data; boundary=6o2knFse3p53ty9dmcQvWAIx1zInP11uCfbm'
             response = requests.post(url, headers=headers, files=files, data=multipart_form_data,

@@ -1,4 +1,4 @@
-# Synopsys Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.5
+# Synopsys Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.6
 
 # PROVISION OF THIS SCRIPT
 This script is provided under the MIT license (see LICENSE file).
@@ -135,6 +135,8 @@ There are several additional options to modify the behaviour of this utility inc
                            Additional Synopsys Detect options
      --api_timeout         Specify API timeout in seconds (default 60) - will be used in
                            Synopsys Detect as --detect.timeout
+     --sbom_create_custom_components
+                           Create custom components when uploading SBOM (default False)
      --debug               Debug logging mode
      --logfile LOGFILE     Logging output file
 
