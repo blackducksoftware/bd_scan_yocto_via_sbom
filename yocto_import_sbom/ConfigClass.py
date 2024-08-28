@@ -69,7 +69,7 @@ class Config:
 
         parser.add_argument("--skip_sig_scan", help="Do not Signature scan downloads and packages",
                             action='store_true')
-        parser.add_argument("--scan_all_files", help="Signature scan all files (only recipes not matched"
+        parser.add_argument("--scan_all_packages", help="Signature scan all packages (only recipes not matched"
                                                      "from OE data are scanned by default)",
                             action='store_true')
         parser.add_argument("--detect_jar_path", help="OPTIONAL Synopsys Detect jar path", default="")
@@ -114,6 +114,8 @@ class Config:
         self.detect_opts = args.detect_opts
         self.api_timeout = args.api_timeout
         self.sbom_custom_components = args.sbom_create_custom_components
+        self.cve_check_dir = ''
+        self.license_dir = ''
 
         terminate = False
         if args.debug:
@@ -130,7 +132,7 @@ class Config:
         else:
             logging.basicConfig(level=loglevel)
 
-        logging.info("Black Duck Yocto scan via SBOM utility")
+        logging.info("Black Duck Yocto scan via SBOM utility - v1.0.7")
         logging.info("SUPPLIED ARGUMENTS:")
         for arg in vars(args):
             logging.info(f"--{arg}={getattr(args, arg)}")
@@ -229,10 +231,17 @@ class Config:
             else:
                 self.package_dir = args.package_dir
 
+        if args.download_dir:
+            if not os.path.exists(args.download_dir):
+                logging.error(f"Specified package dir '{args.download_dir}' does not exist")
+                terminate = True
+            else:
+                self.download_dir = args.download_dir
+
         if args.skip_sig_scan:
             self.skip_sig_scan = True
-            if args.scan_all_files:
-                self.scan_all_packages = True
+        elif args.scan_all_packages:
+            self.scan_all_packages = True
 
         if args.detect_jar_path and not os.path.isfile(args.detect_jar_path):
             logging.error(f"Detect jar file {args.detect_jar_path} does not exist")

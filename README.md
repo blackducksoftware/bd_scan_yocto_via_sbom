@@ -1,4 +1,4 @@
-# Synopsys Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.6
+# Synopsys Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.7
 
 # PROVISION OF THIS SCRIPT
 This script is provided under the MIT license (see LICENSE file).
@@ -127,7 +127,7 @@ There are several additional options to modify the behaviour of this utility inc
                            Package type used for installing packages (e.g. rpm,
                            deb or ipx)
      --skip_sig_scan       Do not Signature scan downloads and packages
-     --scan_all_packages   Signature scan all files (only recipes not matchedfrom
+     --scan_all_packages   Signature scan all packages (only recipes not matched from
                            OE data are scanned by default)
      --detect_jar_path DETECT_JAR_PATH
                            Synopsys Detect jar path
