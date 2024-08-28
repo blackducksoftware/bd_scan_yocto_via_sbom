@@ -228,7 +228,7 @@ class BOM:
         self.CVEPatchedVulnList = patched_vulns
         return
 
-    def run_detect_sigscan(self, tdir, conf):
+    def run_detect_sigscan(self, conf, tdir):
         import shutil
 
         cmd = self.get_detect(conf)

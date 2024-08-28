@@ -240,8 +240,8 @@ class Config:
 
         if args.skip_sig_scan:
             self.skip_sig_scan = True
-            if args.scan_all_files:
-                self.scan_all_packages = True
+        elif args.scan_all_packages:
+            self.scan_all_packages = True
 
         if args.detect_jar_path and not os.path.isfile(args.detect_jar_path):
             logging.error(f"Detect jar file {args.detect_jar_path} does not exist")
