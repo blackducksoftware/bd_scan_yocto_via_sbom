@@ -76,7 +76,7 @@ class BB:
         for mline in lines:
             if re.search(
                     "^(MANIFEST_FILE|DEPLOY_DIR|MACHINE_ARCH|DL_DIR|DEPLOY_DIR_RPM|"
-                    "DEPLOY_DIR_IPK|DEPLOY_DIR_DEB|IMAGE_PKGTYPE)=",
+                    "DEPLOY_DIR_IPK|DEPLOY_DIR_DEB|IMAGE_PKGTYPE|CVE_CHECK_DIR|LICENSE_DIR)=",
                     mline):
 
                 # if re.search('^TMPDIR=', mline):
@@ -98,6 +98,14 @@ class BB:
                     if not conf.download_dir:
                         conf.download_dir = val
                         logging.info(f"Bitbake Env: download_dir={conf.download_dir}")
+                elif re.search('^CVE_CHECK_DIR=', mline):
+                    if not conf.cve_check_dir:
+                        conf.cve_check_dir = val
+                        logging.info(f"Bitbake Env: cve_check_dir={conf.cve_check_dir}")
+                elif re.search('^LICENSE_DIR=', mline):
+                    if not conf.license_dir:
+                        conf.license_dir = val
+                        logging.info(f"Bitbake Env: license_dir={conf.license_dir}")
                 elif not rpm_dir and re.search('^DEPLOY_DIR_RPM=', mline):
                     rpm_dir = val
                     logging.info(f"Bitbake Env: rpm_dir={rpm_dir}")
@@ -111,7 +119,7 @@ class BB:
                     conf.image_pkgtype = val
                     logging.info(f"Bitbake Env: image_pkgtype={conf.image_pkgtype}")
 
-        if conf.package_dir:
+        if not conf.package_dir:
             if conf.image_pkgtype == 'rpm' and rpm_dir:
                 conf.package_dir = rpm_dir
             elif conf.image_pkgtype == 'ipk' and ipk_dir:
@@ -123,10 +131,12 @@ class BB:
             temppath = os.path.join(conf.build_dir, 'tmp', 'deploy')
             if os.path.isdir(temppath):
                 conf.deploy_dir = temppath
+
         if not conf.download_dir:
             temppath = os.path.join(conf.build_dir, 'downloads')
             if os.path.isdir(temppath):
                 conf.download_dir = temppath
+
         if not conf.package_dir and conf.deploy_dir:
             temppath = os.path.join(conf.deploy_dir, conf.image_pkgtype)
             if os.path.isdir(temppath):
@@ -219,29 +229,38 @@ class BB:
         machine = conf.machine.replace('_', '-')
 
         if not conf.license_manifest:
-            if not conf.target or not conf.machine:
-                logging.error("Manifest file not specified and it could not be determined as Target not specified or "
-                              "machine not identified from environment")
-                return False
-            else:
-                manpath = os.path.join(conf.deploy_dir, "licenses",
-                                       f"{conf.target}-{machine}-*", "license.manifest")
-                manifest = ""
-                manlist = glob.glob(manpath)
-                if len(manlist) > 0:
-                    # Get most recent file
-                    manifest = manlist[-1]
+            if conf.license_dir:
+                manpath = os.path.join(conf.license_dir,
+                                       f"{conf.target}-{machine}", "license.manifest")
+                if os.path.isfile(manpath):
+                    conf.license_manifest = manpath
 
-                if not os.path.isfile(manifest):
-                    logging.error(f"Manifest file '{manifest}' could not be located")
+            if not conf.license_manifest:
+                if not conf.target or not conf.machine:
+                    logging.error("Manifest file not specified and it could not be determined as Target not specified or "
+                                  "machine not identified from environment")
                     return False
                 else:
-                    logging.info(f"Located license.manifest file {manifest}")
-                    conf.license_manifest = manifest
+                    manpath = os.path.join(conf.deploy_dir, "licenses",
+                                           f"{conf.target}-{machine}-*", "license.manifest")
+                    manifest = ""
+                    manlist = glob.glob(manpath)
+                    if len(manlist) > 0:
+                        # Get most recent file
+                        manifest = manlist[-1]
+
+                    if not os.path.isfile(manifest):
+                        logging.error(f"Manifest file '{manifest}' could not be located")
+                        return False
+                    else:
+                        logging.info(f"Located license.manifest file {manifest}")
+                        conf.license_manifest = manifest
 
         imgdir = os.path.join(conf.deploy_dir, "images", machine)
         if conf.cve_check_file != "":
             cvefile = conf.cve_check_file
+        elif conf.cve_check_dir:
+            cvefile = os.path.join(conf.cve_check_dir, f"{conf.target}-{machine}")
         else:
             cvefile = ""
             if os.path.isdir(imgdir):
@@ -264,7 +283,7 @@ class BB:
         package_paths_list = glob.glob(pattern, recursive=True)
         package_files_list = []
         for path in package_paths_list:
-            package_files_list.append(os.path.basename(path))
+            package_files_list.append(path)
 
         return package_files_list
 

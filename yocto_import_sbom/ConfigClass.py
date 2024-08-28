@@ -114,6 +114,8 @@ class Config:
         self.detect_opts = args.detect_opts
         self.api_timeout = args.api_timeout
         self.sbom_custom_components = args.sbom_create_custom_components
+        self.cve_check_dir = ''
+        self.license_dir = ''
 
         terminate = False
         if args.debug:
@@ -130,7 +132,7 @@ class Config:
         else:
             logging.basicConfig(level=loglevel)
 
-        logging.info("Black Duck Yocto scan via SBOM utility")
+        logging.info("Black Duck Yocto scan via SBOM utility - v1.0.7")
         logging.info("SUPPLIED ARGUMENTS:")
         for arg in vars(args):
             logging.info(f"--{arg}={getattr(args, arg)}")
@@ -228,6 +230,13 @@ class Config:
                 terminate = True
             else:
                 self.package_dir = args.package_dir
+
+        if args.download_dir:
+            if not os.path.exists(args.download_dir):
+                logging.error(f"Specified package dir '{args.download_dir}' does not exist")
+                terminate = True
+            else:
+                self.download_dir = args.download_dir
 
         if args.skip_sig_scan:
             self.skip_sig_scan = True
