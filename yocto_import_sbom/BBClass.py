@@ -76,7 +76,7 @@ class BB:
         for mline in lines:
             if re.search(
                     "^(MANIFEST_FILE|DEPLOY_DIR|MACHINE_ARCH|DL_DIR|DEPLOY_DIR_RPM|"
-                    "DEPLOY_DIR_IPK|DEPLOY_DIR_DEB|IMAGE_PKGTYPE|CVE_CHECK_DIR|LICENSE_DIR)=",
+                    "DEPLOY_DIR_IPK|DEPLOY_DIR_DEB|IMAGE_PKGTYPE|LICENSE_DIR)=",
                     mline):
 
                 # if re.search('^TMPDIR=', mline):
@@ -98,10 +98,6 @@ class BB:
                     if not conf.download_dir:
                         conf.download_dir = val
                         logging.info(f"Bitbake Env: download_dir={conf.download_dir}")
-                elif re.search('^CVE_CHECK_DIR=', mline):
-                    if not conf.cve_check_dir:
-                        conf.cve_check_dir = val
-                        logging.info(f"Bitbake Env: cve_check_dir={conf.cve_check_dir}")
                 elif re.search('^LICENSE_DIR=', mline):
                     if not conf.license_dir:
                         conf.license_dir = val
@@ -259,8 +255,6 @@ class BB:
         imgdir = os.path.join(conf.deploy_dir, "images", machine)
         if conf.cve_check_file != "":
             cvefile = conf.cve_check_file
-        elif conf.cve_check_dir:
-            cvefile = os.path.join(conf.cve_check_dir, f"{conf.target}-{machine}")
         else:
             cvefile = ""
             if os.path.isdir(imgdir):

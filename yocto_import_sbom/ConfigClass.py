@@ -69,7 +69,7 @@ class Config:
 
         parser.add_argument("--skip_sig_scan", help="Do not Signature scan downloads and packages",
                             action='store_true')
-        parser.add_argument("--scan_all_files", help="Signature scan all files (only recipes not matched"
+        parser.add_argument("--scan_all_packages", help="Signature scan all packages (only recipes not matched"
                                                      "from OE data are scanned by default)",
                             action='store_true')
         parser.add_argument("--detect_jar_path", help="OPTIONAL Synopsys Detect jar path", default="")
