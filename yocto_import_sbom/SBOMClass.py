@@ -153,7 +153,7 @@ class SBOM:
 
     @staticmethod
     def filter_special_chars(val):
-        return val
-        # newval = val.replace(':', '%3A')
-        # newval = newval.replace('+', '%2B')
-        # return newval
+        # return val
+        newval = val.replace(':', '%3A')
+        newval = newval.replace('+', '%2B')
+        return newval

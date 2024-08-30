@@ -261,7 +261,6 @@ class OE:
 
             pref = False
 
-            ver = Recipe.filter_version_string(recipe.version)
             oe_ver = Recipe.filter_version_string(oe_recipe['pv'])
             if best_oe_recipe != {}:
                 best_oe_ver = Recipe.filter_version_string(best_oe_recipe['pv'])
@@ -271,17 +270,19 @@ class OE:
             if oe_ver == best_oe_ver:
                 oe_ver_equal = True
 
-            if ver != best_oe_ver:
-                if ver == oe_ver:
+            if recipe.version != best_oe_ver:
+                if recipe.version == oe_ver:
                     pref = True
                 else:
-                    semver, rest = self.coerce_version(ver)
+                    semver, rest = self.coerce_version(recipe.version)
                     oe_semver, oe_rest = self.coerce_version(oe_ver)
                     best_oe_semver, best_oe_rest = self.coerce_version(best_oe_ver)
                     if semver is not None and oe_semver is not None and oe_semver <= semver:
                         if self.check_semver_distance(conf, semver, oe_semver):
                             if best_oe_semver is not None:
                                 if oe_semver == best_oe_semver:
+                                    if len(oe_ver) < len(best_oe_ver):
+                                        pref = True
                                     oe_ver_equal = True
                                 elif semver >= oe_semver > best_oe_semver:
                                     if (semver.major - best_oe_semver.major) > (semver.major - oe_semver.major):
@@ -318,7 +319,7 @@ class OE:
                     pref = True
 
             if pref:
-                return True, (ver == oe_ver)
+                return True, (recipe.version == oe_ver)
         except Exception as e:
             logging.error(f"Error in compare_recipes(): {e}")
         return False, False
