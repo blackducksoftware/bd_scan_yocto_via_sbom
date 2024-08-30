@@ -81,9 +81,9 @@ class SBOM:
             recipe_layer = recipe.layer
             recipe_name = recipe.name
             if recipe.epoch:
-                recipe_version = f"{recipe.epoch}:{recipe.version}"
+                recipe_version = f"{recipe.epoch}:{recipe.orig_version}"
             else:
-                recipe_version = recipe.version
+                recipe_version = recipe.orig_version
             recipe_pr = 'r0'
         else:
             recipe_layer = recipe.oe_layer['name']
@@ -99,10 +99,10 @@ class SBOM:
             else:
                 recipe_pr = 'r0'
 
-        if recipe_layer == 'openemdedded-core':
-            recipe_layer = 'meta'
-        if recipe_version.endswith('+git'):
-            recipe_version = recipe_version.replace('+git', '+gitX')
+        # if recipe_layer == 'openemdedded-core':
+        #     recipe_layer = 'meta'
+        # if recipe_version.endswith('+git'):
+        #     recipe_version = recipe_version.replace('+git', '+gitX')
 
         recipe_name = self.filter_special_chars(recipe_name)
         recipe_version = self.filter_special_chars(recipe_version)
@@ -153,6 +153,7 @@ class SBOM:
 
     @staticmethod
     def filter_special_chars(val):
-        newval = val.replace(':', '%3A')
-        newval = newval.replace('+', '%2B')
-        return newval
+        return val
+        # newval = val.replace(':', '%3A')
+        # newval = newval.replace('+', '%2B')
+        # return newval

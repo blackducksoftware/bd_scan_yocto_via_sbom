@@ -88,7 +88,7 @@ class RecipeList:
     def find_files(self, conf, all_download_files, all_pkg_files):
         found_files = []
         for recipe in self.recipes:
-            if not conf.scan_all_packages and recipe.matched_oe:
+            if not conf.scan_all_packages and recipe.matched_in_bom:
                 continue
             found = False
             recipe_esc = re.escape(recipe.name)
@@ -157,11 +157,11 @@ class RecipeList:
                 else:
                     logging.debug(f"- Recipe {recipe.name}/{recipe.version}: Not matched in OE data and not in BOM")
                     not_matched_oe += 1
+                    recipe.matched_in_bom
             elif not recipe.matched_oe:
                 not_matched_oe += 1
                 logging.debug(f"- Recipe {recipe.name}/{recipe.version}: Not matched in OE data but in BOM")
-
-
+                recipe.matched_in_bom = True
             else:
                 recipe.matched_in_bom = True
             #     logging.info(f"- Recipe {recipe.name}/{recipe.version}: Found in BOM")

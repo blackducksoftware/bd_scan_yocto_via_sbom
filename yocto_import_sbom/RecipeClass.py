@@ -22,7 +22,10 @@ class Recipe:
     def filter_version_string(version):
         # Remove +git*
         # Remove -snapshot*
-        ret_version = re.sub(r"\+git.*", r"+gitX", version, flags=re.IGNORECASE)
+        # ret_version = re.sub(r"\+git.*", r"+gitX", version, flags=re.IGNORECASE)
+
+
+        ret_version = re.sub(r"AUTOINC.*", r"X", version, flags=re.IGNORECASE)
         return ret_version
 
     @staticmethod
