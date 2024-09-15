@@ -122,21 +122,25 @@ class BB:
                 conf.package_dir = ipk_dir
             elif conf.image_pkgtype == 'deb' and deb_dir:
                 conf.package_dir = deb_dir
+            logging.info(f"Calculated: package_dir={conf.package_dir}")
 
         if not conf.deploy_dir:
             temppath = os.path.join(conf.build_dir, 'tmp', 'deploy')
             if os.path.isdir(temppath):
                 conf.deploy_dir = temppath
+                logging.info(f"Calculated: deploy_dir={conf.deploy_dir}")
 
         if not conf.download_dir:
             temppath = os.path.join(conf.build_dir, 'downloads')
             if os.path.isdir(temppath):
                 conf.download_dir = temppath
+                logging.info(f"Calculated: download_dir={conf.download_dir}")
 
         if not conf.package_dir and conf.deploy_dir:
             temppath = os.path.join(conf.deploy_dir, conf.image_pkgtype)
             if os.path.isdir(temppath):
                 conf.package_dir = temppath
+                logging.info(f"Calculated: package_dir={conf.package_dir}")
 
     @staticmethod
     def run_cmd(command):
@@ -273,22 +277,36 @@ class BB:
 
     @staticmethod
     def get_pkg_files(conf):
+        if conf.package_dir != '' and not os.path.isdir(conf.package_dir):
+            logging.warning(f"Package_dir {conf.package_dir} does not exist")
+            return []
+        logging.info(f"Package_dir={conf.package_dir} Image_package_type={conf.image_package_type}")
         pattern = f"{conf.package_dir}/**/*.{conf.image_package_type}"
         package_paths_list = glob.glob(pattern, recursive=True)
         package_files_list = []
+        count = 0
         for path in package_paths_list:
+            count += 1
             package_files_list.append(path)
-
+        logging.debug(f"Found {count} files")
         return package_files_list
 
     @staticmethod
     def get_download_files(conf):
+        if conf.download_dir != '' and not os.path.isdir(conf.download_dir):
+            logging.warning(f"Download_dir {conf.download_dir} does not exist")
+            return []
+        logging.info(f"Download_dir={conf.download_dir}")
+
         pattern = f"{conf.download_dir}/*"
         # print(pattern)
         all_download_paths_list = glob.glob(pattern, recursive=True)
         download_files_list = []
+        count = 0
         for path in all_download_paths_list:
             if not path.endswith(".done"):
+                count += 1
                 download_files_list.append(path)
+        logging.debug(f"Found {count} files")
 
         return download_files_list
