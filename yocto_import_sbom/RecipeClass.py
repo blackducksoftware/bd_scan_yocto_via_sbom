@@ -36,7 +36,10 @@ class Recipe:
         return '', Recipe.filter_version_string(version)
 
     def print_recipe(self):
-        logging.info(f"Processed Recipe '{self.name}': {self.layer}/{self.name}/{self.version}")
+        logging.info(f"Processed Recipe '{self.name}': {self.full_id()}")
 
     def check_in_bom(self, bom):
         return bom.check_recipe_in_bom(self.name, self.version)
+
+    def full_id(self):
+        return(f"{self.layer}/{self.name}/{self.version}")
