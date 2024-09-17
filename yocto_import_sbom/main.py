@@ -61,8 +61,7 @@ def main():
         logging.error("Error waiting for project scan completion")
         sys.exit(2)
     bom.get_data()
-    reclist.check_recipes_in_bom(bom)
-
+    reclist.check_recipes_in_bom(conf, bom)
 
     logging.info("")
     logging.info("--- PHASE 6 - SIGNATURE SCAN PACKAGES ------------------------------------")

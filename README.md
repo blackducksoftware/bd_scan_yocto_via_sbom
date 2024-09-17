@@ -1,4 +1,4 @@
-# Synopsys Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.11
+# Synopsys Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.12
 
 # PROVISION OF THIS SCRIPT
 This script is provided under the MIT license (see LICENSE file).
@@ -54,7 +54,7 @@ Alternatively, if you have installed the repository locally:
 2. Invoke virtualenv where utility was installed
 3. Run `python3 run.py OPTIONS`
 
-## RECOMMENDATIONS
+## BEST PRACTICE RECOMMENDATIONS
 
 For optimal Yocto scan results, consider the following:
 
@@ -65,6 +65,7 @@ For optimal Yocto scan results, consider the following:
 2 projects and compare the results with and without this option.
 5. If you wish to add the Linux kernel and other packages specified in the image manifest only, 
 consider using the `--process_image_manifest` option and optionally specifying the image manifest license file path (--image_license_manifest FILEPATH) where it does not exist in the same folder and the license.manifest file.
+6. Use the `--recipe_report REPFILE` option to create a report of matched and unmatched recipes in the BOM. In particular check the recipes in the `RECIPES NOT IN BOM - MATCHED IN OE DATA` section.
 
 ## OPTIONAL BEHAVIOUR
 
@@ -152,6 +153,8 @@ There are several additional options to modify the behaviour of this utility inc
                            Create custom components when uploading SBOM (default False)
      --debug               Debug logging mode
      --logfile LOGFILE     Logging output file
+     --recipe_report REPFILE
+                           Output specified file with a list of recipes including those not matched in the BOM
 
 ### MINIMUM REQUIRED OPTIONS
 
@@ -254,15 +257,17 @@ OSS components as manual additions in the Project Version.
 
 - If you are looking for a specific package which appears to be missing from the project, confirm that you are looking for the recipe name not the package name. See the FAQs for an explanation of Yocto recipes versus packages. Check that the package file was included in the Signature scan (within the Source tab).
 
-## REPORTING ISSUES
+## HOW TO REPORT ISSUES WITH THIS SCRIPT
 
 If you encounter issues using the script, then please create an issue in GitHub, ensuring that you include the following information:
 
+- Your Organisation name (to validate you have a Black Duck license)
 - Description of the issue
 - Yocto version in use (use the command `bitbake -e | grep DISTRO_CODENAME`)
 - The `license.manifest` file for the build
 - The output of the command `bitbake-layers show-recipes`
 - The log output from this script with `--debug` enabled (use the `--logfile LOGFILE` option to output to a file )
+- The recipe report file (use `--recipe_report REPFILE`)
 
 # ADDITIONAL SCAN OPTIONS
 

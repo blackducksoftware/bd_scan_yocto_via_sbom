@@ -89,6 +89,8 @@ class Config:
 
         parser.add_argument("--debug", help="Debug logging mode", action='store_true')
         parser.add_argument("--logfile", help="Logging output file", default="")
+        parser.add_argument("--recipe_report", help="Output recipe report to file", default="")
+
 
         args = parser.parse_args()
 
@@ -125,6 +127,7 @@ class Config:
         self.sbom_custom_components = args.sbom_create_custom_components
         self.cve_check_dir = ''
         self.license_dir = ''
+        self.recipe_report = ''
 
         terminate = False
         if args.debug:
@@ -141,7 +144,7 @@ class Config:
         else:
             logging.basicConfig(level=loglevel)
 
-        logging.info("Black Duck Yocto scan via SBOM utility - v1.0.11")
+        logging.info("Black Duck Yocto scan via SBOM utility - v1.0.12")
         logging.info("SUPPLIED ARGUMENTS:")
         for arg in vars(args):
             logging.info(f"--{arg}={getattr(args, arg)}")
@@ -275,6 +278,13 @@ class Config:
             if not self.bitbake_layers_file:
                 logging.error("Option --skip_bitbake set but --bitbake_layers_file not supplied")
                 terminate = True
+
+        if args.recipe_report != '':
+            if os.path.exists(args.recipe_report):
+                logging.error(f"Output recipe report file {args.recipe_report} already exists - terminating")
+                terminate = True
+            else:
+                self.recipe_report = args.recipe_report
 
         if terminate:
             sys.exit(2)
