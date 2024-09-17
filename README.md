@@ -10,18 +10,18 @@ If you have comments or issues, please raise a GitHub issue here. Synopsys suppo
 # INTRODUCTION
 ## OVERVIEW OF BD_SCAN_YOCTO_VIA_SBOM
 
-This utility is intended to:
-- Scan a Yocto project to generate an SPDX SBOM file which will be uploaded to the specified Black Duck server to create a project version
-- Filter recipes using data from the OpenEmbedded (OE) APIs to 'fix-up' recipes moved to new layers or with different local versions/revisions
-- Signature scan packages/downloaded archives (for recipes not matched from OE data)
-- Apply patches for locally patched CVEs identified from `cve_patch` if this data is available
+This utility will create a Black Duck project from a Yocto project, including
+- Scanning the Yocto project artefacts to generate an SPDX SBOM file which will be uploaded to the specified Black Duck server to create a project version
+- Filtering recipes using data from the OpenEmbedded (OE) APIs to 'fix-up' recipes moved to new layers or with different local versions/revisions
+- Signature scanning packages/downloaded archives (for recipes not matched from OE data)
+- Applying patches for locally patched CVEs identified from `cve_patch` if this data is available
 
 This utility has some benefits over the alternative Black Duck Yocto scan processes [Synopsys Detect](https://detect.synopsys.com/doc) and [bd-scan-yocto](https://github.com/matthewb66/bd_scan_yocto), in particular by matching modified original OE recipes and not needing to specify the Bitbake environment script to run Detect Bitbake dependency scans.
 
 Note that, from Black Duck version 2024.7 onwards, the use of SPDX SBOM upload provides for the optional, automatic creation of custom components 
 for recipes not matched in the BD KB using the option `--sbom_create_custom_components`. This would enable the creation of a complete SBOM including 3rd party or local, custom components.
 
-See the BEST PRACTICE RECOMMENDATIONS section below for guidance on optimising Yocto project scans using this utility.
+See the `BEST PRACTICE RECOMMENDATIONS` section below for guidance on optimising Yocto project scans using this utility.
 
 ## INSTALLATION
 
@@ -67,7 +67,7 @@ For optimal Yocto scan results, consider the following:
 output of the `bitbake-layers show-recipes` command.
 3. Use the `--oe_data_folder FOLDER` option to cache the downloaded OE data (~300MB on every run) noting that the OE data does not change frequently.
 4. Add the `cve_check` class to the Bitbake local.conf to ensure patched CVEs are identified, and then check that PHASE 6 picks up the cve-check file (see CVE PATCHING below). Optionally specify the output CVE check file using `--cve_check_file FILE`.
-5. Where recipes have been modified from original versions against the OE data, use the `--max_oe_version_distance X.X.X` option to specify fuzzy matching against OE recipes (distance values in the range '0.0.1' to '0.0.10' are recommended), although this can also cause some matches to be disabled. Create
+5. Where recipes have been modified from original versions against the standard OE recipes, use the `--max_oe_version_distance X.X.X` option to specify fuzzy matching against OE recipes (distance values in the range '0.0.1' to '0.0.10' are recommended), although this can also cause some matches to be disabled. Create
 2 projects and compare the results with and without this option.
 6. If you wish to add the Linux kernel and other packages specified in the image manifest only, 
 consider using the `--process_image_manifest` option and optionally specifying the image manifest license file path (--image_license_manifest FILEPATH) where it does not exist in the same folder and the license.manifest file.
@@ -215,11 +215,15 @@ use them to review layers and revisions to ensure more accurate matching and com
 of OE data or reduction of large data transfers if script is run frequently.
 
 - --skip_sig_scan:
-  - Do not send identified package and downloaded archives for Signature scanning. By default, only recipes
-not matched against OE data will be scanned, use `--scan_all_packages` to scan all recipes.
+  - Do not send identified package and downloaded archives for Signature scanning. By default, recipes
+not matched against OE data will be Signature scanned.
+
+ - --scan_all_packages:
+   - Signature scan all recipes including those matched against OE recipes. By default, only recipes
+not matched against OE data will be Signature scanned.
 
 - --max_oe_version_distance MAJOR.MINOR.PATCH:
-  - Specify version distance to enable close (previous) recipe version matching against OE data.
+  - Specify version distance to enable closest (previous) recipe version matching against OE data where exact matches not available.
 By default, when `--get_oe_data` is specified, OE recipe versions must match the version exactly to replace layers and revision values.
 Setting this value will allow close (previous) recipe version matching.
 The value needs to be of the format MAJOR.MINOR.PATCH (e.g. '0.10.0').
@@ -230,7 +234,10 @@ only consider using values which allow versions from different MINOR or MAJOR ve
 value should probably be in the range 0.0.1 to 0.0.10).
 
 - --process_image_manifest OR --image_license_manifest PATH:
-  - Process the image_license.manifest file to process and add recipes from the core image to the BOM.
+  - Include processing of image_license.manifest file to add recipes from the core image to the BOM (usually including Linux kernel).
+
+- --recipe_report REPFILE:
+  - Create a report of matched and unmatched recipes in specified REPFILE.
   
 ### EXAMPLE DISTANCE CALCULATIONS
 
@@ -262,9 +269,7 @@ The script should locate the path for the output file from cve-check, but you ca
 
 - After scan completion, check that there are at least 2 separate code locations in the Source tab in the Black Duck project (one for SBOM import and the other for Signature scan).
 
-- Check the information from PHASE 5 (if it is run) in particular the total components in BOM against total recipes in Yocto project. The `Recipes matched in OE data but not in BOM` counts recipes
-which were found in OE data but could not be matched against the BD KB. Check to see if these recipes (also listed in Phase 5) are identified by subsequent Signature scan and consider adding the origin
-OSS components as manual additions in the Project Version.
+- Check the information from PHASE 5 (if it is run) in particular the total components in BOM against total recipes in Yocto project. The `Recipes matched in OE data but not in BOM` counts recipes which were found in OE data but could not be matched against the BD KB. Check to see if these recipes (also listed in Phase 5) are identified by subsequent Signature scan and consider adding the origin OSS components as manual additions in the Project Version.
 
 - If you are looking for a specific package which appears to be missing from the project, confirm that you are looking for the recipe name not the package name. See the FAQs for an explanation of Yocto recipes versus packages. Check that the package file was included in the Signature scan (within the Source tab).
 
