@@ -68,7 +68,7 @@ def main():
     logging.info("--- PHASE 6 - SIGNATURE SCAN PACKAGES ------------------------------------")
     if not conf.skip_sig_scan:
         if conf.package_dir and conf.download_dir:
-            if reclist.scan_pkg_download_files(conf, bom):
+            if not reclist.scan_pkg_download_files(conf, bom):
                 logging.error(f"Unable to Signature scan package and download files")
                 sys.exit(2)
             logging.info("Done")

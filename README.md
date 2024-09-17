@@ -1,4 +1,4 @@
-# Synopsys Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.10
+# Synopsys Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.11
 
 # PROVISION OF THIS SCRIPT
 This script is provided under the MIT license (see LICENSE file).
@@ -63,6 +63,8 @@ For optimal Yocto scan results, consider the following:
 3. Add the `cve_check` class to the Bitbake local.conf to ensure patched CVEs are identified, and then check that PHASE 6 picks up the cve-check file (see CVE PATCHING below). Optionally specify the output CVE check file using `--cve_check_file FILE`.
 4. Where recipes have been modified from original versions against the OE data, use the `--max_oe_version_distance X.X.X` option to specify fuzzy matching against OE recipes (distance values in the range '0.0.1' to '0.0.10' are recommended), although this can also cause some matches to be disabled. Create
 2 projects and compare the results with and without this option.
+5. If you wish to add the Linux kernel and other packages specified in the image manifest only, 
+consider using the `--process_image_manifest` option and optionally specifying the image manifest license file path (--image_license_manifest FILEPATH) where it does not exist in the same folder and the license.manifest file.
 
 ## OPTIONAL BEHAVIOUR
 
@@ -101,7 +103,12 @@ There are several additional options to modify the behaviour of this utility inc
                            license.manifest not specified)
      -l LICENSE_MANIFEST, --license_manifest LICENSE_MANIFEST
                            license.manifest file path (REQUIRED - default
-                           'license.manifest)
+                           'license.manifest')
+     -i IMAGE_LICENSE_MANIFEST, --image_license_manifest IMAGE_LICENSE_MANIFEST
+                           Specify the image_license.manifest file path to process recipes from the core image.
+     --process_image_manifest
+                           Process the image_license.manifest file to process recipes from the core image using the
+                           default location. Alternatively specify the image_license.manifest file path.
      -b BITBAKE_LAYERS, --bitbake_layers_file BITBAKE_LAYERS
                            File containing output of 'bitbake-layers show-
                            recipes' command (REQUIRED)
@@ -209,6 +216,9 @@ versions and the ones in the project and then to identify unmatched components w
 only consider using values which allow versions from different MINOR or MAJOR versions in exceptional circumstances (meaning the supplied
 value should probably be in the range 0.0.1 to 0.0.10).
 
+- --process_image_manifest OR --image_license_manifest PATH:
+  - Process the image_license.manifest file to process and add recipes from the core image to the BOM.
+  
 ### EXAMPLE DISTANCE CALCULATIONS
 - Recipe version is 3.2.4 - closest previous OE recipe version is 3.2.1: Distance value would need to be minimum 0.0.3
 - Recipe version is 3.2.4 - closest previous OE recipe version is 3.0.1: Distance value would need to be minimum 0.2.0
@@ -306,7 +316,8 @@ Multiple scans can be combined into the same Black Duck project (ensure to use t
 
 6. I cannot see the Linux kernel in the Black Duck project.
 
-   _The kernel cannot always be identified due to a custom name format being used in Yocto. Consider adding the required kernel version to the project manually._
+   _Consider using the `--process_image_manifest` OR `--image_license_manifest PATH` options to add processing of the
+    packages in the image manifest usually including the Linux kernel. Note that the kernel cannot always be identified due to a custom name format being used in Yocto in which case consider adding the required kernel version to the project manually._
 
 
 7. I am using another Yocto wrapper such as KAS https://kas.readthedocs.io/ and cannot run bitbake, or the script fails for some other reason.
