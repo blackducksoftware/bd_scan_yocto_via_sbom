@@ -26,6 +26,9 @@ class BB:
             return False
 
         self.process_licman_file(conf.license_manifest, reclist)
+        if conf.process_image_manifest:
+            self.process_licman_file(conf.image_license_manifest, reclist)
+
         if not self.process_showlayers(tfile, reclist):
             return False
         return True
@@ -227,6 +230,7 @@ class BB:
     @staticmethod
     def check_files(conf):
         machine = conf.machine.replace('_', '-')
+        licman_dir = ''
 
         if not conf.license_manifest:
             if conf.license_dir:
@@ -234,6 +238,7 @@ class BB:
                                        f"{conf.target}-{machine}", "license.manifest")
                 if os.path.isfile(manpath):
                     conf.license_manifest = manpath
+                    licman_dir = os.path.dirname(manpath)
 
             if not conf.license_manifest:
                 if not conf.target or not conf.machine:
@@ -255,6 +260,19 @@ class BB:
                     else:
                         logging.info(f"Located license.manifest file {manifest}")
                         conf.license_manifest = manifest
+                        licman_dir = os.path.dirname(manifest)
+
+        if conf.process_image_manifest:
+            if conf.image_license_manifest == '' and licman_dir != '':
+                image_licman = os.path.join(licman_dir, "image_license.manifest")
+                if os.path.isfile(image_licman):
+                    conf.image_license_manifest = image_licman
+            if conf.image_license_manifest != '' and os.path.isfile(conf.image_license_manifest):
+                logging.info(f"Will process image license manifest file '{conf.image_license_manifest}'")
+            else:
+                logging.warning(f"Unable to locate image_license.manifest file and --process_image_manifest specified - "
+                                f"Will skip processing")
+                conf.process_image_manifest = False
 
         imgdir = os.path.join(conf.deploy_dir, "images", machine)
         if conf.cve_check_file != "":

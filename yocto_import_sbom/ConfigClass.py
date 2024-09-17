@@ -33,6 +33,13 @@ class Config:
                                                              "(usually determined from Bitbake env - default "
                                                              "'license.manifest')",
                             default="")
+        parser.add_argument("--process_image_manifest",
+                            help="Process image_license.manifest file",
+                            action='store_true')
+        parser.add_argument("-i", "--image_license_manifest", help="OPTIONAL image_license.manifest file path "
+                                                             "(usually determined from Bitbake env - default "
+                                                             "'image_license.manifest')",
+                            default="")
         parser.add_argument("-b", "--bitbake_layers_file",
                             help="OPTIONAL File containing output of 'bitbake-layers show-recipes' command (usually "
                                  "determined from Bitbake command)",
@@ -96,6 +103,8 @@ class Config:
         self.bd_trustcert = False
         self.skip_bitbake = args.skip_bitbake
         self.license_manifest = ''
+        self.image_license_manifest = ''
+        self.process_image_manifest = False
         self.target = ''
         self.machine = args.machine
         self.bitbake_layers_file = ''
@@ -132,7 +141,7 @@ class Config:
         else:
             logging.basicConfig(level=loglevel)
 
-        logging.info("Black Duck Yocto scan via SBOM utility - v1.0.10")
+        logging.info("Black Duck Yocto scan via SBOM utility - v1.0.11")
         logging.info("SUPPLIED ARGUMENTS:")
         for arg in vars(args):
             logging.info(f"--{arg}={getattr(args, arg)}")
@@ -185,7 +194,19 @@ class Config:
             if not os.path.exists(args.license_manifest):
                 logging.error(f"License.manifest '{args.license_manifest}' file does not exist")
                 terminate = True
-            self.license_manifest = args.license_manifest
+            else:
+                self.license_manifest = args.license_manifest
+
+        if args.process_image_manifest:
+            self.process_image_manifest = True
+
+        if args.image_license_manifest:
+            if not os.path.exists(args.image_license_manifest):
+                logging.error(f"License.manifest '{args.image_license_manifest}' file does not exist")
+                terminate = True
+            else:
+                self.image_license_manifest = args.image_license_manifest
+                self.process_image_manifest = True
 
         if args.target:
             self.target = args.target
@@ -197,7 +218,8 @@ class Config:
             if not os.path.exists(args.bitbake_layers_file):
                 logging.error(f"Bitbake layers command output file '{args.bitbake_layers_file}' file does not exist")
                 terminate = True
-            self.bitbake_layers_file = args.bitbake_layers_file
+            else:
+                self.bitbake_layers_file = args.bitbake_layers_file
 
         if args.cve_check_file and not os.path.exists(args.cve_check_file):
             logging.error(f"CVE Check file '{args.cve_check_file}' does not exist")
