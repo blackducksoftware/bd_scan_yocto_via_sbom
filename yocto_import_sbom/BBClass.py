@@ -208,6 +208,8 @@ class BB:
                     line = line.strip()
                     if line.startswith("PACKAGE VERSION:"):
                         ver = line.split(': ')[1]
+                    elif line.startswith("VERSION:"):
+                        ver = line.split(': ')[1]
                     elif line.startswith("RECIPE NAME:"):
                         recipe = line.split(': ')[1]
 
