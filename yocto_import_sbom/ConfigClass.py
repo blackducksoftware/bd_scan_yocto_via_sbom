@@ -144,7 +144,7 @@ class Config:
         else:
             logging.basicConfig(level=loglevel)
 
-        logging.info("Black Duck Yocto scan via SBOM utility - v1.0.12")
+        logging.info("Black Duck Yocto scan via SBOM utility - v1.0.13")
         logging.info("SUPPLIED ARGUMENTS:")
         for arg in vars(args):
             logging.info(f"--{arg}={getattr(args, arg)}")
