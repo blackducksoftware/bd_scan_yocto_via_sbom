@@ -193,6 +193,7 @@ class BB:
 
     @staticmethod
     def process_licman_file(lic_manifest_file, reclist):
+        packages_total = 0
         recipes_total = 0
         try:
             with open(lic_manifest_file, "r") as lfile:
@@ -214,14 +215,15 @@ class BB:
                         recipe = line.split(': ')[1]
 
                     if recipe and ver:
-                        recipes_total += 1
+                        packages_total += 1
                         rec_obj = Recipe(recipe, ver)
                         if not reclist.check_recipe_exists(recipe):
                             reclist.recipes.append(rec_obj)
+                            recipes_total += 1
                         ver = ''
                         recipe = ''
 
-                logging.info(f"- {recipes_total} packages found in license.manifest file ({reclist.count()} recipes)")
+                logging.info(f"- {packages_total} packages found in {lic_manifest_file} ({recipes_total} recipes)")
 
         except Exception as e:
             logging.error(f"Cannot read license manifest file '{lic_manifest_file}' - error '{e}'")

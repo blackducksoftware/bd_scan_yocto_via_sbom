@@ -85,7 +85,7 @@ class RecipeList:
             return True
         return False
 
-    def find_files(self, conf, all_download_files, all_pkg_files):
+    def find_files(self, conf, all_pkg_files, all_download_files):
         found_files = []
         for recipe in self.recipes:
             if not conf.scan_all_packages and recipe.matched_in_bom:
