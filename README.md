@@ -1,24 +1,24 @@
-# Synopsys Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.14
+# Black Duck SCA Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.14
 
 # PROVISION OF THIS SCRIPT
 This script is provided under the MIT license (see LICENSE file).
 
-It does not represent any extension of licensed functionality of Synopsys software itself and is provided as-is, without warranty or liability.
+It does not represent any extension of licensed functionality of Black Duck Software itself and is provided as-is, without warranty or liability.
 
-If you have comments or issues, please raise a GitHub issue here. Synopsys support is not able to respond to support tickets for this OSS utility. Users of this pilot project commit to engage properly with the authors to address any identified issues.
+If you have comments or issues, please raise a GitHub issue here. Black Duck support is not able to respond to support tickets for this OSS utility. Users of this pilot project commit to engage properly with the authors to address any identified issues.
 
 # INTRODUCTION
 ## OVERVIEW OF BD_SCAN_YOCTO_VIA_SBOM
 
-This utility will create a Black Duck project from a Yocto project, including
+This utility will create a Black Duck SCA project from a Yocto project, including
 - Scanning the Yocto project artefacts to generate an SPDX SBOM file which will be uploaded to the specified Black Duck server to create a project version
 - Filtering recipes using data from the OpenEmbedded (OE) APIs to 'fix-up' recipes moved to new layers or with different local versions/revisions
 - Signature scanning packages/downloaded archives (for recipes not matched from OE data)
 - Applying patches for locally patched CVEs identified from `cve_patch` if this data is available
 
-This utility has some benefits over the alternative Black Duck Yocto scan processes [Synopsys Detect](https://detect.synopsys.com/doc) and [bd-scan-yocto](https://github.com/matthewb66/bd_scan_yocto), in particular by matching modified original OE recipes and not needing to specify the Bitbake environment script to run Detect Bitbake dependency scans.
+This utility has some benefits over the alternative Black Duck SCA Yocto scan processes [Detect](https://detect.synopsys.com/doc) and [bd-scan-yocto](https://github.com/matthewb66/bd_scan_yocto), in particular by matching modified original OE recipes and not needing to specify the Bitbake environment script to run Detect Bitbake dependency scans.
 
-Note that, from Black Duck version 2024.7 onwards, the use of SPDX SBOM upload provides for the optional, automatic creation of custom components 
+Note that, from Black Duck SCA version 2024.7 onwards, the use of SPDX SBOM upload provides for the optional, automatic creation of custom components 
 for recipes not matched in the BD KB using the option `--sbom_create_custom_components`. This would enable the creation of a complete SBOM including 3rd party or local, custom components.
 
 See the `BEST PRACTICE RECOMMENDATIONS` section below for guidance on optimising Yocto project scans using this utility.
@@ -43,7 +43,10 @@ Alternatively, clone the repository locally:
 ## PREREQUISITES
 
 1. Yocto v2.1 or newer
-2. Black Duck server 2024.1 or newer
+2. Black Duck SCA server 2024.1 or newer
+3. Black Duck SCA API with either Global Code Scanner and Global Project Manager roles or Project Code Scanner and BOM Manager roles for an existing project
+4. Multi-target Bitbake configurations are not supported - use this utility on a single target at a time
+5. A built Yocto project is required with access to the build platform; alternatively specific outputs from the build can be used instead although some script features may not be supported
 
 ## HOW TO RUN
 
@@ -65,14 +68,14 @@ For optimal Yocto scan results, consider the following:
 
 1. The utility will call Bitbake by default to extract the environment and layer information by default. Locations and other values (license.manifest, machine, target, download_dir, package_dir, image_package_type) extracted from the environment can be overridden using command line options. Also consider using `--bitbake_layers_file FILE` to bypass calling Bitbake (where FILE contains the
 output of the `bitbake-layers show-recipes` command.
-3. Use the `--oe_data_folder FOLDER` option to cache the downloaded OE data (~300MB on every run) noting that the OE data does not change frequently.
-4. Add the `cve_check` class to the Bitbake local.conf to ensure patched CVEs are identified, and then check that PHASE 6 picks up the cve-check file (see CVE PATCHING below). Optionally specify the output CVE check file using `--cve_check_file FILE`.
-5. Where recipes have been modified from original versions against the standard OE recipes, use the `--max_oe_version_distance X.X.X` option to specify fuzzy matching against OE recipes (distance values in the range '0.0.1' to '0.0.10' are recommended), although this can also cause some matches to be disabled. Create
+2. Use the `--oe_data_folder FOLDER` option to cache the downloaded OE data (~300MB on every run) noting that the OE data does not change frequently.
+3. Add the `cve_check` class to the Bitbake local.conf to ensure patched CVEs are identified, and then check that PHASE 6 picks up the cve-check file (see CVE PATCHING below). Optionally specify the output CVE check file using `--cve_check_file FILE`.
+4. Where recipes have been modified from original versions against the standard OE recipes, use the `--max_oe_version_distance X.X.X` option to specify fuzzy matching against OE recipes (distance values in the range '0.0.1' to '0.0.10' are recommended), although this can also cause some matches to be disabled. Create
 2 projects and compare the results with and without this option.
-6. If you wish to add the Linux kernel and other packages specified in the image manifest only, 
+5. If you wish to add the Linux kernel and other packages specified in the image manifest only, 
 consider using the `--process_image_manifest` option and optionally specifying the image manifest license file path (--image_license_manifest FILEPATH) where it does not exist in the same folder and the license.manifest file.
-7. Use the `--recipe_report REPFILE` option to create a report of matched and unmatched recipes in the BOM. In particular check the recipes in the `RECIPES NOT IN BOM - MATCHED IN OE DATA` section.
-8. Consider running Signature scan on all packages as opposed to the default of ONLY those not matched by identifier (use `--scan_all_packages` - useful for deep license and copyright analysis of standard OE recipes). Will require BOM curation to remove duplicates and partial matches.
+6. Use the `--recipe_report REPFILE` option to create a report of matched and unmatched recipes in the BOM. In particular check the recipes in the `RECIPES NOT IN BOM - MATCHED IN OE DATA` section.
+7. Consider running Signature scan on all packages as opposed to the default of ONLY those not matched by identifier (use `--scan_all_packages` - useful for deep license and copyright analysis of standard OE recipes). Will require BOM curation to remove duplicates and partial matches.
 
 ## OPTIONAL BEHAVIOUR
 
@@ -110,7 +113,7 @@ There are several additional options to modify the behaviour of this utility inc
                            Black Duck project version to create (REQUIRED)
      -t TARGET, --target TARGET
                            Yocto target (e.g. core-image-sato - REQUIRED if
-                           license.manifest not specified)
+                           license.manifest not specified - single target configuration only supported)
      -l LICENSE_MANIFEST, --license_manifest LICENSE_MANIFEST
                            license.manifest file path (REQUIRED - default
                            'license.manifest')
@@ -153,11 +156,11 @@ There are several additional options to modify the behaviour of this utility inc
      --scan_all_packages   Signature scan all packages (only recipes not matched from
                            OE data are scanned by default)
      --detect_jar_path DETECT_JAR_PATH
-                           Synopsys Detect jar path
+                           Detect jar path
      --detect_opts DETECT_OPTS
-                           Additional Synopsys Detect options
+                           Additional Detect options
      --api_timeout         Specify API timeout in seconds (default 60) - will be used in
-                           Synopsys Detect as --detect.timeout
+                           Detect as --detect.timeout
      --sbom_create_custom_components
                            Create custom components when uploading SBOM (default False)
      --debug               Debug logging mode
@@ -291,9 +294,9 @@ For a custom C/C++ recipe, or where other languages and package managers are use
 
 For C/C++ recipes, the advanced [blackduck_c_cpp](https://pypi.org/project/blackduck-c-cpp/) utility could be used as part of the build to identify the compiled sources, system includes and operating system dependencies. You would need to modify the build command for the recipe to call the `blackduck-c-cpp` utility as part of a scanning cycle after it had been configured to connect to the Black Duck server.
 
-For recipes where a package manager is used, then a standard Synopsys Detect scan in DETECTOR mode could be utilised to analyse the project dependencies separately.
+For recipes where a package manager is used, then a standard Detect scan in DETECTOR mode could be utilised to analyse the project dependencies separately.
 
-Multiple scans can be combined into the same Black Duck project (ensure to use the Synopsys Detect option `--detect.project.codelocation.unmap=false` to stop previous scans from being unmapped).
+Multiple scans can be combined into the same Black Duck project (ensure to use the Detect option `--detect.project.codelocation.unmap=false` to stop previous scans from being unmapped).
 
 # FAQs
 

@@ -6,9 +6,9 @@ build-backend = "setuptools.build_meta"
 name = "bd_scan_yocto_via_sbom"
 version = "1.0.14"
 authors = [
-  { name="Matthew Brady", email="mbrad@synopsys.com" },
+  { name="Matthew Brady", email="mbrad@blackduck.com" },
 ]
-description = "BD_yocto_import_sbom - BD Script to import a Yocto project to Black Duck by scanning license.manifest and creating an SBOM file"
+description = "BD_yocto_import_sbom - BD Script to import a Yocto project to Black Duck SCA by scanning license.manifest and creating an SBOM file"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
@@ -23,8 +23,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/matthewb66/bd_scan_yocto_via_sbom"
-Issues = "https://github.com/matthewb66/bd_scan_yocto_via_sbom/issues"
+Homepage = "https://github.com/blackducksoftware/bd_scan_yocto_via_sbom"
+Issues = "https://github.com/blackducksoftware/bd_scan_yocto_via_sbom/issues"
 
 [project.scripts]
 bd-scan-yocto-via-sbom = "yocto_import_sbom:main.main"
