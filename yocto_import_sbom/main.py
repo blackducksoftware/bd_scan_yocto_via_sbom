@@ -7,12 +7,23 @@ from .ConfigClass import Config
 import logging
 import sys
 
+import tempfile
+import os
+
+empty_dir = tempfile.TemporaryDirectory()
+
 
 def main():
     conf = Config()
 
     logging.info("")
     logging.info("--- PHASE 1 - PROCESS PROJECT --------------------------------------------")
+    bom = BOM(conf)
+    if conf.detect_opts != '':
+        if not bom.run_detect_sigscan(conf, empty_dir.name, extra_opt='--detect.tools=DETECTOR'):
+            logging.error("Unable to run Detect to initialise project")
+            sys.exit(2)
+
     reclist = RecipeList()
     bb = BB()
     if not bb.process(conf, reclist):
@@ -46,7 +57,7 @@ def main():
     logging.info("Done creating SBOM file")
     logging.info("")
     logging.info("--- PHASE 4 - UPLOAD SBOM ------------------------------------------------")
-    bom = BOM(conf)
+    # bom = BOM(conf)
 
     if bom.upload_sbom(conf, bom, sbom):
         logging.info(f"Uploaded SBOM file '{sbom.file}' to create project "

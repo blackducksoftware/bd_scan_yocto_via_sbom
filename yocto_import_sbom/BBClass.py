@@ -245,21 +245,24 @@ class BB:
                     licman_dir = os.path.dirname(manpath)
 
             if not conf.license_manifest:
-                if not conf.target or not conf.machine:
-                    logging.error("Manifest file not specified and it could not be determined as Target not specified or "
-                                  "machine not identified from environment")
-                    return False
-                else:
-                    manpath = os.path.join(conf.deploy_dir, "licenses",
-                                           f"{conf.target}-{machine}-*", "license.manifest")
+                # if not conf.target or not conf.machine:
+                #     logging.error("Manifest file not specified and it could not be determined as Target not specified or "
+                #                   "machine not identified from environment")
+                #     return False
+                # else:
+                    # Pre Yocto-v5 path
+                    # manpath = os.path.join(conf.deploy_dir, "licenses",
+                    #                        f"{conf.target}-{machine}-*", "license.manifest")
+                    manpath = os.path.join(conf.deploy_dir, "licenses", "**", "license.manifest")
+                    logging.debug(f"License.manifest glob path is {manpath}")
                     manifest = ""
-                    manlist = glob.glob(manpath)
+                    manlist = glob.glob(manpath, recursive=True)
                     if len(manlist) > 0:
                         # Get most recent file
                         manifest = manlist[-1]
 
                     if not os.path.isfile(manifest):
-                        logging.error(f"Manifest file '{manifest}' could not be located")
+                        logging.error(f"Manifest file 'license.manifest' could not be located (Search path is '{manpath})")
                         return False
                     else:
                         logging.info(f"Located license.manifest file {manifest}")

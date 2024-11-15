@@ -4,6 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
+script_version = "v1.0.15"
 
 class Config:
     def __init__(self):
@@ -80,7 +81,7 @@ class Config:
                                                      "from OE data are scanned by default)",
                             action='store_true')
         parser.add_argument("--detect_jar_path", help="OPTIONAL Synopsys Detect jar path", default="")
-        parser.add_argument("--detect_opts", help="OPTIONAL Additional Synopsys Detect options", default="")
+        parser.add_argument("--detect_opts", help="OPTIONAL Additional Synopsys Detect options (remove leading '--')", default="")
         parser.add_argument("--api_timeout", help="OPTIONAL API and Detect timeout in seconds (default 60)",
                             default="60")
         parser.add_argument("--sbom_create_custom_components",
@@ -122,7 +123,7 @@ class Config:
         self.skip_sig_scan = False
         self.scan_all_packages = False
         self.detect_jar = ''
-        self.detect_opts = args.detect_opts
+        self.detect_opts = ''
         self.api_timeout = args.api_timeout
         self.sbom_custom_components = args.sbom_create_custom_components
         self.cve_check_dir = ''
@@ -144,7 +145,7 @@ class Config:
         else:
             logging.basicConfig(level=loglevel)
 
-        logging.info("Black Duck Yocto scan via SBOM utility - v1.0.14")
+        logging.info(f"Black Duck Yocto scan via SBOM utility - {script_version}")
         logging.info("SUPPLIED ARGUMENTS:")
         for arg in vars(args):
             logging.info(f"--{arg}={getattr(args, arg)}")
@@ -213,9 +214,9 @@ class Config:
 
         if args.target:
             self.target = args.target
-        elif not self.license_manifest:
-            logging.error(f"Target --target required if --license_manifest not specified")
-            terminate = True
+        # elif not self.license_manifest:
+        #     logging.error(f"Target --target required if --license_manifest not specified")
+        #     terminate = True
 
         if args.bitbake_layers_file:
             if not os.path.exists(args.bitbake_layers_file):
@@ -285,6 +286,9 @@ class Config:
                 terminate = True
             else:
                 self.recipe_report = args.recipe_report
+
+        if args.detect_opts != '':
+            self.detect_opts = args.detect_opts.replace('detect', '--detect')
 
         if terminate:
             sys.exit(2)

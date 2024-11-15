@@ -81,9 +81,9 @@ class SBOM:
             recipe_layer = recipe.layer
             recipe_name = recipe.name
             if recipe.epoch:
-                recipe_version = f"{recipe.epoch}:{recipe.orig_version}"
+                recipe_version = f"{recipe.epoch}:{recipe.version}"
             else:
-                recipe_version = recipe.orig_version
+                recipe_version = recipe.version
             recipe_pr = 'r0'
         else:
             recipe_layer = recipe.oe_layer['name']

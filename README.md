@@ -1,4 +1,4 @@
-# Black Duck SCA Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.14
+# Black Duck SCA Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.15
 
 # PROVISION OF THIS SCRIPT
 This script is provided under the MIT license (see LICENSE file).
@@ -158,7 +158,7 @@ There are several additional options to modify the behaviour of this utility inc
      --detect_jar_path DETECT_JAR_PATH
                            Detect jar path
      --detect_opts DETECT_OPTS
-                           Additional Detect options
+                           Additional Detect options (remove leading '--' from options)
      --api_timeout         Specify API timeout in seconds (default 60) - will be used in
                            Detect as --detect.timeout
      --sbom_create_custom_components

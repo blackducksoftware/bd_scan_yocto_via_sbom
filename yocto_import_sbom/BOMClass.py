@@ -228,7 +228,7 @@ class BOM:
         self.CVEPatchedVulnList = patched_vulns
         return
 
-    def run_detect_sigscan(self, conf, tdir):
+    def run_detect_sigscan(self, conf, tdir, extra_opt=''):
         import shutil
 
         cmd = self.get_detect(conf)
@@ -243,6 +243,8 @@ class BOM:
         detect_cmd += "--detect.wait.for.results=true "
         if 'detect.timeout' not in conf.detect_opts:
             detect_cmd += f"--detect.timeout={conf.api_timeout} "
+        if extra_opt != '':
+            detect_cmd += f"{extra_opt} "
 
         if conf.detect_opts:
             detect_cmd += conf.detect_opts
