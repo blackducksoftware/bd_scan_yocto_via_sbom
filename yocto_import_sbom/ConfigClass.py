@@ -55,7 +55,7 @@ class Config:
                             help="OPTIONAL Download and use OE data to check layers, versions & revisions",
                             action='store_true')
         parser.add_argument("--oe_data_folder",
-                            help="Folder to contain OE data files - if files do not exist they will be downloaded, "
+                            help="Folder to contain OE data files - if files do not exist they will be down loaded, "
                                  "if files exist then will be used without download", default="")
         parser.add_argument("--max_oe_version_distance",
                             help="Where no exact match, use closest previous recipe version up to specified distance."
@@ -77,6 +77,10 @@ class Config:
 
         parser.add_argument("--skip_sig_scan", help="Do not Signature scan downloads and packages",
                             action='store_true')
+
+        parser.add_argument("--proxy_trust_cert", help="Trust self signed cert when working behind a proxy server",
+                            action='store_true')
+                            
         parser.add_argument("--scan_all_packages", help="Signature scan all packages (only recipes not matched"
                                                      "from OE data are scanned by default)",
                             action='store_true')
