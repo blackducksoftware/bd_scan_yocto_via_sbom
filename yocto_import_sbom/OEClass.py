@@ -32,7 +32,7 @@ class OE:
         if not oe_data_file_exists:
             try:
                 url = "https://layers.openembedded.org/layerindex/api/layerItems/"
-                r = requests.get(url)
+                r = requests.get(url, verify=(not conf.proxy_trustcert))
                 if r.status_code != 200:
                     raise Exception(f"Status code {r.status_code}")
 
@@ -72,7 +72,7 @@ class OE:
         if not oe_data_file_exists:
             try:
                 url = "https://layers.openembedded.org/layerindex/api/recipes/"
-                r = requests.get(url)
+                r = requests.get(url, verify=(not conf.proxy_trustcert))
                 if r.status_code != 200:
                     raise Exception(f"Status code {r.status_code}")
 
@@ -114,7 +114,7 @@ class OE:
         if not oe_data_file_exists:
             try:
                 url = "https://layers.openembedded.org/layerindex/api/layerBranches/"
-                r = requests.get(url)
+                r = requests.get(url, verify=(not conf.proxy_trustcert))
                 if r.status_code != 200:
                     raise Exception(f"Status code {r.status_code}")
 
@@ -156,7 +156,7 @@ class OE:
         if not oe_data_file_exists:
             try:
                 url = "https://layers.openembedded.org/layerindex/api/branches/"
-                r = requests.get(url)
+                r = requests.get(url, verify=(not conf.proxy_trustcert))
                 if r.status_code != 200:
                     raise Exception(f"Status code {r.status_code}")
 
