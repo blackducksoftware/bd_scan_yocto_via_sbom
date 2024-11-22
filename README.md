@@ -1,4 +1,4 @@
-# Black Duck SCA Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.15
+# Black Duck SCA Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.16
 
 # PROVISION OF THIS SCRIPT
 This script is provided under the MIT license (see LICENSE file).
@@ -167,6 +167,7 @@ There are several additional options to modify the behaviour of this utility inc
      --logfile LOGFILE     Logging output file
      --recipe_report REPFILE
                            Output specified file with a list of recipes including those not matched in the BOM
+     --no_unmap            Do not unmap previous code locations (scans) when running the initial scan (default is to unmap)
 
 ### MINIMUM REQUIRED OPTIONS
 

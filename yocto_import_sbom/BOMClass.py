@@ -4,6 +4,7 @@ import sys
 import requests
 import time
 import os
+import json
 from pathlib import Path
 
 from .ComponentListClass import ComponentList
@@ -184,7 +185,12 @@ class BOM:
             if response.status_code == 201:
                 return True
             else:
-                raise Exception(f"Return code {response.status_code}")
+                # Try to extract meaningful error message
+                repjson = response.content.decode('utf8')
+                err = json.loads(repjson)
+                err_text = err['errorMessage']
+
+                raise Exception(f"Return code {response.status_code} - error {err_text}")
 
         except Exception as e:
             logging.error("Unable to POST SPDX data")

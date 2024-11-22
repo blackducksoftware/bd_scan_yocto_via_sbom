@@ -19,8 +19,13 @@ def main():
     logging.info("")
     logging.info("--- PHASE 1 - PROCESS PROJECT --------------------------------------------")
     bom = BOM(conf)
-    if conf.detect_opts != '':
-        if not bom.run_detect_sigscan(conf, empty_dir.name, extra_opt='--detect.tools=DETECTOR'):
+
+    if conf.output_file == '':
+        extra_opt = '--detect.tools=DETECTOR'
+        if conf.unmap:
+            extra_opt += ' --detect.project.codelocation.unmap=true'
+        if not bom.run_detect_sigscan(conf, empty_dir.name,
+                                      extra_opt=extra_opt):
             logging.error("Unable to run Detect to initialise project")
             sys.exit(2)
 
