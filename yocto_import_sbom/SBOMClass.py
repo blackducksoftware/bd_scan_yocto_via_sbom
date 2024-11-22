@@ -27,7 +27,7 @@ class SBOM:
                 ],
                 "licenseListVersion": "3.13"
             },
-            "name": self.quote(f"{proj}-{ver}"),
+            "name": self.quote(f"{proj}-{ver}-" + mytime.strftime("%Y%m%dT%H%M%S")),
             "documentDescribes": [
                 self.quote(f"SPDXRef-package-{self.package_id}")
             ],

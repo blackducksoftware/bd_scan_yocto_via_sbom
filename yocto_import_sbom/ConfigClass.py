@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.0.15"
+script_version = "v1.0.16"
 
 class Config:
     def __init__(self):
@@ -91,7 +91,7 @@ class Config:
         parser.add_argument("--debug", help="Debug logging mode", action='store_true')
         parser.add_argument("--logfile", help="Logging output file", default="")
         parser.add_argument("--recipe_report", help="Output recipe report to file", default="")
-
+        parser.add_argument("--no_unmap", help="Do not unmap previous scans when running new scan", action='store_true')
 
         args = parser.parse_args()
 
@@ -129,6 +129,7 @@ class Config:
         self.cve_check_dir = ''
         self.license_dir = ''
         self.recipe_report = ''
+        self.unmap = True
 
         terminate = False
         if args.debug:
@@ -138,7 +139,7 @@ class Config:
         if args.logfile:
             if os.path.exists(args.logfile):
                 logging.error(f"Specified logfile '{args.logfile}' already exists - EXITING")
-                return
+                sys.exit(2)
             logging.basicConfig(encoding='utf-8',
                                 handlers=[logging.FileHandler(args.logfile), logging.StreamHandler(sys.stdout)],
                                 level=loglevel)
@@ -146,15 +147,18 @@ class Config:
             logging.basicConfig(level=loglevel)
 
         logging.info(f"Black Duck Yocto scan via SBOM utility - {script_version}")
+        logging.info('')
+        logging.info("--- PHASE 0 - CONFIG -----------------------------------------------------")
+
         logging.info("SUPPLIED ARGUMENTS:")
         for arg in vars(args):
             logging.info(f"--{arg}={getattr(args, arg)}")
 
-        logging.info('')
-        logging.info("--- PHASE 0 - CONFIG -----------------------------------------------------")
-
         bd_connect = True
         if args.output:
+            if os.path.exists(args.output):
+                logging.error(f"Specified SBOM output file '{args.output}' already exists - EXITING")
+                sys.exit(2)
             self.output_file = args.output
             bd_connect = False
 
@@ -289,6 +293,9 @@ class Config:
 
         if args.detect_opts != '':
             self.detect_opts = args.detect_opts.replace('detect', '--detect')
+
+        if args.no_unmap:
+            self.unmap = False
 
         if terminate:
             sys.exit(2)
