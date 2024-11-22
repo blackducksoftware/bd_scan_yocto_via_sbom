@@ -94,7 +94,7 @@ class RecipeList:
             recipe_esc = re.escape(recipe.name)
             ver_esc = re.escape(recipe.version)
             download_regex = re.compile(rf"^{recipe_esc}[_-]v?{ver_esc}[.-].*$")
-            pkg_regex = re.compile(rf"^(lib)?{recipe_esc}\d*[_-]v?{ver_esc}[+.-].*\.{conf.image_pkgtype}")
+            pkg_regex = re.compile(rf"^(lib)?{recipe_esc}\d*[_-]v?{ver_esc}[+.-].*\.{conf.image_package_type}")
 
             for path in all_download_files:
                 filename = os.path.basename(path)
@@ -110,7 +110,7 @@ class RecipeList:
             for path in all_pkg_files:
                 filename = os.path.basename(path)
                 # pattern = f"{os.path.join(global_values.pkg_dir, global_values.machine)}/" \
-                #           f"{recipe}[-_]{ver}-*.{global_values.image_pkgtype}"
+                #           f"{recipe}[-_]{ver}-*.{global_values.image_package_type}"
                 pkg_res = pkg_regex.match(filename)
 
                 if pkg_res is not None:
