@@ -134,6 +134,12 @@ class BOM:
 
         logging.info("Waiting for project BOM processing to complete ...")
         try:
+            # Based on experiments, there is about 20% change that bom-status is
+            # UP_TO_DATE, yet BOM is still not ready, i.e., get_paginated_data()
+            # returns an empty array. This unconditional sleep overhead helps to
+            # mitigate the problem.
+            time.sleep(15)
+
             links = self.bdver_dict['_meta']['links']
             link = next((item for item in links if item["rel"] == "bom-status"), None)
 
