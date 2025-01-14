@@ -84,7 +84,10 @@ class SBOM:
                 recipe_version = f"{recipe.epoch}:{recipe.version}"
             else:
                 recipe_version = recipe.version
-            recipe_pr = 'r0'
+            if recipe.release:
+                recipe_pr = recipe.release
+            else:
+                recipe_pr = 'r0'
         else:
             recipe_layer = recipe.oe_layer['name']
             if recipe_layer == 'openembedded-core':

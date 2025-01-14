@@ -8,7 +8,7 @@ import logging
 import sys
 
 import tempfile
-import os
+# import os
 
 empty_dir = tempfile.TemporaryDirectory()
 

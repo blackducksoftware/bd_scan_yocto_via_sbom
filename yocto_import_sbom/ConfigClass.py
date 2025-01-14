@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.0.16"
+script_version = "v1.0.18"
 
 class Config:
     def __init__(self):
@@ -25,7 +25,7 @@ class Config:
         parser.add_argument("--skip_bitbake", help="Do not run Bitbake command",
                             action='store_true')
         parser.add_argument("-t", "--target",
-                            help="Yocto target (e.g. core-image-sato - REQUIRED if license.manifest not specified)",
+                            help="Yocto target (e.g. core-image-sato - REQUIRED if license.manifest not specified or --task_depends_dot_file used)",
                             default="")
         parser.add_argument("--machine",
                             help="OPTIONAL Yocto machine (usually determined from Bitbake env)",
@@ -45,8 +45,13 @@ class Config:
                             help="OPTIONAL File containing output of 'bitbake-layers show-recipes' command (usually "
                                  "determined from Bitbake command)",
                             default="")
+        parser.add_argument("--task_depends_dot_file",
+                            help="OPTIONAL Process task-depends.dot file created by 'bitbake -g' command "
+                                 "(if 'license.manifest' is not also specified, will process ALL recipes including dev "
+                                 "dependencies, --target is also required)",
+                            default="")
         parser.add_argument("-c", "--cve_check_file",
-                            help="OPTIONAL CVE check output file", default="")
+                            help="OPTIONAL CVE check output file to mark locally patched CVEs as patched in project", default="")
         parser.add_argument("-o", "--output",
                             help="OPTIONAL Specify output SBOM SPDX file for manual upload (if specified then BD "
                                  "project will not be created automatically and CVE patching not supported)",
@@ -110,6 +115,7 @@ class Config:
         self.process_image_manifest = False
         self.target = ''
         self.machine = args.machine
+        self.task_depends_dot_file = ''
         self.bitbake_layers_file = ''
         self.cve_check_file = ''
         self.skip_oe_data = False
@@ -222,9 +228,20 @@ class Config:
         #     logging.error(f"Target --target required if --license_manifest not specified")
         #     terminate = True
 
+        if args.task_depends_dot_file:
+            if not os.path.exists(args.task_depends_dot_file):
+                logging.error(f"Specified task-depends.dot file '{args.task_depends_dot_file}' does not exist")
+                terminate = True
+            else:
+                if not self.target:
+                    logging.error(f"Target --target required if --task_depends_dot_file specified")
+                    terminate = True
+                else:
+                    self.task_depends_dot_file = args.task_depends_dot_file
+
         if args.bitbake_layers_file:
             if not os.path.exists(args.bitbake_layers_file):
-                logging.error(f"Bitbake layers command output file '{args.bitbake_layers_file}' file does not exist")
+                logging.error(f"Bitbake layers command output file '{args.bitbake_layers_file}' does not exist")
                 terminate = True
             else:
                 self.bitbake_layers_file = args.bitbake_layers_file
@@ -290,6 +307,10 @@ class Config:
                 terminate = True
             else:
                 self.recipe_report = args.recipe_report
+
+        if not self.license_manifest and not self.task_depends_dot_file:
+            logging.error(f"License manifest and/or task-depends.dot file must be specified - terminating")
+            terminate = True
 
         if args.detect_opts != '':
             self.detect_opts = args.detect_opts.replace('detect', '--detect')

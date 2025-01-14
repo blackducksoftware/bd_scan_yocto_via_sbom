@@ -38,6 +38,12 @@ class RecipeList:
                     recipe.version = version
                 return
 
+    def add_rel_to_recipe(self, rec, rel):
+        for recipe in self.recipes:
+            if recipe.name == rec:
+                recipe.release = rel
+                return
+
     def print_recipes(self):
         for recipe in self.recipes:
             recipe.print_recipe()
