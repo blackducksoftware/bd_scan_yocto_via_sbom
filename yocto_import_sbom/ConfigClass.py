@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.0.18"
+script_version = "v1.0.19"
 
 class Config:
     def __init__(self):
@@ -87,8 +87,8 @@ class Config:
                             action='store_true')
         parser.add_argument("--detect_jar_path", help="OPTIONAL Synopsys Detect jar path", default="")
         parser.add_argument("--detect_opts", help="OPTIONAL Additional Synopsys Detect options (remove leading '--')", default="")
-        parser.add_argument("--api_timeout", help="OPTIONAL API and Detect timeout in seconds (default 60)",
-                            default="60")
+        parser.add_argument("--api_timeout", help="OPTIONAL API and Detect timeout in seconds (default 600)",
+                            default="600")
         parser.add_argument("--sbom_create_custom_components",
                             help="Create custom components for unmatched components on SBOM upload",
                             action='store_true')
@@ -267,7 +267,7 @@ class Config:
             terminate = True
         self.max_oe_version_distance = distarr
 
-        if not os.path.isdir(self.oe_data_folder):
+        if self.oe_data_folder and not os.path.isdir(self.oe_data_folder):
             logging.error(f"OE_data_folder {self.oe_data_folder} does not exist")
             terminate = True
 
@@ -308,9 +308,9 @@ class Config:
             else:
                 self.recipe_report = args.recipe_report
 
-        if not self.license_manifest and not self.task_depends_dot_file:
-            logging.error(f"License manifest and/or task-depends.dot file must be specified - terminating")
-            terminate = True
+        # if not self.license_manifest and not self.task_depends_dot_file:
+        #     logging.error(f"License manifest and/or task-depends.dot file must be specified - terminating")
+        #     terminate = True
 
         if args.detect_opts != '':
             self.detect_opts = args.detect_opts.replace('detect', '--detect')

@@ -78,7 +78,10 @@ class SBOM:
     def add_package(self, recipe):
         spdxid = self.create_spdx_ident()
         if recipe.oe_recipe == {}:
-            recipe_layer = recipe.layer
+            if recipe.layer:
+                recipe_layer = recipe.layer
+            else:
+                recipe_layer = 'meta'
             recipe_name = recipe.name
             if recipe.epoch:
                 recipe_version = f"{recipe.epoch}:{recipe.version}"
