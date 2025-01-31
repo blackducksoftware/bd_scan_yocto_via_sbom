@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.0.19"
+script_version = "v1.0.20"
 
 class Config:
     def __init__(self):
@@ -89,8 +89,8 @@ class Config:
                             help="Signature scan all packages (only recipes not matched"
                                                      "from OE data are scanned by default)",
                             action='store_true')
-        parser.add_argument("--detect_jar_path", help="OPTIONAL Synopsys Detect jar path", default="")
-        parser.add_argument("--detect_opts", help="OPTIONAL Additional Synopsys Detect options (remove leading '--')", default="")
+        parser.add_argument("--detect_jar_path", help="OPTIONAL BD Detect jar path", default="")
+        parser.add_argument("--detect_opts", help="OPTIONAL Additional BD Detect options (remove leading '--')", default="")
         parser.add_argument("--api_timeout", help="OPTIONAL API and Detect timeout in seconds (default 600)",
                             default="600")
         parser.add_argument("--sbom_create_custom_components",

@@ -275,22 +275,22 @@ class BOM:
     def get_detect(conf):
         cmd = ''
         if not conf.detect_jar:
-            tdir = os.path.join(str(Path.home()), "synopsys-detect")
+            tdir = os.path.join(str(Path.home()), "bd-detect")
             if not os.path.isdir(tdir):
                 os.mkdir(tdir)
             tdir = os.path.join(tdir, "download")
             if not os.path.isdir(tdir):
                 os.mkdir(tdir)
             if not os.path.isdir(tdir):
-                logging.error("Cannot create synopsys-detect folder in $HOME")
+                logging.error("Cannot create bd-detect folder in $HOME")
                 sys.exit(2)
-            shpath = os.path.join(tdir, 'detect9.sh')
+            shpath = os.path.join(tdir, 'detect10.sh')
 
-            j = requests.get("https://detect.synopsys.com/detect9.sh")
+            j = requests.get("https://detect.blackduck.com/detect10.sh")
             if j.ok:
                 open(shpath, 'wb').write(j.content)
                 if not os.path.isfile(shpath):
-                    logging.error("Cannot download Synopsys Detect shell script -"
+                    logging.error("Cannot download BD Detect shell script -"
                                   " download manually and use --detect-jar-path option")
                     sys.exit(2)
 
