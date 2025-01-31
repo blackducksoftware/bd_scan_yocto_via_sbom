@@ -16,7 +16,7 @@ This utility will create a Black Duck SCA project from a Yocto project, includin
 - Signature scanning packages/downloaded archives (for recipes not matched from OE data)
 - Applying patches for locally patched CVEs identified from `cve_patch` if this data is available
 
-This utility has some benefits over the alternative Black Duck SCA Yocto scan processes [Detect](https://detect.synopsys.com/doc) and [bd-scan-yocto](https://github.com/matthewb66/bd_scan_yocto), in particular by matching modified original OE recipes and not needing to specify the Bitbake environment script to run Detect Bitbake dependency scans.
+This utility has some benefits over the alternative Black Duck SCA Yocto scan processes [Detect](https://detect.blackduck.com/doc) and [bd-scan-yocto](https://github.com/matthewb66/bd_scan_yocto), in particular by matching modified original OE recipes and not needing to specify the Bitbake environment script to run Detect Bitbake dependency scans.
 
 Note that, from Black Duck SCA version 2024.7 onwards, the use of SPDX SBOM upload provides for the optional, automatic creation of custom components 
 for recipes not matched in the BD KB using the option `--sbom_create_custom_components`. This would enable the creation of a complete SBOM including 3rd party or local, custom components.
