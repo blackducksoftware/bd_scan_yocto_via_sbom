@@ -21,7 +21,8 @@ class Config:
                                                            "(can use BLACKDUCK_TRUST_CERT env var)",
                             action='store_true')
         parser.add_argument("-p", "--project", help="Black Duck project to create (REQUIRED)", default="")
-        parser.add_argument("-v", "--version", help="Black Duck project version to create (REQUIRED)", default="")
+        parser.add_argument("-v", "--version", help="Black Duck project version to create (REQUIRED)",
+                            default="")
         parser.add_argument("--skip_bitbake", help="Do not run Bitbake command",
                             action='store_true')
         parser.add_argument("-t", "--target",
@@ -37,7 +38,8 @@ class Config:
         parser.add_argument("--process_image_manifest",
                             help="Process image_license.manifest file",
                             action='store_true')
-        parser.add_argument("-i", "--image_license_manifest", help="OPTIONAL image_license.manifest file path "
+        parser.add_argument("-i", "--image_license_manifest",
+                            help="OPTIONAL image_license.manifest file path "
                                                              "(usually determined from Bitbake env - default "
                                                              "'image_license.manifest')",
                             default="")
@@ -51,7 +53,8 @@ class Config:
                                  "dependencies, --target is also required)",
                             default="")
         parser.add_argument("-c", "--cve_check_file",
-                            help="OPTIONAL CVE check output file to mark locally patched CVEs as patched in project", default="")
+                            help="OPTIONAL CVE check output file to mark locally patched CVEs as patched in project",
+                            default="")
         parser.add_argument("-o", "--output",
                             help="OPTIONAL Specify output SBOM SPDX file for manual upload (if specified then BD "
                                  "project will not be created automatically and CVE patching not supported)",
@@ -82,13 +85,14 @@ class Config:
 
         parser.add_argument("--skip_sig_scan", help="Do not Signature scan downloads and packages",
                             action='store_true')
-        parser.add_argument("--scan_all_packages", help="Signature scan all packages (only recipes not matched"
+        parser.add_argument("--scan_all_packages",
+                            help="Signature scan all packages (only recipes not matched"
                                                      "from OE data are scanned by default)",
                             action='store_true')
         parser.add_argument("--detect_jar_path", help="OPTIONAL Synopsys Detect jar path", default="")
         parser.add_argument("--detect_opts", help="OPTIONAL Additional Synopsys Detect options (remove leading '--')", default="")
-        parser.add_argument("--api_timeout", help="OPTIONAL API and Detect timeout in seconds (default 600)",
-                            default="600")
+        parser.add_argument("--api_timeout", help="OPTIONAL API and Detect timeout in seconds (default 60)",
+                            default="60")
         parser.add_argument("--sbom_create_custom_components",
                             help="Create custom components for unmatched components on SBOM upload",
                             action='store_true')
@@ -96,7 +100,8 @@ class Config:
         parser.add_argument("--debug", help="Debug logging mode", action='store_true')
         parser.add_argument("--logfile", help="Logging output file", default="")
         parser.add_argument("--recipe_report", help="Output recipe report to file", default="")
-        parser.add_argument("--no_unmap", help="Do not unmap previous scans when running new scan", action='store_true')
+        parser.add_argument("--no_unmap", help="Do not unmap previous scans when running new scan",
+                            action='store_true')
 
         args = parser.parse_args()
 
