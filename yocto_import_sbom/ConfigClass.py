@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.0.19"
+script_version = "v1.0.20"
 
 class Config:
     def __init__(self):
