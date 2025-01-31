@@ -91,8 +91,8 @@ class Config:
                             action='store_true')
         parser.add_argument("--detect_jar_path", help="OPTIONAL Synopsys Detect jar path", default="")
         parser.add_argument("--detect_opts", help="OPTIONAL Additional Synopsys Detect options (remove leading '--')", default="")
-        parser.add_argument("--api_timeout", help="OPTIONAL API and Detect timeout in seconds (default 60)",
-                            default="60")
+        parser.add_argument("--api_timeout", help="OPTIONAL API and Detect timeout in seconds (default 600)",
+                            default="600")
         parser.add_argument("--sbom_create_custom_components",
                             help="Create custom components for unmatched components on SBOM upload",
                             action='store_true')

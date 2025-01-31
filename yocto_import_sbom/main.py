@@ -88,7 +88,7 @@ def main():
                 if ret:
                     logging.info("Done")
                 else:
-                    logging.error(f"Unable to Signature scan package and download files")
+                    logging.error(f"Unable to run Signature scan on package and download files")
                     sys.exit(2)
             else:
                 logging.info("No files to scan - skipping")
