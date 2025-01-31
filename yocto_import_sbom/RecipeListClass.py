@@ -38,6 +38,12 @@ class RecipeList:
                     recipe.version = version
                 return
 
+    def add_rel_to_recipe(self, rec, rel):
+        for recipe in self.recipes:
+            if recipe.name == rec:
+                recipe.release = rel
+                return
+
     def print_recipes(self):
         for recipe in self.recipes:
             recipe.print_recipe()
@@ -80,10 +86,13 @@ class RecipeList:
         all_pkg_files = BB.get_pkg_files(conf)
         all_download_files = BB.get_download_files(conf)
         found_files = self.find_files(conf, all_pkg_files, all_download_files)
-        tdir = self.copy_files(found_files)
-        if tdir and bom.run_detect_sigscan(conf, tdir):
-            return True
-        return False
+        if len(found_files) > 0:
+            tdir = self.copy_files(found_files)
+            if tdir and bom.run_detect_sigscan(conf, tdir):
+                return len(found_files), True
+            else:
+                return len(found_files), False
+        return 0, False
 
     def find_files(self, conf, all_pkg_files, all_download_files):
         found_files = []

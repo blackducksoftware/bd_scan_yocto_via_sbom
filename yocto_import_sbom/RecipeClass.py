@@ -3,11 +3,12 @@ import logging
 
 
 class Recipe:
-    def __init__(self, name, version):
+    def __init__(self, name, version, rel=None):
         self.name = name
         self.orig_version = version
         self.epoch = ''
         self.version = self.filter_version_string(version)
+        self.release = rel
         self.layer = ''
         self.spdxid = ''
         self.oe_layer = {}
@@ -23,7 +24,6 @@ class Recipe:
         # Remove +git*
         # Remove -snapshot*
         # ret_version = re.sub(r"\+git.*", r"+gitX", version, flags=re.IGNORECASE)
-
 
         ret_version = re.sub(r"AUTOINC.*", r"X", version, flags=re.IGNORECASE)
         return ret_version
@@ -42,4 +42,4 @@ class Recipe:
         return bom.check_recipe_in_bom(self.name, self.version)
 
     def full_id(self):
-        return(f"{self.layer}/{self.name}/{self.version}")
+        return f"{self.layer}/{self.name}/{self.version}"

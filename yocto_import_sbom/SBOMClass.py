@@ -78,13 +78,19 @@ class SBOM:
     def add_package(self, recipe):
         spdxid = self.create_spdx_ident()
         if recipe.oe_recipe == {}:
-            recipe_layer = recipe.layer
+            if recipe.layer:
+                recipe_layer = recipe.layer
+            else:
+                recipe_layer = 'meta'
             recipe_name = recipe.name
             if recipe.epoch:
                 recipe_version = f"{recipe.epoch}:{recipe.version}"
             else:
                 recipe_version = recipe.version
-            recipe_pr = 'r0'
+            if recipe.release:
+                recipe_pr = recipe.release
+            else:
+                recipe_pr = 'r0'
         else:
             recipe_layer = recipe.oe_layer['name']
             if recipe_layer == 'openembedded-core':

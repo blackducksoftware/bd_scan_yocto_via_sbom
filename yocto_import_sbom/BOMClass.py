@@ -134,6 +134,7 @@ class BOM:
 
         logging.info("Waiting for project BOM processing to complete ...")
         try:
+            time.sleep(15)
             links = self.bdver_dict['_meta']['links']
             link = next((item for item in links if item["rel"] == "bom-status"), None)
 

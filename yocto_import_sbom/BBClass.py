@@ -18,22 +18,31 @@ class BB:
             if not self.check_bitbake():
                 return False
             self.process_bitbake_env(conf)
-            tfile = self.run_showlayers()
+            layers_file = self.run_showlayers()
+        elif conf.bitbake_layers_file:
+            layers_file = conf.bitbake_layers_file
         else:
-            tfile = conf.bitbake_layers_file
+            logging.error(f"Error --skip_bitbake and no bitbake_layers_file specified - terminating")
+            return False
 
         if not self.check_files(conf):
             return False
 
-        self.process_licman_file(conf.license_manifest, reclist)
+        if conf.license_manifest:
+            self.process_licman_file(conf.license_manifest, reclist)
+
         if conf.process_image_manifest:
             self.process_licman_file(conf.image_license_manifest, reclist)
 
-        if not self.process_showlayers(tfile, reclist):
+        if conf.task_depends_dot_file:
+            self.process_task_depends_dot(conf, reclist)
+
+        if not self.process_showlayers(layers_file, reclist):
             return False
         return True
 
-    def check_bitbake(self):
+    @staticmethod
+    def check_bitbake():
         # cmd = "bitbake"
         # ret = self.run_cmd(cmd)
         # if ret == b'':
@@ -236,7 +245,7 @@ class BB:
         machine = conf.machine.replace('_', '-')
         licman_dir = ''
 
-        if not conf.license_manifest:
+        if not conf.license_manifest and not conf.task_depends_dot_file:
             if conf.license_dir:
                 manpath = os.path.join(conf.license_dir,
                                        f"{conf.target}-{machine}", "license.manifest")
@@ -335,3 +344,106 @@ class BB:
         logging.debug(f"Found {count} files")
 
         return download_files_list
+
+
+    @staticmethod
+    def process_task_depends_dot(conf, reclist):
+        # If reclist is non-zero, check the recipes from task-depends.dot file against this list
+        # otherwise create new reclist from task-depends.dot
+
+        recipe_dict = {}
+
+        if not os.path.exists(conf.task_depends_dot_file):
+            logging.error(f"Cannot locate task depends '{conf.task_depends_dot_file}'")
+            sys.exit(2)
+
+        try:
+            with open(conf.task_depends_dot_file, "r") as tdfile:
+                lines = tdfile.readlines()
+                for line in lines:
+                    # "<recipe>.<task>" [label="<recipe> <task>\n:<ver>-r<0>\nvirtual:native:<bbpath>"]
+                    # "<recipe>.<task>" -> "<subrecipe>.<subtask>"
+                    #
+                    line = line.strip()
+                    if line.startswith("\""):
+                        if line.endswith("]"):
+                            # "<recipe>.<task>" [label="<recipe> <task>\n:<ver>-r<0>\nvirtual:native:<bbpath>"]
+    
+                            arr = line.split('"')
+                            # Get recipe & task
+                            recpart = arr[1].split('.')
+                            recipe = recpart[0]
+                            # task = recpart[1]
+                            # Get version & release
+                            verstring = arr[3].split("\\n")[1]
+                            ver = verstring.split('-')[0][1:]
+                            rel = verstring.split('-')[1]
+    
+                            if recipe not in recipe_dict.keys():
+                                recipe_dict[recipe] = {
+                                    'ver': ver,
+                                    'rel': rel,
+                                    'children': [],
+                                    'processed': False
+                                }
+                        else:
+                            # "<recipe>.<task>" -> "<subrecipe>.<subtask>"
+    
+                            arr = line.split('"')
+                            # Get recipe & task
+                            recpart = arr[1].split('.')
+                            recipe = recpart[0]
+                            # task = recpart[1]
+                            # Get subrecipe & subtask
+                            subpart = arr[3].split('.')
+                            subrec = subpart[0]
+                            # subtask = subpart[1]
+    
+                            if subrec != recipe:
+                                if recipe in recipe_dict.keys():
+                                    found = False
+                                    for rec in recipe_dict[recipe]['children']:
+                                        if rec == subrec:
+                                            found = True
+                                            break
+                                    if not found:
+                                        recipe_dict[recipe]['children'].append(subrec)
+    
+        except Exception as e:
+            logging.error(f"Cannot read file '{conf.task_depends_dot_file}' - error '{e}'")
+            sys.exit(2)
+
+        if conf.target not in recipe_dict.keys():
+            logging.error(f"Target name '{conf.target}' not found in '{conf.task_depends_dot_file}'")
+            sys.exit(2)
+
+        try:
+            if reclist.count() > 0:
+                create_reclist = False
+                logging.info(f"Processing '{conf.task_depends_dot_file}' to update recipe list from '{conf.license_manifest}'")
+            else:
+                create_reclist = True
+                logging.info(f"Processing '{conf.task_depends_dot_file}' to create recipe list (license.manifest not specified)")
+
+            recipes_total = 0
+
+            for recipe in recipe_dict[conf.target]['children']:
+                if recipe in recipe_dict.keys():
+                    if create_reclist:
+                        rec_obj = Recipe(recipe, recipe_dict[recipe]['ver'], recipe_dict[recipe]['rel'])
+                        if not reclist.check_recipe_exists(recipe):
+                            reclist.recipes.append(rec_obj)
+                            recipes_total += 1
+                    else:
+                        reclist.add_rel_to_recipe(recipe, recipe_dict[recipe]['rel'])
+                else:
+                    logging.warning(f"Recipe '{recipe}' not found in '{conf.task_depends_dot_file}' - skipping")
+
+            if create_reclist:
+                logging.info(f"- {recipes_total} recipes found in '{conf.task_depends_dot_file}'")
+
+        except Exception as e:
+            logging.error(f"Error processing recipe list from '{conf.task_depends_dot_file}' - {e}")
+            sys.exit(2)
+
+        return

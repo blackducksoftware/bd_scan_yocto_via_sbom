@@ -8,7 +8,7 @@ import logging
 import sys
 
 import tempfile
-import os
+# import os
 
 empty_dir = tempfile.TemporaryDirectory()
 
@@ -83,10 +83,15 @@ def main():
     logging.info("--- PHASE 6 - SIGNATURE SCAN PACKAGES ------------------------------------")
     if not conf.skip_sig_scan:
         if conf.package_dir and conf.download_dir:
-            if not reclist.scan_pkg_download_files(conf, bom):
-                logging.error(f"Unable to Signature scan package and download files")
-                sys.exit(2)
-            logging.info("Done")
+            num, ret = reclist.scan_pkg_download_files(conf, bom)
+            if num > 0:
+                if ret:
+                    logging.info("Done")
+                else:
+                    logging.error(f"Unable to run Signature scan on package and download files")
+                    sys.exit(2)
+            else:
+                logging.info("No files to scan - skipping")
         else:
             logging.info("Skipped (package_dir or download_dir not identified)")
     else:
