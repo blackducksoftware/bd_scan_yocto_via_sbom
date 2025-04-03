@@ -32,9 +32,13 @@ class RecipeList:
         epoch, version = Recipe.get_epoch_and_version(ver)
         for recipe in self.recipes:
             if recipe.name == rec:
-                recipe.add_layer(layer)
-                recipe.epoch = epoch
-                if recipe.version != version and recipe.version in version:
+                if recipe.version != '':
+                    if recipe.version in version:
+                        recipe.add_layer(layer)
+                        recipe.epoch = epoch
+                else:
+                    recipe.add_layer(layer)
+                    recipe.epoch = epoch
                     recipe.version = version
                 return
 
@@ -159,9 +163,15 @@ class RecipeList:
         matched_oe_not_in_bom = []
         not_matched_oe_not_in_bom = []
         not_matched_oe_in_bom = []
+        not_in_bom_recipename_in_oe = []
         logging.info(f"Missing Recipes:")
         for recipe in self.recipes:
             fullid = recipe.full_id()
+
+            if recipe.matched_oe_exact:
+                fullid += " (EXACT VERSION)"
+            elif recipe.matched_oe:
+                fullid += f" (Closest version {recipe.oe_recipe['pv']}-{recipe.oe_recipe['pr']})"
 
             if not recipe.check_in_bom(bom):
                 not_in_bom.append(fullid)
@@ -171,6 +181,8 @@ class RecipeList:
                 else:
                     not_matched_oe_not_in_bom.append(fullid)
                     logging.debug(f"- Recipe {fullid}: NOT matched in OE data and NOT found in BOM")
+                if recipe.recipename_in_oe:
+                    not_in_bom_recipename_in_oe.append(fullid)
             else:
                 in_bom.append(fullid)
                 recipe.matched_in_bom = True
@@ -187,6 +199,7 @@ class RecipeList:
         logging.info(f"- Recipes NOT in BOM - {len(not_in_bom)}")
         logging.info(f"    - Of which {len(matched_oe_not_in_bom)} matched in OE data")
         logging.info(f"    - Of which {len(not_matched_oe_not_in_bom)} not matched in OE data")
+        logging.info(f"    - Of which {len(not_in_bom_recipename_in_oe)} not matched but recipe exists in OE data")
 
         if conf.recipe_report != '':
             try:
@@ -195,10 +208,14 @@ class RecipeList:
                     repfile.write("\n".join(in_bom))
                     repfile.write(f"\n\nRECIPES IN BOM - NOT MATCHED IN OE DATA ({len(not_matched_oe_in_bom)}):\n")
                     repfile.write("\n".join(not_matched_oe_in_bom))
+                    repfile.write(f"\n\nRECIPES NOT IN BOM ({len(not_in_bom)}):\n")
+                    repfile.write("\n".join(not_in_bom))
                     repfile.write(f"\n\nRECIPES NOT IN BOM - NOT MATCHED IN OE DATA ({len(not_matched_oe_not_in_bom)}):\n")
                     repfile.write("\n".join(not_matched_oe_not_in_bom))
                     repfile.write(f"\n\nRECIPES NOT IN BOM - MATCHED IN OE DATA ({len(matched_oe_not_in_bom)}):\n")
                     repfile.write("\n".join(matched_oe_not_in_bom))
+                    repfile.write(f"\n\nRECIPES NOT IN BOM - RECIPE EXISTS IN OE DATA BUT NO VERSION MATCH ({len(not_in_bom_recipename_in_oe)}):\n")
+                    repfile.write("\n".join(not_in_bom_recipename_in_oe))
                 logging.info(f"Output full recipe report to '{conf.recipe_report}'")
             except IOError as error:
                 logging.error(f"Unable to write recipe report file {conf.recipe_report} - {error}")

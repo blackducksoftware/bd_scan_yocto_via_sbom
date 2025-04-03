@@ -15,6 +15,8 @@ class Recipe:
         self.oe_recipe = {}
         self.matched_oe = False
         self.matched_in_bom = False
+        self.recipename_in_oe = False
+        self.matched_oe_exact = False
 
     def add_layer(self, layer):
         self.layer = layer
