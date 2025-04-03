@@ -345,6 +345,7 @@ class OE:
             exact_ver = False
             exact_layer = False
 
+            recipename_in_oe = False
             if recipe.name in self.recipename_dict.keys():
                 for oe_recipe in self.recipename_dict[recipe.name]:
                     # print(f"{oe_recipe['pn']} - {oe_recipe['pv']}")
@@ -354,6 +355,13 @@ class OE:
                         recipe.matched_oe = True
                         if exact_ver_temp:
                             exact_ver = True
+                            recipe.matched_oe_exact = True
+                            break
+                    else:
+                        recipename_in_oe = True
+
+            if not recipe.matched_oe and recipename_in_oe:
+                recipe.recipename_in_oe = True
 
             if recipe.epoch:
                 recipe_ver = f"{recipe.epoch}:{recipe.orig_version}"

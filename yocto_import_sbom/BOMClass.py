@@ -296,7 +296,7 @@ class BOM:
 
                 cmd = "/bin/bash " + shpath + " "
         else:
-            cmd = "java " + conf.detect_jar
+            cmd = "java -jar " + conf.detect_jar
 
         return cmd
 
