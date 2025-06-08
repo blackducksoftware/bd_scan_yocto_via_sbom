@@ -156,7 +156,7 @@ class RecipeList:
         else:
             return ''
 
-    def check_recipes_in_bom(self, conf, bom):
+    def report_recipes_in_bom(self, conf, bom):
 
         in_bom = []
         not_in_bom = []
@@ -173,7 +173,7 @@ class RecipeList:
             elif recipe.matched_oe:
                 fullid += f" (Closest version {recipe.oe_recipe['pv']}-{recipe.oe_recipe['pr']})"
 
-            if not recipe.check_in_bom(bom):
+            if not recipe.matched_in_bom:
                 not_in_bom.append(fullid)
                 if recipe.matched_oe:
                     matched_oe_not_in_bom.append(fullid)
@@ -185,7 +185,6 @@ class RecipeList:
                     not_in_bom_recipename_in_oe.append(fullid)
             else:
                 in_bom.append(fullid)
-                recipe.matched_in_bom = True
                 if not recipe.matched_oe:
                     not_matched_oe_in_bom.append(fullid)
                     # logging.debug(f"- Recipe {fullid}: Not matched in OE data but found in BOM")
@@ -219,3 +218,24 @@ class RecipeList:
                 logging.info(f"Output full recipe report to '{conf.recipe_report}'")
             except IOError as error:
                 logging.error(f"Unable to write recipe report file {conf.recipe_report} - {error}")
+
+    def check_recipes_in_bom(self, conf, bom):
+        for recipe in self.recipes:
+            if recipe.check_in_bom(bom):
+                recipe.matched_in_bom = True
+
+    def get_cpes(self):
+        cpes = []
+        for recipe in self.recipes:
+            if not recipe.matched_in_bom:
+                cpes.append(recipe.cpe_string())
+        return cpes
+
+    def process_missing_recipes(self, conf, bom):
+        if conf.add_comps_by_cpe:
+            cpes = self.get_cpes()
+            for cpe in cpes:
+                url = f"{conf.bd_url}/api/cpes?q={cpe}"
+                arr = bom.get_paginated_data(url, "application/vnd.blackducksoftware.component-detail-5+json")
+                for entry in arr:
+                    print(entry)

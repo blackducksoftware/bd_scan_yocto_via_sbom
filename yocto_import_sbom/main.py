@@ -70,17 +70,14 @@ def main():
     else:
         sys.exit(2)
 
-    logging.info("")
-    logging.info("--- PHASE 5 - CHECKING OE RECIPES IN BOM ---------------------------------")
     bom.get_proj()
     if not bom.wait_for_bom_completion():
         logging.error("Error waiting for project scan completion")
         sys.exit(2)
-    bom.get_data()
-    reclist.check_recipes_in_bom(conf, bom)
+    bom.get_comps()
 
     logging.info("")
-    logging.info("--- PHASE 6 - SIGNATURE SCAN PACKAGES ------------------------------------")
+    logging.info("--- PHASE 5 - SIGNATURE SCAN PACKAGES ------------------------------------")
     if not conf.skip_sig_scan:
         if conf.package_dir and conf.download_dir:
             num, ret = reclist.scan_pkg_download_files(conf, bom)
@@ -98,6 +95,17 @@ def main():
         logging.info("Skipped (--skip_sig_scan specified)")
 
     logging.info("")
+    logging.info("--- PHASE 5 - CHECKING ALL RECIPES IN BOM ---------------------------------")
+    bom.get_proj()
+    if not bom.wait_for_bom_completion():
+        logging.error("Error waiting for project scan completion")
+        sys.exit(2)
+    bom.get_comps()
+    reclist.check_recipes_in_bom(conf, bom)
+    reclist.process_missing_recipes(conf, bom)
+    reclist.report_recipes_in_bom(conf, bom)
+
+    logging.info("")
     logging.info("--- PHASE 7 - APPLY CVE PATCHES ------------------------------------------")
     if conf.cve_check_file:
         bom.get_proj()
@@ -105,7 +113,7 @@ def main():
             logging.error("Error waiting for project scan completion")
             sys.exit(2)
 
-        bom.get_data()
+        bom.get_comps()
         bom.process_cve_file(conf.cve_check_file, reclist)
         bom.process_patched_cves()
     else:

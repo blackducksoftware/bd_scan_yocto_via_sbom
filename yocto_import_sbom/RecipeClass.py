@@ -45,3 +45,8 @@ class Recipe:
 
     def full_id(self):
         return f"{self.layer}/{self.name}/{self.version}"
+
+    def cpe_string(self):
+        # cpe:2.3:a:*:glibc:2.40:*:*:*:*:*:*:*
+        cpe = f"cpe:2.3:a:*:{self.name}:{self.version}:*:*:*:*:*:*:*"
+        return cpe

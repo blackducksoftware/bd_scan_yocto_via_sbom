@@ -39,7 +39,9 @@ class BOM:
         logging.info(f"Working on project '{self.bdprojname}' version '{self.bdvername}'")
         self.bdver_dict = self.get_project()
 
-    def get_data(self):
+    def get_comps(self):
+        self.complist = ComponentList()  # Reset component list
+
         res = self.bd.list_resources(self.bdver_dict)
         self.projver = res['href']
         thishref = f"{self.projver}/components"

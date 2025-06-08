@@ -102,6 +102,8 @@ class Config:
         parser.add_argument("--recipe_report", help="Output recipe report to file", default="")
         parser.add_argument("--no_unmap", help="Do not unmap previous scans when running new scan",
                             action='store_true')
+        parser.add_argument("--add_comps_by_cpe", help="For recipes not matched by OE lookup or signature scan, try looking up using CPE to add them",
+                            action='store_true')
 
         args = parser.parse_args()
 
@@ -141,6 +143,7 @@ class Config:
         self.license_dir = ''
         self.recipe_report = ''
         self.unmap = True
+        self.add_comps_by_cpe = False
 
         terminate = False
         if args.debug:
@@ -322,6 +325,9 @@ class Config:
 
         if args.no_unmap:
             self.unmap = False
+
+        if args.add_comps_by_cpe:
+            self.add_comps_by_cpe = True
 
         if terminate:
             sys.exit(2)
