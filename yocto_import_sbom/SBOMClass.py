@@ -5,6 +5,9 @@ from random import randint
 import json
 import tempfile
 
+from .RecipeClass import Recipe
+from .RecipeListClass import RecipeList
+
 
 class SBOM:
     def __init__(self, proj, ver):
@@ -75,7 +78,7 @@ class SBOM:
         rand_hex_str = f"{hex1}-{hex2}-{hex3}-{hex4}-{hex5}"
         return rand_hex_str
 
-    def add_package(self, recipe):
+    def add_package(self, recipe: Recipe):
         spdxid = self.create_spdx_ident()
         if recipe.oe_recipe == {}:
             if recipe.layer:
@@ -135,7 +138,7 @@ class SBOM:
         }
         self.json["relationships"].append(rel_json)
 
-    def process_recipes(self, reclist):
+    def process_recipes(self, reclist: RecipeList):
         for recipe in reclist:
             self.add_package(recipe)
 

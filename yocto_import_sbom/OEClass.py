@@ -6,10 +6,11 @@ import re
 from semver import Version
 
 from .RecipeClass import Recipe
+from .ConfigClass import Config
 
 
 class OE:
-    def __init__(self, conf):
+    def __init__(self, conf: Config):
         logging.info(f"Processing OE recipes and layers ...")
         self.layers = self.get_oe_layers(conf)
         self.layerid_dict = self.process_layers()
@@ -21,7 +22,7 @@ class OE:
         self.branchid_dict = self.process_branches()
 
     @staticmethod
-    def get_oe_layers(conf):
+    def get_oe_layers(conf: Config):
         logging.info("- Getting OE layers")
         oe_data_file_exists = False
         if conf.oe_data_folder:
@@ -61,7 +62,7 @@ class OE:
         return {}
 
     @staticmethod
-    def get_oe_recipes(conf):
+    def get_oe_recipes(conf: Config):
         logging.info("- Getting OE recipes")
         oe_data_file_exists = False
         if conf.oe_data_folder:
@@ -102,7 +103,7 @@ class OE:
         return {}
 
     @staticmethod
-    def get_oe_layerbranches(conf):
+    def get_oe_layerbranches(conf: Config):
         logging.info("- Getting OE layerbranches")
 
         oe_data_file_exists = False
@@ -144,7 +145,7 @@ class OE:
         return {}
 
     @staticmethod
-    def get_oe_branches(conf):
+    def get_oe_branches(conf: Config):
         logging.info("- Getting OE branches")
 
         oe_data_file_exists = False
@@ -246,7 +247,7 @@ class OE:
             logging.warning(f"Cannot get branch by layerbranchid {e}")
         return {}
 
-    def compare_recipes(self, conf, recipe, oe_recipe, best_oe_recipe):
+    def compare_recipes(self, conf: Config, recipe: Recipe, oe_recipe: Recipe, best_oe_recipe: Recipe):
         # Returns:
         # - Bool - Match found
         # - Bool - Exact version match
@@ -333,7 +334,7 @@ class OE:
             branch_sort_priority = 999
         return branch_sort_priority
 
-    def get_recipe(self, conf, recipe):
+    def get_recipe(self, conf: Config, recipe: Recipe):
         # need to look for closest version match
         # Return:
         # - OE Recipe
@@ -453,7 +454,7 @@ class OE:
             return [0, 0, 0]
 
     @staticmethod
-    def check_semver_distance(conf, ver1, ver2):
+    def check_semver_distance(conf: Config, ver1, ver2):
         # Is ver2 less than ver1 AND
         # ver2 is within the distance of ver1
         if conf.max_oe_version_distance[0] > 0:

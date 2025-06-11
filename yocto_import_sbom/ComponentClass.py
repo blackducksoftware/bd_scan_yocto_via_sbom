@@ -42,6 +42,9 @@ class Component:
                 return []
             for origin in self.data['origins']:
                 if origin['externalNamespace'] == 'openembedded':
+                    orig = origin['externalId'].split('/')
+                    origlist.append('/'.join(orig[1:2]))
+                else:
                     origlist.append(origin['externalId'])
             return origlist
         except KeyError as e:

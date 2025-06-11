@@ -7,12 +7,14 @@ from .RecipeClass import Recipe
 import tempfile
 import glob
 
+from .ConfigClass import Config
+from .RecipeListClass import RecipeList
 
 class BB:
     def __init__(self):
         pass
 
-    def process(self, conf, reclist):
+    def process(self, conf: Config, reclist: RecipeList):
         if not conf.skip_bitbake:
             logging.info(f"Checking Bitbake environment ...")
             if not self.check_bitbake():
@@ -79,7 +81,7 @@ class BB:
 
         return lfile.name
 
-    def process_bitbake_env(self, conf):
+    def process_bitbake_env(self, conf: Config):
         lines = self.run_bitbake_env().split('\n')
 
         rpm_dir = ''
@@ -174,7 +176,7 @@ class BB:
         # return proc_stdout
 
     @staticmethod
-    def process_showlayers(showlayers_file, reclist):
+    def process_showlayers(showlayers_file, reclist: RecipeList):
         try:
             with open(showlayers_file, "r") as bfile:
                 lines = bfile.readlines()
@@ -204,7 +206,7 @@ class BB:
         return True
 
     @staticmethod
-    def process_licman_file(lic_manifest_file, reclist):
+    def process_licman_file(lic_manifest_file, reclist: RecipeList):
         packages_total = 0
         recipes_total = 0
         try:
@@ -244,7 +246,7 @@ class BB:
         return True
 
     @staticmethod
-    def check_files(conf):
+    def check_files(conf: Config):
         machine = conf.machine.replace('_', '-')
         licman_dir = ''
 
@@ -258,7 +260,7 @@ class BB:
 
             if not conf.license_manifest:
                 # if not conf.target or not conf.machine:
-                #     logging.error("Manifest file not specified and it could not be determined as Target not specified or "
+                #     logging.error("Manifest file not specified, and it could not be determined as Target not specified or "
                 #                   "machine not identified from environment")
                 #     return False
                 # else:
@@ -299,9 +301,9 @@ class BB:
             cvefile = conf.cve_check_file
         else:
             if conf.log_dir != '':
-                tempfile = f"{conf.log_dir}/cve/cve-summary.json"
-                if os.path.isfile(tempfile):
-                    cvefile = tempfile
+                cfile = f"{conf.log_dir}/cve/cve-summary.json"
+                if os.path.isfile(cfile):
+                    cvefile = cfile
             if cvefile != '':
                 # imgdir = os.path.join(conf.deploy_dir, "images", machine)
                 # if os.path.isdir(imgdir):
@@ -314,8 +316,8 @@ class BB:
                 cvelist = glob.glob(cvepath, recursive=True)
                 if len(cvelist) > 0:
                     # Get most recent file
-                    tempfile = cvelist[-1]
-                    if os.path.isfile(tempfile):
+                    cfile = cvelist[-1]
+                    if os.path.isfile(cfile):
                         cvefile = tempfile
 
         if not os.path.isfile(cvefile):
@@ -327,7 +329,7 @@ class BB:
         return True
 
     @staticmethod
-    def get_pkg_files(conf):
+    def get_pkg_files(conf: Config):
         if conf.package_dir != '' and not os.path.isdir(conf.package_dir):
             logging.warning(f"Package_dir {conf.package_dir} does not exist")
             return []
@@ -364,7 +366,7 @@ class BB:
 
 
     @staticmethod
-    def process_task_depends_dot(conf, reclist):
+    def process_task_depends_dot(conf: Config, reclist: RecipeList):
         # If reclist is non-zero, check the recipes from task-depends.dot file against this list
         # otherwise create new reclist from task-depends.dot
 

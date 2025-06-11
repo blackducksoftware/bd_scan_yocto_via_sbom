@@ -1,6 +1,7 @@
 import re
 import logging
 
+from .BOMClass import BOM
 
 class Recipe:
     def __init__(self, name, version, rel=None):
@@ -40,7 +41,7 @@ class Recipe:
     def print_recipe(self):
         logging.info(f"Processed Recipe '{self.name}': {self.full_id()}")
 
-    def check_in_bom(self, bom):
+    def check_in_bom(self, bom: BOM):
         return bom.check_recipe_in_bom(self.name, self.version)
 
     def full_id(self):
