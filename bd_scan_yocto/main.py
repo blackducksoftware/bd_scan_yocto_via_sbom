@@ -104,6 +104,7 @@ def main():
     bom.get_comps()
     reclist.check_recipes_in_bom(bom)
     if reclist.process_missing_recipes(conf, bom):
+        bom.get_comps()
         reclist.check_recipes_in_bom(bom)
     reclist.report_recipes_in_bom(conf, bom)
 
@@ -115,7 +116,6 @@ def main():
             logging.error("Error waiting for project scan completion")
             sys.exit(2)
 
-        bom.get_comps()
         if bom.process_cve_file(conf.cve_check_file, reclist):
             bom.process_patched_cves()
     else:

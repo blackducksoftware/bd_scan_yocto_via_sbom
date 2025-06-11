@@ -368,9 +368,9 @@ class BOM:
             }
 
             r = self.bd.session.post(posturl, data=json.dumps(postdata), headers=custom_headers)
-            r.raise_for_status()
+            # r.raise_for_status()
             if r.status_code == 200:
-                logging.info(f"Created manual component {comp_url}")
+                logging.debug(f"Created manual component {comp_url}")
                 return True
             else:
                 raise Exception(f"PUT returned {r.status_code}")

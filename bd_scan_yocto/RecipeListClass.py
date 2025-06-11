@@ -257,19 +257,23 @@ class RecipeList:
                     continue
 
                 rec_cpe = recipe.cpe_string()
-                print(f"CPE - missing recipe {recipe.name}/{recipe.version} - {rec_cpe}")
+                # print(f"CPE - missing recipe {recipe.name}/{recipe.version} - {rec_cpe}")
 
                 url = f"{conf.bd_url}/api/cpes?q={rec_cpe}"
                 cpe_arr = bom.get_data(url, "application/vnd.blackducksoftware.component-detail-5+json")
+                logging.debug(f"Recipe {recipe.name}/{recipe.version} - found {len(cpe_arr)} CPE entries")
                 for comp in cpe_arr:
                     val = self.get_rel(comp)
                     if val:
                         comp_arr = bom.get_data(val, "application/vnd.blackducksoftware.component-detail-5+json")
+                        logging.debug(f"Found {len(comp_arr)} matching components from CPE")
                         for pkg in comp_arr:
                             if '_meta' in pkg and 'href' in pkg['_meta']:
                                 if bom.add_manual_comp(pkg['_meta']['href']):
+                                    logging.info(f"Manually added component {recipe.name}/{recipe.version} using CPE")
                                     comps_added = True
-                return comps_added
+                                    break
+            return comps_added
 
         except Exception as e:
             logging.exception(f"Error processing missing recipes - {e}")
