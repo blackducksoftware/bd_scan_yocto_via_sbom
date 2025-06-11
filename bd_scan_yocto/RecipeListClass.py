@@ -262,6 +262,7 @@ class RecipeList:
                 url = f"{conf.bd_url}/api/cpes?q={rec_cpe}"
                 cpe_arr = bom.get_data(url, "application/vnd.blackducksoftware.component-detail-5+json")
                 logging.debug(f"Recipe {recipe.name}/{recipe.version} - found {len(cpe_arr)} CPE entries")
+                comp_added = False
                 for comp in cpe_arr:
                     val = self.get_rel(comp)
                     if val:
@@ -272,7 +273,10 @@ class RecipeList:
                                 if bom.add_manual_comp(pkg['_meta']['href']):
                                     logging.info(f"Manually added component {recipe.name}/{recipe.version} using CPE")
                                     comps_added = True
+                                    comp_added = True
                                     break
+                        if comp_added:
+                            break
             return comps_added
 
         except Exception as e:

@@ -4,9 +4,8 @@ from .ComponentClass import Component
 
 
 class ComponentList:
-    components = []
-
     def __init__(self):
+        self.components = []
         pass
 
     def add(self, comp: Component):
