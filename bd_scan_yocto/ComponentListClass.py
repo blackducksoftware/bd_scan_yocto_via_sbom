@@ -31,9 +31,9 @@ class ComponentList:
                     if recipe_name == arr[0]:
                         if recipe_ver == '':
                             return True
-                        elif recipe_ver == arr[1]:
+                        elif recipe_ver in arr[1]:
                             return True
         except IndexError as e:
-            logging.error(f"Unable to process origin - {e}")
+            logging.error(f"Error checking recipe {recipe_name} - {e}")
 
         return False

@@ -139,9 +139,9 @@ class BOM:
     def process_patched_cves(self):
         self.get_vulns()
 
-        count = self.vulnlist.process_patched(self.CVEPatchedVulnList, self.bd)
+        patched, skipped = self.vulnlist.process_patched(self.CVEPatchedVulnList, self.bd)
 
-        logging.info(f"- {count} CVEs marked as patched in BD project")
+        logging.info(f"- {patched} CVEs marked as patched in BD project ({skipped} already patched)")
         return
 
     def wait_for_bom_completion(self):
@@ -352,3 +352,23 @@ class BOM:
 
     def check_recipe_in_bom(self, name, ver):
         return self.complist.check_recipe_in_list(name, ver)
+
+    def add_manual_comp(self, comp_url):
+        posturl = self.projver + "/components"
+        custom_headers = {
+            'Content-Type': 'application/vnd.blackducksoftware.bill-of-materials-6+json'
+        }
+
+        postdata = {
+            "component": comp_url,
+            "componentPurpose": "Added by CPE (bd_scan_yocto_via_sbom)",
+            "componentModified": False,
+            "componentModification": ""
+        }
+
+        r = self.bd.session.put(posturl, data=json.dumps(postdata), headers=custom_headers)
+        r.raise_for_status()
+        if r.status_code == 202:
+            logging.info(f"Created manual component {comp_url}")
+        else:
+            raise Exception(f"PUT returned {r.status_code}")

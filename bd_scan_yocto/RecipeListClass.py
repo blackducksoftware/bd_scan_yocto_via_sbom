@@ -226,14 +226,14 @@ class RecipeList:
             if recipe.check_in_bom(bom):
                 recipe.matched_in_bom = True
 
-    def get_cpes(self):
-        cpes = []
-        for recipe in self.recipes:
-            if not recipe.matched_in_bom:
-                reccpe = recipe.cpe_string()
-                print(f"CPE - missing recipe {recipe.name}/{recipe.version} - {reccpe}")
-                cpes.append(recipe.cpe_string())
-        return cpes
+    # def get_cpes(self):
+    #     cpes = []
+    #     for recipe in self.recipes:
+    #         if not recipe.matched_in_bom:
+    #             reccpe = recipe.cpe_string()
+    #             print(f"CPE - missing recipe {recipe.name}/{recipe.version} - {reccpe}")
+    #             cpes.append([recipe.name, reccpe])
+    #     return cpes
 
     @staticmethod
     def get_rel(entry):
@@ -248,17 +248,25 @@ class RecipeList:
         return ''
 
     def process_missing_recipes(self, conf: "Config", bom: "BOM"):
+        if not conf.add_comps_by_cpe:
+            return
         try:
-            if not conf.add_comps_by_cpe:
-                return
-            cpes = self.get_cpes()
-            for cpe in cpes:
-                url = f"{conf.bd_url}/api/cpes?q={cpe}"
-                arr = bom.get_data(url, "application/vnd.blackducksoftware.component-detail-5+json")
-                for entry in arr:
-                    val = self.get_rel(entry)
+            for recipe in self.recipes:
+                if recipe.matched_in_bom:
+                    continue
+
+                rec_cpe = recipe.cpe_string()
+                print(f"CPE - missing recipe {recipe.name}/{recipe.version} - {rec_cpe}")
+
+                url = f"{conf.bd_url}/api/cpes?q={rec_cpe}"
+                cpe_arr = bom.get_data(url, "application/vnd.blackducksoftware.component-detail-5+json")
+                for comp in cpe_arr:
+                    val = self.get_rel(comp)
                     if val:
-                        res = bom.get_data(val, "application/vnd.blackducksoftware.component-detail-5+json")
-                        print(res)
+                        comp_arr = bom.get_data(val, "application/vnd.blackducksoftware.component-detail-5+json")
+                        for pkg in comp_arr:
+                            if '_meta' in pkg and 'href' in pkg['_meta']:
+                                bom.add_manual_comp(pkg['_meta']['href'])
+
         except Exception as e:
             logging.exception(f"Error processing missing recipes - {e}")

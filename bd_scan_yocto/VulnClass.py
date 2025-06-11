@@ -91,3 +91,16 @@ class Vuln:
 
         logging.info(f"Patched vulnerability {self.id()}")
         return True
+
+    def is_patched(self):
+        try:
+            if 'vulnerabilityWithRemediation' in self.data and 'remediationStatus' in self.data['vulnerabilityWithRemediation']:
+                if self.data['vulnerabilityWithRemediation']['remediationStatus'] == 'PATCHED':
+                    return True
+                else:
+                    return False
+            if self.data['ignored'] == True:
+                return True
+        except Exception as e:
+            logging.error(f"Error in is_patched() - {e}")
+        return False

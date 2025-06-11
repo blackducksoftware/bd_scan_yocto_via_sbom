@@ -50,5 +50,9 @@ class Recipe:
     def cpe_string(self):
         # cpe:2.3:a:*:glibc:2.40:*:*:*:*:*:*:*
         ver = self.version.split('+')[0]
-        cpe = f"cpe:2.3:a:*:{self.name}:{ver}:*:*:*:*:*:*:*"
+        name = self.name
+        if 'linux-yocto' in self.name:
+            name = 'linux_kernel'
+
+        cpe = f"cpe:2.3:a:*:{name}:{ver}:*:*:*:*:*:*:*"
         return cpe

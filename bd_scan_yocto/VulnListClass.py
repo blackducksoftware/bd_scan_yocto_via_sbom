@@ -11,13 +11,17 @@ class VulnList:
             self.vulns.append(vuln)
 
     def process_patched(self, cve_list, bd):
-        count = 0
+        patched = 0
+        skipped = 0
         for vuln in self.vulns:
             cve = vuln.get_cve(bd)
             if cve in cve_list:
+                if vuln.is_patched():
+                    skipped += 1
+                    continue
                 if vuln.patch(bd):
-                    count += 1
-        return count
+                    patched += 1
+        return patched, skipped
 
     def print(self, bd):
         table = []
