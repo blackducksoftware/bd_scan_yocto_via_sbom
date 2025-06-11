@@ -1,4 +1,4 @@
-# Black Duck SCA Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.0.21
+# Black Duck SCA Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.1.0
 
 # PROVISION OF THIS SCRIPT
 This script is provided under the MIT license (see LICENSE file).
@@ -14,7 +14,7 @@ This utility will create a Black Duck SCA project from a Yocto project, includin
 - Scanning the Yocto project artefacts to generate an SPDX SBOM file which will be uploaded to the specified Black Duck server to create a project version
 - Filtering recipes using data from the OpenEmbedded (OE) APIs to 'fix-up' recipes moved to new layers or with different local versions/revisions
 - Signature scanning packages/downloaded archives (for recipes not matched from OE data)
-- Applying patches for locally patched CVEs identified from `cve_patch` if this data is available
+- Applying patches for locally patched CVEs identified from `cve_check` if this data is available
 
 This utility has some benefits over the alternative Black Duck SCA Yocto scan processes [Detect](https://detect.blackduck.com/doc) and [bd-scan-yocto](https://github.com/matthewb66/bd_scan_yocto), in particular by matching modified original OE recipes and not needing to specify the Bitbake environment script to run Detect Bitbake dependency scans.
 

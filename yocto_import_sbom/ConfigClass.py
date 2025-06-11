@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.0.21"
+script_version = "v1.1.0"
 
 class Config:
     def __init__(self):
@@ -132,6 +132,7 @@ class Config:
         self.download_dir = ''
         self.deploy_dir = ''
         self.build_dir = ''
+        self.log_dir = ''
         self.image_package_type = args.image_package_type
         self.skip_sig_scan = False
         self.scan_all_packages = False

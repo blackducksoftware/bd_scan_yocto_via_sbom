@@ -88,7 +88,7 @@ class BB:
         for mline in lines:
             if re.search(
                     "^(MANIFEST_FILE|DEPLOY_DIR|MACHINE_ARCH|DL_DIR|DEPLOY_DIR_RPM|"
-                    "DEPLOY_DIR_IPK|DEPLOY_DIR_DEB|IMAGE_PKGTYPE|LICENSE_DIR)=",
+                    "DEPLOY_DIR_IPK|DEPLOY_DIR_DEB|IMAGE_PKGTYPE|LICENSE_DIR|LOG_DIR)=",
                     mline):
 
                 # if re.search('^TMPDIR=', mline):
@@ -126,6 +126,9 @@ class BB:
                 elif re.search('^IMAGE_PKGTYPE=', mline):
                     conf.image_pkgtype = val
                     logging.info(f"Bitbake Env: image_pkgtype={conf.image_pkgtype}")
+                elif re.search('^LOG_DIR=', mline):
+                    conf.log_dir = val
+                    logging.info(f"Bitbake Env: log_dir={conf.log_dir}")
 
         if not conf.package_dir:
             if conf.image_pkgtype == 'rpm' and rpm_dir:
@@ -290,16 +293,30 @@ class BB:
                                 f"Will skip processing")
                 conf.process_image_manifest = False
 
-        imgdir = os.path.join(conf.deploy_dir, "images", machine)
+        # CVE JSON is at build/tmp/log/cve/cve-summary.json
+        cvefile = ''
         if conf.cve_check_file != "":
             cvefile = conf.cve_check_file
         else:
-            cvefile = ""
-            if os.path.isdir(imgdir):
-                for file in sorted(os.listdir(imgdir)):
-                    if file == conf.target + "-" + machine + ".cve":
-                        cvefile = os.path.join(imgdir, file)
-                        break
+            if conf.log_dir != '':
+                tempfile = f"{conf.log_dir}/cve/cve-summary.json"
+                if os.path.isfile(tempfile):
+                    cvefile = tempfile
+            if cvefile != '':
+                # imgdir = os.path.join(conf.deploy_dir, "images", machine)
+                # if os.path.isdir(imgdir):
+                #     for file in sorted(os.listdir(imgdir)):
+                #         if file == conf.target + "-" + machine + ".cve":
+                #             cvefile = os.path.join(imgdir, file)
+                #             break
+
+                cvepath = os.path.join(conf.deploy_dir, "images", "**", conf.target + "-" + machine + "*.cve")
+                cvelist = glob.glob(cvepath, recursive=True)
+                if len(cvelist) > 0:
+                    # Get most recent file
+                    tempfile = cvelist[-1]
+                    if os.path.isfile(tempfile):
+                        cvefile = tempfile
 
         if not os.path.isfile(cvefile):
             logging.warning(f"CVE check file {cvefile} could not be located - skipping CVE processing")

@@ -136,7 +136,7 @@ class BOM:
 
         logging.info("Waiting for project BOM processing to complete ...")
         try:
-            time.sleep(15)
+            time.sleep(5)
             links = self.bdver_dict['_meta']['links']
             link = next((item for item in links if item["rel"] == "bom-status"), None)
 
@@ -202,13 +202,19 @@ class BOM:
         return False
 
     def process_cve_file(self, cve_file, reclist):
+        if cve_file.endswith('.cve'):
+            return self.process_cve_file_cve(cve_file, reclist)
+        elif cve_file.endswith('.json'):
+            return self.process_cve_file_json(cve_file, reclist)
+
+    def process_cve_file_cve(self, cve_file, reclist):
         try:
             cvefile = open(cve_file, "r")
             cvelines = cvefile.readlines()
             cvefile.close()
         except Exception as e:
             logging.error("Unable to open CVE check output file\n" + str(e))
-            sys.exit(3)
+            return
 
         patched_vulns = []
         pkgvuln = {}
@@ -236,6 +242,27 @@ class BOM:
                      f" are for recipes in the yocto image")
         self.CVEPatchedVulnList = patched_vulns
         return
+
+    def process_cve_file_json(self, cve_file, reclist):
+        try:
+            data = None
+            with open(cve_file, "r") as cf:
+                logging.info(f"- loaded from file {cve_file}")
+                data = json.load(cf)
+
+            if data:
+                patched_vulns = []
+                # Parse each JSON object separately
+                for obj in data['package']:
+                    issues = obj['issue']
+                    for issue in issues:
+                        if issue.get("status") == "Patched":
+                            patched_vulns.append(issue['id'])
+                self.CVEPatchedVulnList = patched_vulns
+            return
+
+        except Exception as e:
+            logging.error(f"Unable to process CVE file {cve_file}: {e}")
 
     def run_detect_sigscan(self, conf, tdir, extra_opt=''):
         import shutil

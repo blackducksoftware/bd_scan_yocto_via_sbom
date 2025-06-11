@@ -228,14 +228,34 @@ class RecipeList:
         cpes = []
         for recipe in self.recipes:
             if not recipe.matched_in_bom:
+                reccpe = recipe.cpe_string()
+                print(f"CPE - missing recipe {recipe.name}/{recipe.version} - {reccpe}")
                 cpes.append(recipe.cpe_string())
         return cpes
 
+    def get_rel(self, entry):
+        try:
+            if '_meta' in entry and 'links' in entry['_meta']:
+                link_arr = entry['_meta']['links']
+                for link in link_arr:
+                    if link['rel'] == 'cpe-versions':
+                        return link['href']
+        except KeyError as e:
+            logging.exception(e)
+        return ''
+
     def process_missing_recipes(self, conf, bom):
-        if conf.add_comps_by_cpe:
+        try:
+            if not conf.add_comps_by_cpe:
+                return
             cpes = self.get_cpes()
             for cpe in cpes:
                 url = f"{conf.bd_url}/api/cpes?q={cpe}"
-                arr = bom.get_paginated_data(url, "application/vnd.blackducksoftware.component-detail-5+json")
+                arr = bom.get_data(url, "application/vnd.blackducksoftware.component-detail-5+json")
                 for entry in arr:
-                    print(entry)
+                    val = self.get_rel(entry)
+                    if val:
+                        res = bom.get_data(val, "application/vnd.blackducksoftware.component-detail-5+json")
+                        print(res)
+        except Exception as e:
+            logging.exception(e)

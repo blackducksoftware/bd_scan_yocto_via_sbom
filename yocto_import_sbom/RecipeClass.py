@@ -48,5 +48,6 @@ class Recipe:
 
     def cpe_string(self):
         # cpe:2.3:a:*:glibc:2.40:*:*:*:*:*:*:*
-        cpe = f"cpe:2.3:a:*:{self.name}:{self.version}:*:*:*:*:*:*:*"
+        ver = self.version.split('+')[0]
+        cpe = f"cpe:2.3:a:*:{self.name}:{ver}:*:*:*:*:*:*:*"
         return cpe

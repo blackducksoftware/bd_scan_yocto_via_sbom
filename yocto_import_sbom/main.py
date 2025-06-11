@@ -95,7 +95,7 @@ def main():
         logging.info("Skipped (--skip_sig_scan specified)")
 
     logging.info("")
-    logging.info("--- PHASE 5 - CHECKING ALL RECIPES IN BOM ---------------------------------")
+    logging.info("--- PHASE 6 - CHECKING ALL RECIPES IN BOM ---------------------------------")
     bom.get_proj()
     if not bom.wait_for_bom_completion():
         logging.error("Error waiting for project scan completion")
