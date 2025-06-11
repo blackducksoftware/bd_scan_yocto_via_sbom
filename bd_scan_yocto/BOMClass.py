@@ -354,21 +354,27 @@ class BOM:
         return self.complist.check_recipe_in_list(name, ver)
 
     def add_manual_comp(self, comp_url):
-        posturl = self.projver + "/components"
-        custom_headers = {
-            'Content-Type': 'application/vnd.blackducksoftware.bill-of-materials-6+json'
-        }
+        try:
+            posturl = self.projver + "/components"
+            custom_headers = {
+                'Content-Type': 'application/vnd.blackducksoftware.bill-of-materials-6+json'
+            }
 
-        postdata = {
-            "component": comp_url,
-            "componentPurpose": "Added by CPE (bd_scan_yocto_via_sbom)",
-            "componentModified": False,
-            "componentModification": ""
-        }
+            postdata = {
+                "component": comp_url,
+                "componentPurpose": "Added by CPE (bd_scan_yocto_via_sbom)",
+                "componentModified": False,
+                "componentModification": ""
+            }
 
-        r = self.bd.session.put(posturl, data=json.dumps(postdata), headers=custom_headers)
-        r.raise_for_status()
-        if r.status_code == 202:
-            logging.info(f"Created manual component {comp_url}")
-        else:
-            raise Exception(f"PUT returned {r.status_code}")
+            r = self.bd.session.post(posturl, data=json.dumps(postdata), headers=custom_headers)
+            r.raise_for_status()
+            if r.status_code == 200:
+                logging.info(f"Created manual component {comp_url}")
+                return True
+            else:
+                raise Exception(f"PUT returned {r.status_code}")
+
+        except Exception as e:
+            logging.exception(f"Error creating manual component - {e}")
+        return False

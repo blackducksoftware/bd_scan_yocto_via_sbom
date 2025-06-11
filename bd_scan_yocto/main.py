@@ -36,6 +36,8 @@ def main():
 
     logging.info("")
     logging.info("--- PHASE 2 - GET OE DATA ------------------------------------------------")
+    if not conf.oe_data_folder:
+        logging.info("Not using OE data cache folder (consider using --oe_data_folder) ...")
     if not conf.skip_oe_data:
         oe_class = OE(conf)
         reclist.check_recipes_in_oe(conf, oe_class)
@@ -101,7 +103,8 @@ def main():
         sys.exit(2)
     bom.get_comps()
     reclist.check_recipes_in_bom(bom)
-    reclist.process_missing_recipes(conf, bom)
+    if reclist.process_missing_recipes(conf, bom):
+        reclist.check_recipes_in_bom(bom)
     reclist.report_recipes_in_bom(conf, bom)
 
     logging.info("")

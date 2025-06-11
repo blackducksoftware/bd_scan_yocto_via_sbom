@@ -250,6 +250,7 @@ class RecipeList:
     def process_missing_recipes(self, conf: "Config", bom: "BOM"):
         if not conf.add_comps_by_cpe:
             return
+        comps_added = False
         try:
             for recipe in self.recipes:
                 if recipe.matched_in_bom:
@@ -266,7 +267,10 @@ class RecipeList:
                         comp_arr = bom.get_data(val, "application/vnd.blackducksoftware.component-detail-5+json")
                         for pkg in comp_arr:
                             if '_meta' in pkg and 'href' in pkg['_meta']:
-                                bom.add_manual_comp(pkg['_meta']['href'])
+                                if bom.add_manual_comp(pkg['_meta']['href']):
+                                    comps_added = True
+                return comps_added
 
         except Exception as e:
             logging.exception(f"Error processing missing recipes - {e}")
+        return comps_added
