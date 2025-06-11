@@ -6,8 +6,8 @@ import tempfile
 
 from .RecipeClass import Recipe
 from .BBClass import BB
-from .BOMClass import BOM
-from .ConfigClass import Config
+# from .BOMClass import BOM
+# from .ConfigClass import Config
 
 
 class RecipeList:
@@ -61,7 +61,7 @@ class RecipeList:
                 layers.append(recipe.layer)
         return layers
 
-    def check_recipes_in_oe(self, conf: Config, oe):
+    def check_recipes_in_oe(self, conf: "Config", oe):
         recipes_in_oe = 0
         exact_recipes_in_oe = 0
         changed_layers = 0
@@ -88,7 +88,7 @@ class RecipeList:
         logging.info(f"    - {exact_layers} with the same layer as OE")
         logging.info(f"    - {changed_layers} exist in different OE layer (mapped to original)")
 
-    def scan_pkg_download_files(self, conf: Config, bom: BOM):
+    def scan_pkg_download_files(self, conf: "Config", bom: "BOM"):
         all_pkg_files = BB.get_pkg_files(conf)
         all_download_files = BB.get_download_files(conf)
         found_files = self.find_files(conf, all_pkg_files, all_download_files)
@@ -158,7 +158,7 @@ class RecipeList:
         else:
             return ''
 
-    def report_recipes_in_bom(self, conf: Config, bom: BOM):
+    def report_recipes_in_bom(self, conf: "Config", bom: "BOM"):
 
         in_bom = []
         not_in_bom = []
@@ -221,7 +221,7 @@ class RecipeList:
             except IOError as error:
                 logging.error(f"Unable to write recipe report file {conf.recipe_report} - {error}")
 
-    def check_recipes_in_bom(self, bom: BOM):
+    def check_recipes_in_bom(self, bom: "BOM"):
         for recipe in self.recipes:
             if recipe.check_in_bom(bom):
                 recipe.matched_in_bom = True
@@ -247,7 +247,7 @@ class RecipeList:
             logging.exception(f"Cannot get rel entry - {e}")
         return ''
 
-    def process_missing_recipes(self, conf: Config, bom: BOM):
+    def process_missing_recipes(self, conf: "Config", bom: "BOM"):
         try:
             if not conf.add_comps_by_cpe:
                 return

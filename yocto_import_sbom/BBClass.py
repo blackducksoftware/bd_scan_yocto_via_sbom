@@ -7,14 +7,14 @@ from .RecipeClass import Recipe
 import tempfile
 import glob
 
-from .ConfigClass import Config
-from .RecipeListClass import RecipeList
+# from .ConfigClass import Config
+# from .RecipeListClass import RecipeList
 
 class BB:
     def __init__(self):
         pass
 
-    def process(self, conf: Config, reclist: RecipeList):
+    def process(self, conf: "Config", reclist: "RecipeList"):
         if not conf.skip_bitbake:
             logging.info(f"Checking Bitbake environment ...")
             if not self.check_bitbake():
@@ -81,7 +81,7 @@ class BB:
 
         return lfile.name
 
-    def process_bitbake_env(self, conf: Config):
+    def process_bitbake_env(self, conf: "Config"):
         lines = self.run_bitbake_env().split('\n')
 
         rpm_dir = ''
@@ -176,7 +176,7 @@ class BB:
         # return proc_stdout
 
     @staticmethod
-    def process_showlayers(showlayers_file, reclist: RecipeList):
+    def process_showlayers(showlayers_file, reclist: "RecipeList"):
         try:
             with open(showlayers_file, "r") as bfile:
                 lines = bfile.readlines()
@@ -206,7 +206,7 @@ class BB:
         return True
 
     @staticmethod
-    def process_licman_file(lic_manifest_file, reclist: RecipeList):
+    def process_licman_file(lic_manifest_file, reclist: "RecipeList"):
         packages_total = 0
         recipes_total = 0
         try:
@@ -246,7 +246,7 @@ class BB:
         return True
 
     @staticmethod
-    def check_files(conf: Config):
+    def check_files(conf: "Config"):
         machine = conf.machine.replace('_', '-')
         licman_dir = ''
 
@@ -329,7 +329,7 @@ class BB:
         return True
 
     @staticmethod
-    def get_pkg_files(conf: Config):
+    def get_pkg_files(conf: "Config"):
         if conf.package_dir != '' and not os.path.isdir(conf.package_dir):
             logging.warning(f"Package_dir {conf.package_dir} does not exist")
             return []
@@ -366,7 +366,7 @@ class BB:
 
 
     @staticmethod
-    def process_task_depends_dot(conf: Config, reclist: RecipeList):
+    def process_task_depends_dot(conf: "Config", reclist: "RecipeList"):
         # If reclist is non-zero, check the recipes from task-depends.dot file against this list
         # otherwise create new reclist from task-depends.dot
 

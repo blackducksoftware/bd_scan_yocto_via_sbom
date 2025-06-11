@@ -10,13 +10,13 @@ from pathlib import Path
 from .ComponentListClass import ComponentList
 from .ComponentClass import Component
 from .VulnListClass import VulnList
-from .RecipeListClass import RecipeList
-from .ConfigClass import Config
-from .SBOMClass import SBOM
+# from .RecipeListClass import RecipeList
+# from .ConfigClass import Config
+# from .SBOMClass import SBOM
 
 
 class BOM:
-    def __init__(self, conf: Config):
+    def __init__(self, conf: "Config"):
         self.bdprojname = conf.bd_project
         self.bdvername = conf.bd_version
         self.complist = ComponentList()
@@ -69,7 +69,7 @@ class BOM:
             res = self.bd.get_json(url, headers=headers)
             return res['items']
         except KeyError as e:
-            logging.exception(e)
+            logging.exception(f"Unable to get_data() - {e}")
         return []
 
     def get_paginated_data(self, url, accept_hdr):
@@ -180,7 +180,7 @@ class BOM:
         return uptodate
 
     @staticmethod
-    def upload_sbom(conf, bom, sbom: SBOM):
+    def upload_sbom(conf: "Config", bom: "BOM", sbom: "SBOM"):
         url = bom.bd.base_url + "/api/scan/data"
         headers = {
             'X-CSRF-TOKEN': bom.bd.session.auth.csrf_token,
@@ -215,14 +215,14 @@ class BOM:
 
         return False
 
-    def process_cve_file(self, cve_file, reclist: RecipeList):
+    def process_cve_file(self, cve_file, reclist: "RecipeList"):
         if cve_file.endswith('.cve'):
             return self.process_cve_file_cve(cve_file, reclist)
 
         elif cve_file.endswith('.json'):
             return self.process_cve_file_json(cve_file, reclist)
 
-    def process_cve_file_cve(self, cve_file, reclist: RecipeList):
+    def process_cve_file_cve(self, cve_file, reclist: "RecipeList"):
         try:
             cvefile = open(cve_file, "r")
             cvelines = cvefile.readlines()
@@ -260,7 +260,7 @@ class BOM:
             return True
         return False
 
-    def process_cve_file_json(self, cve_file, reclist: RecipeList):
+    def process_cve_file_json(self, cve_file, reclist: "RecipeList"):
         try:
             data = None
             with open(cve_file, "r") as cf:
@@ -285,7 +285,7 @@ class BOM:
             logging.error(f"Unable to process CVE file {cve_file}: {e}")
         return False
 
-    def run_detect_sigscan(self, conf: Config, tdir, extra_opt=''):
+    def run_detect_sigscan(self, conf: "Config", tdir, extra_opt=''):
         import shutil
 
         cmd = self.get_detect(conf)
@@ -322,7 +322,7 @@ class BOM:
         return True
 
     @staticmethod
-    def get_detect(conf: Config):
+    def get_detect(conf: "Config"):
         cmd = ''
         if not conf.detect_jar:
             tdir = os.path.join(str(Path.home()), "bd-detect")
