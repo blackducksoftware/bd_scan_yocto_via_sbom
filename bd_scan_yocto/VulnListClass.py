@@ -42,7 +42,7 @@ class VulnList:
         async with aiohttp.ClientSession(trust_env=True) as session:
             vuln_tasks = []
             for vuln in self.vulns:
-                if vuln.is_ignored() or vuln.in_kernel:
+                if vuln.is_patched():
                     continue
 
                 vuln_task = asyncio.ensure_future(vuln.async_ignore_vuln(bd, session, token))
