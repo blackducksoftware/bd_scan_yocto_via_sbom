@@ -36,7 +36,7 @@ class VulnList:
 
         return table, ["ID", "Status", "Severity", "Component", "Linked Vuln"]
 
-    async def async_ignore_vulns(self, bd):
+    async def async_ignore_vulns(self, conf, bd):
         token = bd.session.auth.bearer_token
 
         async with aiohttp.ClientSession(trust_env=True) as session:
@@ -45,7 +45,7 @@ class VulnList:
                 if vuln.is_patched():
                     continue
 
-                vuln_task = asyncio.ensure_future(vuln.async_ignore_vuln(bd, session, token))
+                vuln_task = asyncio.ensure_future(vuln.async_ignore_vuln(conf, session, token))
                 vuln_tasks.append(vuln_task)
 
             vuln_data = dict(await asyncio.gather(*vuln_tasks))

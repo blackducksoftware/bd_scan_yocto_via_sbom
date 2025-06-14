@@ -141,13 +141,13 @@ class BOM:
     #     print(tabulate(table, headers=header, tablefmt="tsv"))
     #
 
-    def process_patched_cves(self):
+    def process_patched_cves(self, conf: "Config"):
         self.get_vulns()
 
         # patched, skipped = self.vulnlist.process_patched(self.CVEPatchedVulnList, self.bd)
         # logging.info(f"- {patched} CVEs marked as patched in BD project ({skipped} already patched)")
 
-        patched = self.ignore_vulns_async()
+        patched = self.ignore_vulns_async(conf)
         logging.info(f"- {patched} CVEs marked as patched in BD project")
         return
 
@@ -385,9 +385,9 @@ class BOM:
             logging.exception(f"Error creating manual component - {e}")
         return False
 
-    def ignore_vulns_async(self):
+    def ignore_vulns_async(self, conf: "Config"):
         if platform.system() == "Windows":
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-        data = asyncio.run(self.vulnlist.async_ignore_vulns(self.bd))
+        data = asyncio.run(self.vulnlist.async_ignore_vulns(conf, self.bd))
         return len(data)

@@ -120,7 +120,7 @@ def main():
             sys.exit(2)
 
         if bom.process_cve_file(conf.cve_check_file, reclist):
-            bom.process_patched_cves()
+            bom.process_patched_cves(conf)
     else:
         logging.info("Skipping CVE processing as no cve_check output file supplied")
 
