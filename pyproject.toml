@@ -19,7 +19,9 @@ classifiers = [
 dependencies = [
     "blackduck>=1.1.3",
     "requests",
-    "semver"
+    "semver",
+    "aiohttp",
+    "asyncio"
 ]
 
 [project.urls]
@@ -27,4 +29,4 @@ Homepage = "https://github.com/blackducksoftware/bd_scan_yocto_via_sbom"
 Issues = "https://github.com/blackducksoftware/bd_scan_yocto_via_sbom/issues"
 
 [project.scripts]
-bd-scan-yocto-via-sbom = "yocto_import_sbom:main.main"
+bd-scan-yocto-via-sbom = "bd_scan_yocto:main.main"

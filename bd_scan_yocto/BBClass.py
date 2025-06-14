@@ -10,6 +10,7 @@ import glob
 # from .ConfigClass import Config
 # from .RecipeListClass import RecipeList
 
+
 class BB:
     def __init__(self):
         pass
@@ -264,24 +265,24 @@ class BB:
                 #                   "machine not identified from environment")
                 #     return False
                 # else:
-                    # Pre Yocto-v5 path
-                    # manpath = os.path.join(conf.deploy_dir, "licenses",
-                    #                        f"{conf.target}-{machine}-*", "license.manifest")
-                    manpath = os.path.join(conf.deploy_dir, "licenses", "**", "license.manifest")
-                    logging.debug(f"License.manifest glob path is {manpath}")
-                    manifest = ""
-                    manlist = glob.glob(manpath, recursive=True)
-                    if len(manlist) > 0:
-                        # Get most recent file
-                        manifest = manlist[-1]
+                # Pre Yocto-v5 path
+                # manpath = os.path.join(conf.deploy_dir, "licenses",
+                #                        f"{conf.target}-{machine}-*", "license.manifest")
+                manpath = os.path.join(conf.deploy_dir, "licenses", "**", "license.manifest")
+                logging.debug(f"License.manifest glob path is {manpath}")
+                manifest = ""
+                manlist = glob.glob(manpath, recursive=True)
+                if len(manlist) > 0:
+                    # Get most recent file
+                    manifest = manlist[-1]
 
-                    if not os.path.isfile(manifest):
-                        logging.error(f"Manifest file 'license.manifest' could not be located (Search path is '{manpath})")
-                        return False
-                    else:
-                        logging.info(f"Located license.manifest file {manifest}")
-                        conf.license_manifest = manifest
-                        licman_dir = os.path.dirname(manifest)
+                if not os.path.isfile(manifest):
+                    logging.error(f"Manifest file 'license.manifest' could not be located (Search path is '{manpath})")
+                    return False
+                else:
+                    logging.info(f"Located license.manifest file {manifest}")
+                    conf.license_manifest = manifest
+                    licman_dir = os.path.dirname(manifest)
 
         if conf.process_image_manifest:
             if conf.image_license_manifest == '' and licman_dir != '':
@@ -363,7 +364,6 @@ class BB:
         logging.debug(f"Found {count} files")
 
         return download_files_list
-
 
     @staticmethod
     def process_task_depends_dot(conf: "Config", reclist: "RecipeList"):

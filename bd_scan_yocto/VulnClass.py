@@ -1,4 +1,5 @@
 import logging
+import datetime
 
 
 class Vuln:
@@ -94,13 +95,46 @@ class Vuln:
 
     def is_patched(self):
         try:
-            if 'vulnerabilityWithRemediation' in self.data and 'remediationStatus' in self.data['vulnerabilityWithRemediation']:
+            if ('vulnerabilityWithRemediation' in self.data and
+                    'remediationStatus' in self.data['vulnerabilityWithRemediation']):
                 if self.data['vulnerabilityWithRemediation']['remediationStatus'] == 'PATCHED':
                     return True
                 else:
                     return False
-            if self.data['ignored'] == True:
+            if self.data['ignored']:
                 return True
         except Exception as e:
             logging.error(f"Error in is_patched() - {e}")
         return False
+
+    def url(self):
+        try:
+            return self.data['_meta']['href']
+        except KeyError:
+            return ''
+
+    async def async_ignore_vuln(self, conf, session, token):
+        if conf.bd_trustcert:
+            ssl = False
+        else:
+            ssl = None
+
+        headers = {
+            # 'accept': "application/vnd.blackducksoftware.bill-of-materials-6+json",
+            'Authorization': f'Bearer {token}',
+        }
+        # resp = globals.bd.get_json(thishref, headers=headers)
+        x = datetime.datetime.now()
+        mydate = x.strftime("%x %X")
+
+        payload = self.data
+        # payload['remediationJustification'] = "NO_CODE"
+        payload['comment'] = f"Remediated by bd_scan_yocto_via_sbom utility {mydate} - patched locally"
+        payload['remediationStatus'] = "PATCHED"
+
+        logging.debug(f"{self.id} - {self.url()}")
+        async with session.put(self.url(), headers=headers, json=payload, ssl=ssl) as response:
+            res = response.status
+
+        # print(res)
+        return self.id(), res

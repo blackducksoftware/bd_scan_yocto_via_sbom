@@ -6,6 +6,8 @@ import time
 import os
 import json
 from pathlib import Path
+import platform
+import asyncio
 
 from .ComponentListClass import ComponentList
 from .ComponentClass import Component
@@ -142,9 +144,11 @@ class BOM:
     def process_patched_cves(self):
         self.get_vulns()
 
-        patched, skipped = self.vulnlist.process_patched(self.CVEPatchedVulnList, self.bd)
+        # patched, skipped = self.vulnlist.process_patched(self.CVEPatchedVulnList, self.bd)
+        # logging.info(f"- {patched} CVEs marked as patched in BD project ({skipped} already patched)")
 
-        logging.info(f"- {patched} CVEs marked as patched in BD project ({skipped} already patched)")
+        patched = self.ignore_vulns_async()
+        logging.info(f"- {patched} CVEs marked as patched in BD project")
         return
 
     def wait_for_bom_completion(self):
@@ -380,3 +384,10 @@ class BOM:
         except Exception as e:
             logging.exception(f"Error creating manual component - {e}")
         return False
+
+    def ignore_vulns_async(self):
+        if platform.system() == "Windows":
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+        data = asyncio.run(self.vulnlist.async_ignore_vulns(self.bd))
+        return len(data)

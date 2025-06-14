@@ -3,6 +3,7 @@ import logging
 
 from .BOMClass import BOM
 
+
 class Recipe:
     def __init__(self, name, version, rel=None):
         self.name = name

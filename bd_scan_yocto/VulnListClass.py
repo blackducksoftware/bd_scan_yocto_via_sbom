@@ -1,4 +1,6 @@
 from .VulnClass import Vuln
+import aiohttp
+import asyncio
 
 
 class VulnList:
@@ -33,3 +35,20 @@ class VulnList:
             table.append([vuln.id(), vuln.status(), vuln.severity(), vuln.component(), vuln.get_linked_vuln(bd)])
 
         return table, ["ID", "Status", "Severity", "Component", "Linked Vuln"]
+
+    async def async_ignore_vulns(self, bd):
+        token = bd.session.auth.bearer_token
+
+        async with aiohttp.ClientSession(trust_env=True) as session:
+            vuln_tasks = []
+            for vuln in self.vulns:
+                if vuln.is_ignored() or vuln.in_kernel:
+                    continue
+
+                vuln_task = asyncio.ensure_future(vuln.async_ignore_vuln(bd, session, token))
+                vuln_tasks.append(vuln_task)
+
+            vuln_data = dict(await asyncio.gather(*vuln_tasks))
+            await asyncio.sleep(0.250)
+
+        return vuln_data

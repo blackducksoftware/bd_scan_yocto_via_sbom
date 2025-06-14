@@ -6,6 +6,7 @@ from .OEClass import OE
 
 script_version = "v1.1.0"
 
+
 class Config:
     def __init__(self):
         parser = argparse.ArgumentParser(description='Create BD Yocto project from license.manifest via SBOM, '
@@ -40,8 +41,8 @@ class Config:
                             action='store_true')
         parser.add_argument("-i", "--image_license_manifest",
                             help="OPTIONAL image_license.manifest file path "
-                                                             "(usually determined from Bitbake env - default "
-                                                             "'image_license.manifest')",
+                                 "(usually determined from Bitbake env - default "
+                                 "'image_license.manifest')",
                             default="")
         parser.add_argument("-b", "--bitbake_layers_file",
                             help="OPTIONAL File containing output of 'bitbake-layers show-recipes' command (usually "
@@ -87,7 +88,7 @@ class Config:
                             action='store_true')
         parser.add_argument("--scan_all_packages",
                             help="Signature scan all packages (only recipes not matched"
-                                                     "from OE data are scanned by default)",
+                                 "from OE data are scanned by default)",
                             action='store_true')
         parser.add_argument("--detect_jar_path", help="OPTIONAL BD Detect jar path", default="")
         parser.add_argument("--detect_opts", help="OPTIONAL Additional BD Detect options (remove leading '--')", default="")
@@ -102,7 +103,7 @@ class Config:
         parser.add_argument("--recipe_report", help="Output recipe report to file", default="")
         parser.add_argument("--no_unmap", help="Do not unmap previous scans when running new scan",
                             action='store_true')
-        parser.add_argument("--add_comps_by_cpe", help="For recipes not matched by OE lookup or signature scan, try looking up using CPE to add them",
+        parser.add_argument("--add_comps_by_cpe", help="Use CPE to add recipes not matched by OE lookup or signature scan",
                             action='store_true')
 
         args = parser.parse_args()
@@ -119,13 +120,13 @@ class Config:
         self.skip_bitbake = args.skip_bitbake
         self.license_manifest = ''
         self.image_license_manifest = ''
-        self.process_image_manifest = False
-        self.target = ''
+        self.process_image_manifest = args.process_image_manifest
+        self.target = args.target
         self.machine = args.machine
         self.task_depends_dot_file = ''
         self.bitbake_layers_file = ''
         self.cve_check_file = ''
-        self.skip_oe_data = False
+        self.skip_oe_data = args.skip_oe_data
         self.max_oe_version_distance = ''
         self.oe_data_folder = args.oe_data_folder
         self.package_dir = ''
@@ -143,8 +144,8 @@ class Config:
         self.cve_check_dir = ''
         self.license_dir = ''
         self.recipe_report = ''
-        self.unmap = True
-        self.add_comps_by_cpe = False
+        self.unmap = not args.no_unmap
+        self.add_comps_by_cpe = args.add_comps_by_cpe
 
         terminate = False
         if args.debug:
@@ -167,7 +168,7 @@ class Config:
 
         logging.info("SUPPLIED ARGUMENTS:")
         for arg in vars(args):
-            logging.info(f"--{arg}={getattr(args, arg)}")
+            logging.info(f"    --{arg}={getattr(args, arg)}")
 
         bd_connect = True
         if args.output:
@@ -220,9 +221,6 @@ class Config:
             else:
                 self.license_manifest = args.license_manifest
 
-        if args.process_image_manifest:
-            self.process_image_manifest = True
-
         if args.image_license_manifest:
             if not os.path.exists(args.image_license_manifest):
                 logging.error(f"License.manifest '{args.image_license_manifest}' file does not exist")
@@ -230,12 +228,6 @@ class Config:
             else:
                 self.image_license_manifest = args.image_license_manifest
                 self.process_image_manifest = True
-
-        if args.target:
-            self.target = args.target
-        # elif not self.license_manifest:
-        #     logging.error(f"Target --target required if --license_manifest not specified")
-        #     terminate = True
 
         if args.task_depends_dot_file:
             if not os.path.exists(args.task_depends_dot_file):
@@ -264,9 +256,6 @@ class Config:
         if not self.output_file and (not self.bd_url or not self.bd_api):
             logging.error("Black Duck URL/API and output file not specified - nothing to do")
             terminate = True
-
-        if args.skip_oe_data:
-            self.skip_oe_data = True
 
         distarr = OE.calc_specified_version_distance(args.max_oe_version_distance)
         if distarr[0] == -1:
@@ -323,12 +312,6 @@ class Config:
 
         if args.detect_opts != '':
             self.detect_opts = args.detect_opts.replace('detect', '--detect')
-
-        if args.no_unmap:
-            self.unmap = False
-
-        if args.add_comps_by_cpe:
-            self.add_comps_by_cpe = True
 
         if terminate:
             sys.exit(2)
