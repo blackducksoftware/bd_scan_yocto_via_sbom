@@ -40,7 +40,10 @@ class BOM:
 
     def get_proj(self):
         logging.info(f"Working on project '{self.bdprojname}' version '{self.bdvername}'")
-        self.bdver_dict = self.get_project()
+        self.bdver_dict = self.get_projdata()
+        if not self.bdver_dict:
+            return False
+        return True
 
     def get_comps(self):
         self.complist = ComponentList()  # Reset component list
@@ -100,7 +103,7 @@ class BOM:
     def count_comps(self):
         return self.complist.count()
 
-    def get_project(self):
+    def get_projdata(self):
         params = {
             'q': "name:" + self.bdprojname,
             'sort': 'name',
@@ -117,12 +120,12 @@ class BOM:
                         break
                 break
         else:
-            logging.error(f"Version '{self.bdvername}' does not exist in project '{self.bdprojname}'")
-            sys.exit(2)
+            logging.warning(f"Version '{self.bdvername}' does not exist in project '{self.bdprojname}'")
+            return None
 
         if ver_dict is None:
             logging.warning(f"Project '{self.bdprojname}' does not exist")
-            sys.exit(2)
+            return None
 
         return ver_dict
 
@@ -176,7 +179,6 @@ class BOM:
             logging.error(str(e))
             return False
 
-        logging.info("Project scan processing complete")
         return uptodate
 
     @staticmethod

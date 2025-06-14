@@ -78,7 +78,7 @@ class SBOM:
         rand_hex_str = f"{hex1}-{hex2}-{hex3}-{hex4}-{hex5}"
         return rand_hex_str
 
-    def add_package(self, recipe: "Recipe"):
+    def add_recipe(self, recipe: "Recipe"):
         spdxid = self.create_spdx_ident()
         if recipe.oe_recipe == {}:
             if recipe.layer:
@@ -160,7 +160,7 @@ class SBOM:
         package_json['externalRefs'].append(
                 {
                     "referenceCategory": "OTHER",
-                    "referenceLocator": compid,
+                    "referenceLocator": origid,
                     "referenceType": "BlackDuck-ComponentOrigin"
                 })
         package_json['externalRefs'].append(
@@ -172,7 +172,7 @@ class SBOM:
         package_json['externalRefs'].append(
                 {
                     "referenceCategory": "OTHER",
-                    "referenceLocator": origid,
+                    "referenceLocator": compid,
                     "referenceType": "BlackDuck-Component"
                 })
 
@@ -186,7 +186,7 @@ class SBOM:
 
     def process_recipes(self, reclist: "RecipeList"):
         for recipe in reclist:
-            self.add_package(recipe)
+            self.add_recipe(recipe)
 
     def output(self, output_file):
         try:
