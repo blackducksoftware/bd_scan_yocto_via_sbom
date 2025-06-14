@@ -47,7 +47,7 @@ def main():
                      "(remove --skip_oe_data to enable)")
 
     logging.info("")
-    logging.info("--- PHASE 3 - CREATE & UPLOAD SBOM ----------------------------------------")
+    logging.info("--- PHASE 3 - GENERATE & UPLOAD SBOM -------------------------------------")
     sbom = SBOM(conf.bd_project, conf.bd_version)
     sbom.process_recipes(reclist.recipes)
     if not sbom.output(conf.output_file):

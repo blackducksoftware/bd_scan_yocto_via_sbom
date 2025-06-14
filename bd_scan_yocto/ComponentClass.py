@@ -1,5 +1,6 @@
 import logging
 
+
 class Component:
     def __init__(self, name, version, data):
         self.name = name
@@ -48,5 +49,5 @@ class Component:
                     origlist.append(origin['externalId'])
             return origlist
         except KeyError as e:
-            logging.error("Error in get_origin()")
+            logging.error(f"Error in get_origin(): {e}")
             return []

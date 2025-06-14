@@ -8,6 +8,7 @@ from .RecipeClass import Recipe
 from .BBClass import BB
 # from .BOMClass import BOM
 # from .ConfigClass import Config
+from .SBOMClass import SBOM
 
 
 class RecipeList:
@@ -252,6 +253,7 @@ class RecipeList:
             return
         comps_added = False
         try:
+            add_sbom = SBOM(conf.bd_project, conf.bd_version)
             for recipe in self.recipes:
                 if recipe.matched_in_bom:
                     continue
@@ -268,14 +270,32 @@ class RecipeList:
                         comp_arr = bom.get_data(val, "application/vnd.blackducksoftware.component-detail-5+json")
                         logging.debug(f"Found {len(comp_arr)} matching components from CPE")
                         for pkg in comp_arr:
-                            if '_meta' in pkg and 'href' in pkg['_meta']:
-                                if bom.add_manual_comp(pkg['_meta']['href']):
-                                    logging.info(f"Manually added component {recipe.name}/{recipe.version} using CPE")
+                            if '_meta' in pkg and 'links' in pkg['_meta']:
+                                orig_arr = pkg['_meta']['links']
+                                orig_data = None
+                                for orig in orig_arr:
+                                    if orig['rel'] == 'origins':
+                                        orig_data = bom.get_data(orig['href'], "application/vnd.blackducksoftware.component-detail-5+json")
+                                        break
+                                if orig_data:
+                                    orig = orig_data[0]
+                                    o_vername = orig['versionName']
+                                    add_sbom.add_component(recipe.name, o_vername, orig['_meta']['href'])
                                     comps_added = True
                                     recipe.matched_in_bom = True
+                                    logging.info(f"Added component {recipe.name}/{recipe.version} using CPE in SBOM")
                                     break
+
                         if recipe.matched_in_bom:
                             break
+            if comps_added:
+                if not add_sbom.output(conf.output_file):
+                    logging.error("Unable to create SBOM file")
+                if bom.upload_sbom(conf, bom, add_sbom):
+                    logging.info(f"Uploaded SBOM file '{add_sbom.file}' to create project "
+                                 f"'{conf.bd_project}' version '{conf.bd_version}'")
+                else:
+                    return False
             return comps_added
 
         except Exception as e:
