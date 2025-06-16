@@ -48,11 +48,11 @@ class Recipe:
     def full_id(self):
         return f"{self.layer}/{self.name}/{self.version}"
 
-    def cpe_string(self):
+    def cpe_string(self, conf):
         # cpe:2.3:a:*:glibc:2.40:*:*:*:*:*:*:*
         ver = self.version.split('+')[0]
         name = self.name
-        if 'linux-yocto' in self.name:
+        if conf.kernel_recipe in self.name:
             name = 'linux_kernel'
 
         cpe = f"cpe:2.3:a:*:{name}:{ver}:*:*:*:*:*:*:*"

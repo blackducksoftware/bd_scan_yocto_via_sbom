@@ -105,6 +105,9 @@ class Config:
                             action='store_true')
         parser.add_argument("--add_comps_by_cpe", help="Use CPE to add recipes not matched by OE lookup or signature scan",
                             action='store_true')
+        parser.add_argument("--process_kernel_vulns", help="Process kernel modules to ignore vulns not in compiled kernel modules (requires --process_image_manifest)",
+                            action='store_true')
+        parser.add_argument("--kernel_recipe", help="Alternate kernel recipe name - used in CPE matching --add_comps_by_cpe (default 'linux-yocto')", default="linux-yocto")
 
         args = parser.parse_args()
 
@@ -146,6 +149,9 @@ class Config:
         self.recipe_report = ''
         self.unmap = not args.no_unmap
         self.add_comps_by_cpe = args.add_comps_by_cpe
+        self.process_kernel_vulns = args.process_kernel_vulns
+        self.kernel_recipe = args.kernel_recipe
+        self.kernel_files = []
 
         terminate = False
         if args.debug:

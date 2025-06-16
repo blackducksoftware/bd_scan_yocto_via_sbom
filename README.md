@@ -119,7 +119,7 @@ There are several additional options to modify the behaviour of this utility inc
 
     YOCTO PROJECT DETAILS OPTIONAL:
      -l LICENSE_MANIFEST, --license_manifest LICENSE_MANIFEST
-            license.manifest file path (Latest file in standard will be used if not specified)
+            license.manifest file path (Latest file in standard location will be used if not specified)
      --process_image_manifest
             Process the image_license.manifest file to process recipes from the core image using the
             default location. Alternatively specify the image_license.manifest file path.

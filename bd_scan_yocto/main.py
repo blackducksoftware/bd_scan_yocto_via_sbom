@@ -8,6 +8,7 @@ import logging
 import sys
 
 import tempfile
+# from bd_kernel_vulns import main
 # import os
 
 empty_dir = tempfile.TemporaryDirectory()
@@ -123,6 +124,10 @@ def main():
             bom.process_patched_cves(conf)
     else:
         logging.info("Skipping CVE processing as no cve_check output file supplied")
+
+    if conf.process_kernel_vulns and conf.image_license_manifest:
+        kfilelist = bb.process_kernel_files(conf)
+        print(len(kfilelist))
 
     logging.info("")
     logging.info("DONE")

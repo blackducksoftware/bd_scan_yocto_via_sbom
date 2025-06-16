@@ -258,7 +258,7 @@ class RecipeList:
                 if recipe.matched_in_bom:
                     continue
 
-                rec_cpe = recipe.cpe_string()
+                rec_cpe = recipe.cpe_string(conf)
                 # print(f"CPE - missing recipe {recipe.name}/{recipe.version} - {rec_cpe}")
 
                 url = f"{conf.bd_url}/api/cpes?q={rec_cpe}"

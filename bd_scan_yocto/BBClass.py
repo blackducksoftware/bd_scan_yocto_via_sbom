@@ -6,6 +6,7 @@ import os
 from .RecipeClass import Recipe
 import tempfile
 import glob
+import zipfile
 
 # from .ConfigClass import Config
 # from .RecipeListClass import RecipeList
@@ -32,10 +33,10 @@ class BB:
             return False
 
         if conf.license_manifest:
-            self.process_licman_file(conf.license_manifest, reclist)
+            self.process_licman_file(conf, conf.license_manifest, reclist)
 
         if conf.process_image_manifest:
-            self.process_licman_file(conf.image_license_manifest, reclist)
+            self.process_licman_file(conf, conf.image_license_manifest, reclist)
 
         if conf.task_depends_dot_file:
             self.process_task_depends_dot(conf, reclist)
@@ -161,7 +162,7 @@ class BB:
                 logging.info(f"Calculated: package_dir={conf.package_dir}")
 
     @staticmethod
-    def run_cmd(command):
+    def run_cmd(command: list):
         try:
             ret = subprocess.run(command, capture_output=True, text=True, timeout=60)
             if ret.returncode != 0:
@@ -177,7 +178,7 @@ class BB:
         # return proc_stdout
 
     @staticmethod
-    def process_showlayers(showlayers_file, reclist: "RecipeList"):
+    def process_showlayers(showlayers_file: str, reclist: "RecipeList"):
         try:
             with open(showlayers_file, "r") as bfile:
                 lines = bfile.readlines()
@@ -207,7 +208,7 @@ class BB:
         return True
 
     @staticmethod
-    def process_licman_file(lic_manifest_file, reclist: "RecipeList"):
+    def process_licman_file(conf: "Config", lic_manifest_file, reclist: "RecipeList"):
         packages_total = 0
         recipes_total = 0
         try:
@@ -215,6 +216,7 @@ class BB:
                 lines = lfile.readlines()
                 ver = ''
                 recipe = ''
+                prev_recipe = ''
                 for line in lines:
                     # PACKAGE NAME: name
                     # PACKAGE VERSION: ver
@@ -228,6 +230,10 @@ class BB:
                         ver = line.split(': ')[1]
                     elif line.startswith("RECIPE NAME:"):
                         recipe = line.split(': ')[1]
+                    elif line.startswith("FILES:"):
+                        if prev_recipe == conf.kernel_recipe:
+                            kfiles = line.split(': ')[1]
+                            conf.kernel_files = kfiles.split(' ')
 
                     if recipe and ver:
                         packages_total += 1
@@ -236,6 +242,7 @@ class BB:
                             reclist.recipes.append(rec_obj)
                             recipes_total += 1
                         ver = ''
+                        prev_recipe = recipe
                         recipe = ''
 
                 logging.info(f"- {packages_total} packages found in {lic_manifest_file} ({recipes_total} recipes)")
@@ -346,7 +353,7 @@ class BB:
         return package_files_list
 
     @staticmethod
-    def get_download_files(conf):
+    def get_download_files(conf: "Config"):
         if conf.download_dir != '' and not os.path.isdir(conf.download_dir):
             logging.warning(f"Download_dir {conf.download_dir} does not exist")
             return []
@@ -466,3 +473,20 @@ class BB:
             sys.exit(2)
 
         return
+
+    @staticmethod
+    def process_kernel_files(conf: "Config"):
+        kernel_source_list = []
+        try:
+            for kfile in conf.kernel_files:
+                if kfile.endswith(".tgz"):
+                    with zipfile.ZipFile(kfile) as z:
+                        for zinfo in z.infolist():
+                            if zinfo.is_dir():
+                                continue
+                            if zinfo.filename.endswith('.ko'):
+                                kernel_source_list.append(zinfo.filename.replace('.ko', '.c'))
+            return kernel_source_list
+        except Exception as e:
+            conf.logger.error(f"Can't open zip file (Skipped) - {e}\n")
+        return []
