@@ -6,7 +6,7 @@ import os
 from .RecipeClass import Recipe
 import tempfile
 import glob
-import zipfile
+import tarfile
 
 # from .ConfigClass import Config
 # from .RecipeListClass import RecipeList
@@ -480,13 +480,17 @@ class BB:
         try:
             for kfile in conf.kernel_files:
                 if kfile.endswith(".tgz"):
-                    with zipfile.ZipFile(kfile) as z:
-                        for zinfo in z.infolist():
-                            if zinfo.is_dir():
-                                continue
-                            if zinfo.filename.endswith('.ko'):
-                                kernel_source_list.append(zinfo.filename.replace('.ko', '.c'))
+                    with tarfile.open(kfile, 'r') as tar:
+                        # Use getnames() to get a list of all member names
+                        file_names = tar.getnames()
+                        for fname in file_names:
+                            if fname.endswith('.ko'):
+                                kernel_source_list.append(fname.replace('.ko', '.c'))
             return kernel_source_list
+        except FileNotFoundError as e:
+            logging.error(f"Can't open kernel tgz file - {e}\n")
+        except tarfile.ReadError as e:
+            print(f"Failed to read '{e}'. It may not be a valid tar file.")
         except Exception as e:
-            conf.logger.error(f"Can't open zip file (Skipped) - {e}\n")
+            conf.logger.error(f"Unidentified error - {e}\n")
         return []
