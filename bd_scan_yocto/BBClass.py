@@ -480,7 +480,7 @@ class BB:
         try:
             for kfile in conf.kernel_files:
                 if kfile.endswith(".tgz"):
-                    tpath = os.path.join(conf.deploy_dir, "images", conf.machine, kfile)
+                    tpath = os.path.join(conf.deploy_dir, "images", conf.machine.replace('_','-'), kfile)
                     with tarfile.open(tpath, 'r') as tar:
                         # Use getnames() to get a list of all member names
                         file_names = tar.getnames()
