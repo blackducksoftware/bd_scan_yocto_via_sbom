@@ -20,17 +20,17 @@ def main():
     logging.info("--- PHASE 1 - PROCESS PROJECT --------------------------------------------")
     bom = BOM(conf)
 
-    if not bom.get_proj():
-        if conf.output_file == '':
-            extra_opt = '--detect.tools=DETECTOR'
-            if conf.unmap:
-                extra_opt += ' --detect.project.codelocation.unmap=true'
-            if not bom.run_detect_sigscan(conf, empty_dir.name,
-                                          extra_opt=extra_opt):
-                logging.error("Unable to run Detect to initialise project")
-                sys.exit(2)
-    else:
+    if bom.get_proj():
         logging.info(f"Project {conf.bd_project} Version {conf.bd_version} already exists")
+
+    if conf.output_file == '':
+        extra_opt = '--detect.tools=DETECTOR'
+        if conf.unmap:
+            extra_opt += ' --detect.project.codelocation.unmap=true'
+        if not bom.run_detect_sigscan(conf, empty_dir.name,
+                                      extra_opt=extra_opt):
+            logging.error("Unable to run Detect to initialise project")
+            sys.exit(2)
 
     reclist = RecipeList()
     bb = BB()
