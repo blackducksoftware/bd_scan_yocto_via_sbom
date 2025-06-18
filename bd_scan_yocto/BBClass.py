@@ -260,6 +260,7 @@ class BB:
 
         if not conf.license_manifest and not conf.task_depends_dot_file:
             if conf.license_dir:
+                # Yocto pre-v5 paths
                 manpath = os.path.join(conf.license_dir,
                                        f"{conf.target}-{machine}", "license.manifest")
                 if os.path.isfile(manpath):
@@ -278,7 +279,7 @@ class BB:
                 manpath = os.path.join(conf.deploy_dir, "licenses", "**", "license.manifest")
                 logging.debug(f"License.manifest glob path is {manpath}")
                 manifest = ""
-                manlist = glob.glob(manpath, recursive=True)
+                manlist = sorted(glob.glob(manpath, recursive=True), key=os.path.getmtime, reverse=True)
                 if len(manlist) > 0:
                     # Get most recent file
                     manifest = manlist[-1]
@@ -321,7 +322,7 @@ class BB:
                 #             break
 
                 cvepath = os.path.join(conf.deploy_dir, "images", "**", conf.target + "-" + machine + "*.cve")
-                cvelist = glob.glob(cvepath, recursive=True)
+                cvelist = sorted(glob.glob(cvepath, recursive=True), key=os.path.getmtime, reverse=True)
                 if len(cvelist) > 0:
                     # Get most recent file
                     cfile = cvelist[-1]
@@ -480,8 +481,11 @@ class BB:
         try:
             for kfile in conf.kernel_files:
                 if kfile.endswith(".tgz"):
-                    tpath = os.path.join(conf.deploy_dir, "images", conf.machine.replace('_','-'), kfile)
-                    with tarfile.open(tpath, 'r') as tar:
+                    tpath = os.path.join(conf.deploy_dir, "images", conf.machine.replace('_','-'), '**', kfile)
+                    kfilelist = sorted(glob.glob(tpath, recursive=True), key=os.path.getmtime, reverse=True)
+                    if len(kfilelist) == 0 or not os.path.isfile(kfilelist[-1]):
+                        continue
+                    with tarfile.open(kfilelist[-1], 'r') as tar:
                         # Use getnames() to get a list of all member names
                         file_names = tar.getnames()
                         for fname in file_names:
