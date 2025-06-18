@@ -8,7 +8,7 @@ import logging
 import sys
 
 import tempfile
-# from bd_kernel_vulns import main
+from bd_kernel_vulns import main as bdkv_main
 # import os
 
 empty_dir = tempfile.TemporaryDirectory()
@@ -127,7 +127,14 @@ def main():
 
     if conf.process_kernel_vulns and conf.image_license_manifest:
         kfilelist = bb.process_kernel_files(conf)
-        print(len(kfilelist))
+        kfile = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix='.lst')
+        kfile.write('\n'.join(kfilelist))
+        kfile.close()
+
+        bdkv_main.process_kernel_vulns(blackduck_url=conf.bd_url, blackduck_api_token=conf.bd_api,
+                                             kernel_source_file=kfile.name, project=conf.bd_project,
+                                             version=conf.bd_version, logger=logging,
+                                             blackduck_trust_cert=conf.bd_trustcert)
 
     logging.info("")
     logging.info("DONE")
