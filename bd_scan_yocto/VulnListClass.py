@@ -38,17 +38,26 @@ class VulnList:
 
     async def async_ignore_vulns(self, conf, bd):
         token = bd.session.auth.bearer_token
+        vulns_per_cycle = 250
+        ignored_count = 0
+        index = 0
 
-        async with aiohttp.ClientSession(trust_env=True) as session:
-            vuln_tasks = []
-            for vuln in self.vulns:
-                if vuln.is_patched():
-                    continue
+        while True:
+            async with aiohttp.ClientSession(trust_env=True) as session:
+                vuln_tasks = []
+                for vuln in self.vulns[index:]:
+                    if vuln.is_patched():
+                        continue
+                    index += 1
+                    vuln_task = asyncio.ensure_future(vuln.async_ignore_vuln(conf, session, token))
+                    vuln_tasks.append(vuln_task)
+                    if len(vuln_tasks) >= vulns_per_cycle:
+                        break
 
-                vuln_task = asyncio.ensure_future(vuln.async_ignore_vuln(conf, session, token))
-                vuln_tasks.append(vuln_task)
+                vuln_data = dict(await asyncio.gather(*vuln_tasks))
+                await asyncio.sleep(0.250)
 
-            vuln_data = dict(await asyncio.gather(*vuln_tasks))
-            await asyncio.sleep(0.250)
-
-        return vuln_data
+            ignored_count += len(vuln_data)
+            if index >= len(self.vulns):
+                break
+        return ignored_count
