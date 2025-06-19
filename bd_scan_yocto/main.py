@@ -108,6 +108,7 @@ def main():
     bom.get_comps()
     reclist.check_recipes_in_bom(bom)
     if reclist.process_missing_recipes(conf, bom):
+        bom.wait_for_bom_completion()
         bom.get_comps()
         reclist.check_recipes_in_bom(bom)
     reclist.report_recipes_in_bom(conf, bom)
@@ -115,29 +116,27 @@ def main():
     logging.info("")
     logging.info("--- PHASE 6 - APPLY CVE PATCHES ------------------------------------------")
     if conf.cve_check_file:
-        bom.get_proj()
-        if not bom.wait_for_bom_completion():
-            logging.error("Error waiting for project scan completion")
-            sys.exit(2)
+        # bom.get_proj()
 
         if bom.process_cve_file(conf.cve_check_file, reclist):
             bom.process_patched_cves(conf)
     else:
         logging.info("Skipping CVE processing as no cve_check output file supplied")
 
-    if conf.process_kernel_vulns and conf.image_license_manifest:
+    if conf.process_kernel_vulns and bom.check_kernel_in_bom():
+        logging.info("Ignoring Kernel vulnerabilities for modules not included in kernel build ...")
         kfilelist = bb.process_kernel_files(conf)
         kfile = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix='.lst')
         kfile.write('\n'.join(kfilelist))
         kfile.close()
 
         bdkv_main.process_kernel_vulns(blackduck_url=conf.bd_url, blackduck_api_token=conf.bd_api,
-                                             kernel_source_file=kfile.name, project=conf.bd_project,
-                                             version=conf.bd_version, logger=logging,
-                                             blackduck_trust_cert=conf.bd_trustcert)
+                                       kernel_source_file=kfile.name, project=conf.bd_project,
+                                       version=conf.bd_version, logger=logging,
+                                       blackduck_trust_cert=conf.bd_trustcert)
 
     logging.info("")
-    logging.info("DONE")
+    logging.info("bd_scan_yocto_via_sbom DONE")
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 from .VulnClass import Vuln
 import aiohttp
 import asyncio
+import logging
 
 
 class VulnList:
@@ -36,28 +37,20 @@ class VulnList:
 
         return table, ["ID", "Status", "Severity", "Component", "Linked Vuln"]
 
-    async def async_ignore_vulns(self, conf, bd):
+    async def async_ignore_vulns(self, conf, bd, cve_list):
         token = bd.session.auth.bearer_token
-        vulns_per_cycle = 250
-        ignored_count = 0
-        index = 0
+        logging.info("Ignoring locally patched vulnerabilities ...")
 
-        while True:
-            async with aiohttp.ClientSession(trust_env=True) as session:
-                vuln_tasks = []
-                for vuln in self.vulns[index:]:
-                    if vuln.is_patched():
-                        continue
-                    index += 1
-                    vuln_task = asyncio.ensure_future(vuln.async_ignore_vuln(conf, session, token))
-                    vuln_tasks.append(vuln_task)
-                    if len(vuln_tasks) >= vulns_per_cycle:
-                        break
+        async with aiohttp.ClientSession(trust_env=True) as session:
+            vuln_tasks = []
+            for vuln in self.vulns:
+                cve = vuln.related_vuln()
+                if cve not in cve_list or vuln.is_patched():
+                    continue
+                vuln_task = asyncio.ensure_future(vuln.async_ignore_vuln(conf, session, token))
+                vuln_tasks.append(vuln_task)
 
-                vuln_data = dict(await asyncio.gather(*vuln_tasks))
-                await asyncio.sleep(0.250)
+            vuln_data = dict(await asyncio.gather(*vuln_tasks))
+            await asyncio.sleep(0.250)
 
-            ignored_count += len(vuln_data)
-            if index >= len(self.vulns):
-                break
-        return ignored_count
+        return len(vuln_data)

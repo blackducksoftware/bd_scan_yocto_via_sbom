@@ -55,7 +55,7 @@ class OE:
         else:
             try:
                 with open(lfile, "r") as infile:
-                    logging.info(f"- loaded from file {lfile}")
+                    logging.info(f"- loaded OE Layers from file {lfile}")
                     return json.load(infile)
 
             except Exception as e:
@@ -96,7 +96,7 @@ class OE:
         else:
             try:
                 with open(lfile, "r") as infile:
-                    logging.info(f"- loaded from file {lfile}")
+                    logging.info(f"- loaded OE Recipes from file {lfile}")
                     recipe_dict = json.load(infile)
                 return recipe_dict
 
@@ -139,7 +139,7 @@ class OE:
         else:
             try:
                 with open(lfile, "r") as infile:
-                    logging.info(f"- loaded from file {lfile}")
+                    logging.info(f"- loaded OE LayerBranches from file {lfile}")
                     layerbranches_dict = json.load(infile)
                 return layerbranches_dict
 
@@ -182,7 +182,7 @@ class OE:
         else:
             try:
                 with open(lfile, "r") as infile:
-                    logging.info(f"- loaded from file {lfile}")
+                    logging.info(f"- loaded OE Branches from file {lfile}")
                     layerbranches_dict = json.load(infile)
                 return layerbranches_dict
 

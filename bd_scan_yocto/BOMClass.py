@@ -147,7 +147,7 @@ class BOM:
         # patched, skipped = self.vulnlist.process_patched(self.CVEPatchedVulnList, self.bd)
         # logging.info(f"- {patched} CVEs marked as patched in BD project ({skipped} already patched)")
 
-        patched = self.ignore_vulns_async(conf)
+        patched = self.ignore_vulns_async(conf, self.CVEPatchedVulnList)
         logging.info(f"- {patched} CVEs marked as patched in BD project")
         return
 
@@ -270,7 +270,7 @@ class BOM:
         try:
             data = None
             with open(cve_file, "r") as cf:
-                logging.info(f"- loaded from file {cve_file}")
+                logging.info(f"- loaded Patched CVEs from file {cve_file}")
                 data = json.load(cf)
 
             if data and 'package' in data:
@@ -359,6 +359,9 @@ class BOM:
     def check_recipe_in_bom(self, name, ver):
         return self.complist.check_recipe_in_list(name, ver)
 
+    def check_kernel_in_bom(self):
+        return self.complist.check_kernel_in_bom()
+
     def add_manual_comp(self, comp_url):
         try:
             posturl = self.projver + "/components"
@@ -385,9 +388,9 @@ class BOM:
             logging.exception(f"Error creating manual component - {e}")
         return False
 
-    def ignore_vulns_async(self, conf: "Config"):
+    def ignore_vulns_async(self, conf: "Config", cve_list):
         if platform.system() == "Windows":
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-        data = asyncio.run(self.vulnlist.async_ignore_vulns(conf, self.bd))
-        return len(data)
+        count = asyncio.run(self.vulnlist.async_ignore_vulns(conf, self.bd, cve_list))
+        return count

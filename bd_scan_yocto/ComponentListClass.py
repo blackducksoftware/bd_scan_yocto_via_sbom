@@ -36,3 +36,9 @@ class ComponentList:
             logging.error(f"Error checking recipe {recipe_name} - {e}")
 
         return False
+
+    def check_kernel_in_bom(self):
+        for component in self.components:
+            if component.name == 'Linux Kernel':
+                return True
+        return False
