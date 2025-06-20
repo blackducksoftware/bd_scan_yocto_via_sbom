@@ -279,7 +279,7 @@ class BB:
                 manpath = os.path.join(conf.deploy_dir, "licenses", "**", "license.manifest")
                 logging.debug(f"License.manifest glob path is {manpath}")
                 manifest = ""
-                manlist = sorted(glob.glob(manpath, recursive=True), key=os.path.getmtime, reverse=True)
+                manlist = sorted(glob.glob(manpath, recursive=True), key=os.path.getmtime)
                 if len(manlist) > 0:
                     # Get most recent file
                     manifest = manlist[-1]
@@ -300,8 +300,8 @@ class BB:
             if conf.image_license_manifest != '' and os.path.isfile(conf.image_license_manifest):
                 logging.info(f"Will process image license manifest file '{conf.image_license_manifest}'")
             else:
-                logging.warning(f"Unable to locate image_license.manifest file and --process_image_manifest specified - "
-                                f"Will skip processing")
+                logging.warning(f"--process_image_manifest specified but unable to locate image_license.manifest file - "
+                                f"Will skip processing image manifest")
                 conf.process_image_manifest = False
 
         # CVE JSON is at build/tmp/log/cve/cve-summary.json
@@ -322,7 +322,7 @@ class BB:
                 #             break
 
                 cvepath = os.path.join(conf.deploy_dir, "images", "**", conf.target + "-" + machine + "*.cve")
-                cvelist = sorted(glob.glob(cvepath, recursive=True), key=os.path.getmtime, reverse=True)
+                cvelist = sorted(glob.glob(cvepath, recursive=True), key=os.path.getmtime)
                 if len(cvelist) > 0:
                     # Get most recent file
                     cfile = cvelist[-1]

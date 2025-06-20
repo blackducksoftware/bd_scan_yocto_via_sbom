@@ -25,6 +25,7 @@ def main():
         logging.info(f"Project {conf.bd_project} Version {conf.bd_version} already exists")
 
     if conf.output_file == '':
+        logging.info("Running Detect to initialise project")
         extra_opt = '--detect.tools=DETECTOR'
         if conf.unmap:
             extra_opt += ' --detect.project.codelocation.unmap=true'
