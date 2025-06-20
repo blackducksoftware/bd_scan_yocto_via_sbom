@@ -1,6 +1,8 @@
 import re
 import logging
 
+from .BOMClass import BOM
+
 
 class Recipe:
     def __init__(self, name, version, rel=None):
@@ -40,8 +42,18 @@ class Recipe:
     def print_recipe(self):
         logging.info(f"Processed Recipe '{self.name}': {self.full_id()}")
 
-    def check_in_bom(self, bom):
+    def check_in_bom(self, bom: BOM):
         return bom.check_recipe_in_bom(self.name, self.version)
 
     def full_id(self):
         return f"{self.layer}/{self.name}/{self.version}"
+
+    def cpe_string(self, conf):
+        # cpe:2.3:a:*:glibc:2.40:*:*:*:*:*:*:*
+        ver = self.version.split('+')[0]
+        name = self.name
+        if conf.kernel_recipe in self.name:
+            name = 'linux_kernel'
+
+        cpe = f"cpe:2.3:a:*:{name}:{ver}:*:*:*:*:*:*:*"
+        return cpe

@@ -6,13 +6,17 @@ import os
 from .RecipeClass import Recipe
 import tempfile
 import glob
+import tarfile
+
+# from .ConfigClass import Config
+# from .RecipeListClass import RecipeList
 
 
 class BB:
     def __init__(self):
         pass
 
-    def process(self, conf, reclist):
+    def process(self, conf: "Config", reclist: "RecipeList"):
         if not conf.skip_bitbake:
             logging.info(f"Checking Bitbake environment ...")
             if not self.check_bitbake():
@@ -29,10 +33,10 @@ class BB:
             return False
 
         if conf.license_manifest:
-            self.process_licman_file(conf.license_manifest, reclist)
+            self.process_licman_file(conf, conf.license_manifest, reclist)
 
         if conf.process_image_manifest:
-            self.process_licman_file(conf.image_license_manifest, reclist)
+            self.process_licman_file(conf, conf.image_license_manifest, reclist)
 
         if conf.task_depends_dot_file:
             self.process_task_depends_dot(conf, reclist)
@@ -79,7 +83,7 @@ class BB:
 
         return lfile.name
 
-    def process_bitbake_env(self, conf):
+    def process_bitbake_env(self, conf: "Config"):
         lines = self.run_bitbake_env().split('\n')
 
         rpm_dir = ''
@@ -88,7 +92,7 @@ class BB:
         for mline in lines:
             if re.search(
                     "^(MANIFEST_FILE|DEPLOY_DIR|MACHINE_ARCH|DL_DIR|DEPLOY_DIR_RPM|"
-                    "DEPLOY_DIR_IPK|DEPLOY_DIR_DEB|IMAGE_PKGTYPE|LICENSE_DIR)=",
+                    "DEPLOY_DIR_IPK|DEPLOY_DIR_DEB|IMAGE_PKGTYPE|LICENSE_DIR|LOG_DIR)=",
                     mline):
 
                 # if re.search('^TMPDIR=', mline):
@@ -126,6 +130,9 @@ class BB:
                 elif re.search('^IMAGE_PKGTYPE=', mline):
                     conf.image_pkgtype = val
                     logging.info(f"Bitbake Env: image_pkgtype={conf.image_pkgtype}")
+                elif re.search('^LOG_DIR=', mline):
+                    conf.log_dir = val
+                    logging.info(f"Bitbake Env: log_dir={conf.log_dir}")
 
         if not conf.package_dir:
             if conf.image_pkgtype == 'rpm' and rpm_dir:
@@ -155,7 +162,7 @@ class BB:
                 logging.info(f"Calculated: package_dir={conf.package_dir}")
 
     @staticmethod
-    def run_cmd(command):
+    def run_cmd(command: list):
         try:
             ret = subprocess.run(command, capture_output=True, text=True, timeout=60)
             if ret.returncode != 0:
@@ -171,7 +178,7 @@ class BB:
         # return proc_stdout
 
     @staticmethod
-    def process_showlayers(showlayers_file, reclist):
+    def process_showlayers(showlayers_file: str, reclist: "RecipeList"):
         try:
             with open(showlayers_file, "r") as bfile:
                 lines = bfile.readlines()
@@ -201,7 +208,7 @@ class BB:
         return True
 
     @staticmethod
-    def process_licman_file(lic_manifest_file, reclist):
+    def process_licman_file(conf: "Config", lic_manifest_file, reclist: "RecipeList"):
         packages_total = 0
         recipes_total = 0
         try:
@@ -209,6 +216,7 @@ class BB:
                 lines = lfile.readlines()
                 ver = ''
                 recipe = ''
+                prev_recipe = ''
                 for line in lines:
                     # PACKAGE NAME: name
                     # PACKAGE VERSION: ver
@@ -222,6 +230,10 @@ class BB:
                         ver = line.split(': ')[1]
                     elif line.startswith("RECIPE NAME:"):
                         recipe = line.split(': ')[1]
+                    elif line.startswith("FILES:"):
+                        if prev_recipe == conf.kernel_recipe:
+                            kfiles = line.split(': ')[1]
+                            conf.kernel_files = kfiles.split(' ')
 
                     if recipe and ver:
                         packages_total += 1
@@ -230,6 +242,7 @@ class BB:
                             reclist.recipes.append(rec_obj)
                             recipes_total += 1
                         ver = ''
+                        prev_recipe = recipe
                         recipe = ''
 
                 logging.info(f"- {packages_total} packages found in {lic_manifest_file} ({recipes_total} recipes)")
@@ -241,12 +254,13 @@ class BB:
         return True
 
     @staticmethod
-    def check_files(conf):
+    def check_files(conf: "Config"):
         machine = conf.machine.replace('_', '-')
         licman_dir = ''
 
         if not conf.license_manifest and not conf.task_depends_dot_file:
             if conf.license_dir:
+                # Yocto pre-v5 paths
                 manpath = os.path.join(conf.license_dir,
                                        f"{conf.target}-{machine}", "license.manifest")
                 if os.path.isfile(manpath):
@@ -255,28 +269,28 @@ class BB:
 
             if not conf.license_manifest:
                 # if not conf.target or not conf.machine:
-                #     logging.error("Manifest file not specified and it could not be determined as Target not specified or "
+                #     logging.error("Manifest file not specified, and it could not be determined as Target not specified or "
                 #                   "machine not identified from environment")
                 #     return False
                 # else:
-                    # Pre Yocto-v5 path
-                    # manpath = os.path.join(conf.deploy_dir, "licenses",
-                    #                        f"{conf.target}-{machine}-*", "license.manifest")
-                    manpath = os.path.join(conf.deploy_dir, "licenses", "**", "license.manifest")
-                    logging.debug(f"License.manifest glob path is {manpath}")
-                    manifest = ""
-                    manlist = glob.glob(manpath, recursive=True)
-                    if len(manlist) > 0:
-                        # Get most recent file
-                        manifest = manlist[-1]
+                # Pre Yocto-v5 path
+                # manpath = os.path.join(conf.deploy_dir, "licenses",
+                #                        f"{conf.target}-{machine}-*", "license.manifest")
+                manpath = os.path.join(conf.deploy_dir, "licenses", "**", "license.manifest")
+                logging.debug(f"License.manifest glob path is {manpath}")
+                manifest = ""
+                manlist = sorted(glob.glob(manpath, recursive=True), key=os.path.getmtime)
+                if len(manlist) > 0:
+                    # Get most recent file
+                    manifest = manlist[-1]
 
-                    if not os.path.isfile(manifest):
-                        logging.error(f"Manifest file 'license.manifest' could not be located (Search path is '{manpath})")
-                        return False
-                    else:
-                        logging.info(f"Located license.manifest file {manifest}")
-                        conf.license_manifest = manifest
-                        licman_dir = os.path.dirname(manifest)
+                if not os.path.isfile(manifest):
+                    logging.error(f"Manifest file 'license.manifest' could not be located (Search path is '{manpath})")
+                    return False
+                else:
+                    logging.info(f"Located license.manifest file {manifest}")
+                    conf.license_manifest = manifest
+                    licman_dir = os.path.dirname(manifest)
 
         if conf.process_image_manifest:
             if conf.image_license_manifest == '' and licman_dir != '':
@@ -286,20 +300,34 @@ class BB:
             if conf.image_license_manifest != '' and os.path.isfile(conf.image_license_manifest):
                 logging.info(f"Will process image license manifest file '{conf.image_license_manifest}'")
             else:
-                logging.warning(f"Unable to locate image_license.manifest file and --process_image_manifest specified - "
-                                f"Will skip processing")
+                logging.warning(f"--process_image_manifest specified but unable to locate image_license.manifest file - "
+                                f"Will skip processing image manifest")
                 conf.process_image_manifest = False
 
-        imgdir = os.path.join(conf.deploy_dir, "images", machine)
+        # CVE JSON is at build/tmp/log/cve/cve-summary.json
+        cvefile = ''
         if conf.cve_check_file != "":
             cvefile = conf.cve_check_file
         else:
-            cvefile = ""
-            if os.path.isdir(imgdir):
-                for file in sorted(os.listdir(imgdir)):
-                    if file == conf.target + "-" + machine + ".cve":
-                        cvefile = os.path.join(imgdir, file)
-                        break
+            if conf.log_dir != '':
+                cfile = f"{conf.log_dir}/cve/cve-summary.json"
+                if os.path.isfile(cfile):
+                    cvefile = cfile
+            if cvefile != '':
+                # imgdir = os.path.join(conf.deploy_dir, "images", machine)
+                # if os.path.isdir(imgdir):
+                #     for file in sorted(os.listdir(imgdir)):
+                #         if file == conf.target + "-" + machine + ".cve":
+                #             cvefile = os.path.join(imgdir, file)
+                #             break
+
+                cvepath = os.path.join(conf.deploy_dir, "images", "**", conf.target + "-" + machine + "*.cve")
+                cvelist = sorted(glob.glob(cvepath, recursive=True), key=os.path.getmtime)
+                if len(cvelist) > 0:
+                    # Get most recent file
+                    cfile = cvelist[-1]
+                    if os.path.isfile(cfile):
+                        cvefile = tempfile
 
         if not os.path.isfile(cvefile):
             logging.warning(f"CVE check file {cvefile} could not be located - skipping CVE processing")
@@ -310,7 +338,7 @@ class BB:
         return True
 
     @staticmethod
-    def get_pkg_files(conf):
+    def get_pkg_files(conf: "Config"):
         if conf.package_dir != '' and not os.path.isdir(conf.package_dir):
             logging.warning(f"Package_dir {conf.package_dir} does not exist")
             return []
@@ -326,7 +354,7 @@ class BB:
         return package_files_list
 
     @staticmethod
-    def get_download_files(conf):
+    def get_download_files(conf: "Config"):
         if conf.download_dir != '' and not os.path.isdir(conf.download_dir):
             logging.warning(f"Download_dir {conf.download_dir} does not exist")
             return []
@@ -345,9 +373,8 @@ class BB:
 
         return download_files_list
 
-
     @staticmethod
-    def process_task_depends_dot(conf, reclist):
+    def process_task_depends_dot(conf: "Config", reclist: "RecipeList"):
         # If reclist is non-zero, check the recipes from task-depends.dot file against this list
         # otherwise create new reclist from task-depends.dot
 
@@ -447,3 +474,28 @@ class BB:
             sys.exit(2)
 
         return
+
+    @staticmethod
+    def process_kernel_files(conf: "Config"):
+        kernel_source_list = []
+        try:
+            for kfile in conf.kernel_files:
+                if kfile.endswith(".tgz"):
+                    tpath = os.path.join(conf.deploy_dir, "images", conf.machine.replace('_','-'), '**', kfile)
+                    kfilelist = sorted(glob.glob(tpath, recursive=True), key=os.path.getmtime, reverse=True)
+                    if len(kfilelist) == 0 or not os.path.isfile(kfilelist[-1]):
+                        continue
+                    with tarfile.open(kfilelist[-1], 'r') as tar:
+                        # Use getnames() to get a list of all member names
+                        file_names = tar.getnames()
+                        for fname in file_names:
+                            if fname.endswith('.ko'):
+                                kernel_source_list.append(fname.replace('.ko', '.c'))
+            return kernel_source_list
+        except FileNotFoundError as e:
+            logging.error(f"Can't open kernel tgz file - {e}\n")
+        except tarfile.ReadError as e:
+            print(f"Failed to read '{e}'. It may not be a valid tar file.")
+        except Exception as e:
+            conf.logger.error(f"Unidentified error - {e}\n")
+        return []

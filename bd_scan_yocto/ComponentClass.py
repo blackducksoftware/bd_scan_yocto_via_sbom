@@ -1,5 +1,6 @@
 import logging
 
+
 class Component:
     def __init__(self, name, version, data):
         self.name = name
@@ -42,8 +43,11 @@ class Component:
                 return []
             for origin in self.data['origins']:
                 if origin['externalNamespace'] == 'openembedded':
+                    orig = origin['externalId'].split('/')
+                    origlist.append('/'.join(orig[1:]))
+                else:
                     origlist.append(origin['externalId'])
             return origlist
         except KeyError as e:
-            logging.error("Error processing origin")
+            logging.error(f"Error in get_origin(): {e}")
             return []

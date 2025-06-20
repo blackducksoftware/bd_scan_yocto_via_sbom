@@ -6,14 +6,19 @@ import time
 import os
 import json
 from pathlib import Path
+import platform
+import asyncio
 
 from .ComponentListClass import ComponentList
 from .ComponentClass import Component
 from .VulnListClass import VulnList
+# from .RecipeListClass import RecipeList
+# from .ConfigClass import Config
+# from .SBOMClass import SBOM
 
 
 class BOM:
-    def __init__(self, conf):
+    def __init__(self, conf: "Config"):
         self.bdprojname = conf.bd_project
         self.bdvername = conf.bd_version
         self.complist = ComponentList()
@@ -37,9 +42,14 @@ class BOM:
 
     def get_proj(self):
         logging.info(f"Working on project '{self.bdprojname}' version '{self.bdvername}'")
-        self.bdver_dict = self.get_project()
+        self.bdver_dict = self.get_projdata()
+        if not self.bdver_dict:
+            return False
+        return True
 
-    def get_data(self):
+    def get_comps(self):
+        self.complist = ComponentList()  # Reset component list
+
         res = self.bd.list_resources(self.bdver_dict)
         self.projver = res['href']
         thishref = f"{self.projver}/components"
@@ -55,6 +65,17 @@ class BOM:
             self.complist.add(compclass)
 
         return
+
+    def get_data(self, url, accept_hdr):
+        try:
+            headers = {
+                'accept': accept_hdr,
+            }
+            res = self.bd.get_json(url, headers=headers)
+            return res['items']
+        except KeyError as e:
+            logging.exception(f"Unable to get_data() - {e}")
+        return []
 
     def get_paginated_data(self, url, accept_hdr):
         headers = {
@@ -84,7 +105,7 @@ class BOM:
     def count_comps(self):
         return self.complist.count()
 
-    def get_project(self):
+    def get_projdata(self):
         params = {
             'q': "name:" + self.bdprojname,
             'sort': 'name',
@@ -101,12 +122,12 @@ class BOM:
                         break
                 break
         else:
-            logging.error(f"Version '{self.bdvername}' does not exist in project '{self.bdprojname}'")
-            sys.exit(2)
+            logging.warning(f"Version '{self.bdvername}' does not exist in project '{self.bdprojname}'")
+            return None
 
         if ver_dict is None:
             logging.warning(f"Project '{self.bdprojname}' does not exist")
-            sys.exit(2)
+            return None
 
         return ver_dict
 
@@ -120,12 +141,14 @@ class BOM:
     #     print(tabulate(table, headers=header, tablefmt="tsv"))
     #
 
-    def process_patched_cves(self):
+    def process_patched_cves(self, conf: "Config"):
         self.get_vulns()
 
-        count = self.vulnlist.process_patched(self.CVEPatchedVulnList, self.bd)
+        # patched, skipped = self.vulnlist.process_patched(self.CVEPatchedVulnList, self.bd)
+        # logging.info(f"- {patched} CVEs marked as patched in BD project ({skipped} already patched)")
 
-        logging.info(f"- {count} CVEs marked as patched in BD project")
+        patched = self.ignore_vulns_async(conf, self.CVEPatchedVulnList)
+        logging.info(f"- {patched} CVEs marked as patched in BD project")
         return
 
     def wait_for_bom_completion(self):
@@ -134,7 +157,7 @@ class BOM:
 
         logging.info("Waiting for project BOM processing to complete ...")
         try:
-            time.sleep(15)
+            time.sleep(5)
             links = self.bdver_dict['_meta']['links']
             link = next((item for item in links if item["rel"] == "bom-status"), None)
 
@@ -160,11 +183,10 @@ class BOM:
             logging.error(str(e))
             return False
 
-        logging.info("Project scan processing complete")
         return uptodate
 
     @staticmethod
-    def upload_sbom(conf, bom, sbom):
+    def upload_sbom(conf: "Config", bom: "BOM", sbom: "SBOM"):
         url = bom.bd.base_url + "/api/scan/data"
         headers = {
             'X-CSRF-TOKEN': bom.bd.session.auth.csrf_token,
@@ -199,14 +221,21 @@ class BOM:
 
         return False
 
-    def process_cve_file(self, cve_file, reclist):
+    def process_cve_file(self, cve_file, reclist: "RecipeList"):
+        if cve_file.endswith('.cve'):
+            return self.process_cve_file_cve(cve_file, reclist)
+
+        elif cve_file.endswith('.json'):
+            return self.process_cve_file_json(cve_file, reclist)
+
+    def process_cve_file_cve(self, cve_file, reclist: "RecipeList"):
         try:
             cvefile = open(cve_file, "r")
             cvelines = cvefile.readlines()
             cvefile.close()
         except Exception as e:
             logging.error("Unable to open CVE check output file\n" + str(e))
-            sys.exit(3)
+            return False
 
         patched_vulns = []
         pkgvuln = {}
@@ -233,9 +262,36 @@ class BOM:
         logging.info(f"      {len(patched_vulns)} total patched CVEs identified of which {cves_in_bm}"
                      f" are for recipes in the yocto image")
         self.CVEPatchedVulnList = patched_vulns
-        return
+        if len(patched_vulns) > 0:
+            return True
+        return False
 
-    def run_detect_sigscan(self, conf, tdir, extra_opt=''):
+    def process_cve_file_json(self, cve_file, reclist: "RecipeList"):
+        try:
+            data = None
+            with open(cve_file, "r") as cf:
+                logging.info(f"- loaded Patched CVEs from file {cve_file}")
+                data = json.load(cf)
+
+            if data and 'package' in data:
+                patched_vulns = []
+                # Parse each JSON object separately
+                for obj in data['package']:
+                    if 'issue' in obj:
+                        issues = obj['issue']
+                        for issue in issues:
+                            if issue.get("status") == "Patched":
+                                if reclist.check_recipe_exists(obj['name']):
+                                    patched_vulns.append(issue['id'])
+                self.CVEPatchedVulnList = patched_vulns
+                if len(patched_vulns) > 0:
+                    return True
+
+        except Exception as e:
+            logging.error(f"Unable to process CVE file {cve_file}: {e}")
+        return False
+
+    def run_detect_sigscan(self, conf: "Config", tdir, extra_opt=''):
         import shutil
 
         cmd = self.get_detect(conf)
@@ -272,7 +328,7 @@ class BOM:
         return True
 
     @staticmethod
-    def get_detect(conf):
+    def get_detect(conf: "Config"):
         cmd = ''
         if not conf.detect_jar:
             tdir = os.path.join(str(Path.home()), "bd-detect")
@@ -302,3 +358,39 @@ class BOM:
 
     def check_recipe_in_bom(self, name, ver):
         return self.complist.check_recipe_in_list(name, ver)
+
+    def check_kernel_in_bom(self):
+        return self.complist.check_kernel_in_bom()
+
+    def add_manual_comp(self, comp_url):
+        try:
+            posturl = self.projver + "/components"
+            custom_headers = {
+                'Content-Type': 'application/vnd.blackducksoftware.bill-of-materials-6+json'
+            }
+
+            postdata = {
+                "component": comp_url,
+                "componentPurpose": "Added by CPE (bd_scan_yocto_via_sbom)",
+                "componentModified": False,
+                "componentModification": ""
+            }
+
+            r = self.bd.session.post(posturl, data=json.dumps(postdata), headers=custom_headers)
+            # r.raise_for_status()
+            if r.status_code == 200:
+                logging.debug(f"Created manual component {comp_url}")
+                return True
+            else:
+                raise Exception(f"PUT returned {r.status_code}")
+
+        except Exception as e:
+            logging.exception(f"Error creating manual component - {e}")
+        return False
+
+    def ignore_vulns_async(self, conf: "Config", cve_list):
+        if platform.system() == "Windows":
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+        count = asyncio.run(self.vulnlist.async_ignore_vulns(conf, self.bd, cve_list))
+        return count

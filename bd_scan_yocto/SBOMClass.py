@@ -5,6 +5,9 @@ from random import randint
 import json
 import tempfile
 
+# from .RecipeClass import Recipe
+# from .RecipeListClass import RecipeList
+
 
 class SBOM:
     def __init__(self, proj, ver):
@@ -75,7 +78,7 @@ class SBOM:
         rand_hex_str = f"{hex1}-{hex2}-{hex3}-{hex4}-{hex5}"
         return rand_hex_str
 
-    def add_package(self, recipe):
+    def add_recipe(self, recipe: "Recipe"):
         spdxid = self.create_spdx_ident()
         if recipe.oe_recipe == {}:
             if recipe.layer:
@@ -135,9 +138,55 @@ class SBOM:
         }
         self.json["relationships"].append(rel_json)
 
-    def process_recipes(self, reclist):
+    def add_component(self, compname, compversion, orig_href):
+        spdxid = self.create_spdx_ident()
+        name = self.filter_special_chars(compname)
+        version = self.filter_special_chars(compversion)
+        # 'https://sca247.poc.blackduck.com/api/components/5baf441a-8153-44f7-88d7-726c943b03d0/versions/60ea79ce-2204-4144-be58-3ace36b4c080/origins/33842216-89c3-49c9-a791-adbc08a71249'
+
+        package_json = {
+            "SPDXID": self.quote(f"SPDXRef-package-{spdxid}"),
+            "downloadLocation": "NOASSERTION",
+            "externalRefs": [],
+            "name": self.quote(name),
+            "versionInfo": self.quote(f"{version}")
+        }
+        href_arr = orig_href.split('/')
+        if len(href_arr) <= 9:
+            return
+        compid = href_arr[5]
+        verid = href_arr[7]
+        origid = href_arr[9]
+        package_json['externalRefs'].append(
+                {
+                    "referenceCategory": "OTHER",
+                    "referenceLocator": origid,
+                    "referenceType": "BlackDuck-ComponentOrigin"
+                })
+        package_json['externalRefs'].append(
+                {
+                    "referenceCategory": "OTHER",
+                    "referenceLocator": verid,
+                    "referenceType": "BlackDuck-ComponentVersion"
+                })
+        package_json['externalRefs'].append(
+                {
+                    "referenceCategory": "OTHER",
+                    "referenceLocator": compid,
+                    "referenceType": "BlackDuck-Component"
+                })
+
+        self.json['packages'].append(package_json)
+        rel_json = {
+            "spdxElementId": self.quote(f"SPDXRef-package-{spdxid}"),
+            "relationshipType": "DYNAMIC_LINK",
+            "relatedSpdxElement": self.quote(f"SPDXRef-package-{self.package_id}")
+        }
+        self.json["relationships"].append(rel_json)
+
+    def process_recipes(self, reclist: "RecipeList"):
         for recipe in reclist:
-            self.add_package(recipe)
+            self.add_recipe(recipe)
 
     def output(self, output_file):
         try:

@@ -6,6 +6,9 @@ import tempfile
 
 from .RecipeClass import Recipe
 from .BBClass import BB
+# from .BOMClass import BOM
+# from .ConfigClass import Config
+from .SBOMClass import SBOM
 
 
 class RecipeList:
@@ -59,7 +62,7 @@ class RecipeList:
                 layers.append(recipe.layer)
         return layers
 
-    def check_recipes_in_oe(self, conf, oe):
+    def check_recipes_in_oe(self, conf: "Config", oe):
         recipes_in_oe = 0
         exact_recipes_in_oe = 0
         changed_layers = 0
@@ -86,7 +89,7 @@ class RecipeList:
         logging.info(f"    - {exact_layers} with the same layer as OE")
         logging.info(f"    - {changed_layers} exist in different OE layer (mapped to original)")
 
-    def scan_pkg_download_files(self, conf, bom):
+    def scan_pkg_download_files(self, conf: "Config", bom: "BOM"):
         all_pkg_files = BB.get_pkg_files(conf)
         all_download_files = BB.get_download_files(conf)
         found_files = self.find_files(conf, all_pkg_files, all_download_files)
@@ -156,7 +159,7 @@ class RecipeList:
         else:
             return ''
 
-    def check_recipes_in_bom(self, conf, bom):
+    def report_recipes_in_bom(self, conf: "Config", bom: "BOM"):
 
         in_bom = []
         not_in_bom = []
@@ -173,7 +176,7 @@ class RecipeList:
             elif recipe.matched_oe:
                 fullid += f" (Closest version {recipe.oe_recipe['pv']}-{recipe.oe_recipe['pr']})"
 
-            if not recipe.check_in_bom(bom):
+            if not recipe.matched_in_bom:
                 not_in_bom.append(fullid)
                 if recipe.matched_oe:
                     matched_oe_not_in_bom.append(fullid)
@@ -185,7 +188,6 @@ class RecipeList:
                     not_in_bom_recipename_in_oe.append(fullid)
             else:
                 in_bom.append(fullid)
-                recipe.matched_in_bom = True
                 if not recipe.matched_oe:
                     not_matched_oe_in_bom.append(fullid)
                     # logging.debug(f"- Recipe {fullid}: Not matched in OE data but found in BOM")
@@ -219,3 +221,83 @@ class RecipeList:
                 logging.info(f"Output full recipe report to '{conf.recipe_report}'")
             except IOError as error:
                 logging.error(f"Unable to write recipe report file {conf.recipe_report} - {error}")
+
+    def check_recipes_in_bom(self, bom: "BOM"):
+        for recipe in self.recipes:
+            if recipe.check_in_bom(bom):
+                recipe.matched_in_bom = True
+
+    # def get_cpes(self):
+    #     cpes = []
+    #     for recipe in self.recipes:
+    #         if not recipe.matched_in_bom:
+    #             reccpe = recipe.cpe_string()
+    #             print(f"CPE - missing recipe {recipe.name}/{recipe.version} - {reccpe}")
+    #             cpes.append([recipe.name, reccpe])
+    #     return cpes
+
+    @staticmethod
+    def get_rel(entry):
+        try:
+            if '_meta' in entry and 'links' in entry['_meta']:
+                link_arr = entry['_meta']['links']
+                for link in link_arr:
+                    if link['rel'] == 'cpe-versions':
+                        return link['href']
+        except KeyError as e:
+            logging.exception(f"Cannot get rel entry - {e}")
+        return ''
+
+    def process_missing_recipes(self, conf: "Config", bom: "BOM"):
+        if not conf.add_comps_by_cpe:
+            return
+        comps_added = False
+        try:
+            add_sbom = SBOM(conf.bd_project, conf.bd_version)
+            for recipe in self.recipes:
+                if recipe.matched_in_bom:
+                    continue
+
+                rec_cpe = recipe.cpe_string(conf)
+                # print(f"CPE - missing recipe {recipe.name}/{recipe.version} - {rec_cpe}")
+
+                url = f"{conf.bd_url}/api/cpes?q={rec_cpe}"
+                cpe_arr = bom.get_data(url, "application/vnd.blackducksoftware.component-detail-5+json")
+                logging.debug(f"Recipe {recipe.name}/{recipe.version} - found {len(cpe_arr)} CPE entries")
+                for comp in cpe_arr:
+                    val = self.get_rel(comp)
+                    if val:
+                        comp_arr = bom.get_data(val, "application/vnd.blackducksoftware.component-detail-5+json")
+                        logging.debug(f"Found {len(comp_arr)} matching components from CPE")
+                        for pkg in comp_arr:
+                            if '_meta' in pkg and 'links' in pkg['_meta']:
+                                orig_arr = pkg['_meta']['links']
+                                orig_data = None
+                                for orig in orig_arr:
+                                    if orig['rel'] == 'origins':
+                                        orig_data = bom.get_data(orig['href'], "application/vnd.blackducksoftware.component-detail-5+json")
+                                        break
+                                if orig_data:
+                                    orig = orig_data[0]
+                                    o_vername = orig['versionName']
+                                    add_sbom.add_component(recipe.name, o_vername, orig['_meta']['href'])
+                                    comps_added = True
+                                    recipe.matched_in_bom = True
+                                    logging.info(f"Added component {recipe.name}/{recipe.version} using CPE in SBOM")
+                                    break
+
+                        if recipe.matched_in_bom:
+                            break
+            if comps_added:
+                if not add_sbom.output(conf.output_file):
+                    logging.error("Unable to create SBOM file")
+                if bom.upload_sbom(conf, bom, add_sbom):
+                    logging.info(f"Uploaded SBOM file '{add_sbom.file}' to create project "
+                                 f"'{conf.bd_project}' version '{conf.bd_version}'")
+                else:
+                    return False
+            return comps_added
+
+        except Exception as e:
+            logging.exception(f"Error processing missing recipes - {e}")
+        return comps_added

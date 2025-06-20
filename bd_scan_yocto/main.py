@@ -8,6 +8,7 @@ import logging
 import sys
 
 import tempfile
+from bd_kernel_vulns import main as bdkv_main
 # import os
 
 empty_dir = tempfile.TemporaryDirectory()
@@ -20,7 +21,11 @@ def main():
     logging.info("--- PHASE 1 - PROCESS PROJECT --------------------------------------------")
     bom = BOM(conf)
 
+    if bom.get_proj():
+        logging.info(f"Project {conf.bd_project} Version {conf.bd_version} already exists")
+
     if conf.output_file == '':
+        logging.info("Running Detect to initialise project")
         extra_opt = '--detect.tools=DETECTOR'
         if conf.unmap:
             extra_opt += ' --detect.project.codelocation.unmap=true'
@@ -36,6 +41,8 @@ def main():
 
     logging.info("")
     logging.info("--- PHASE 2 - GET OE DATA ------------------------------------------------")
+    if not conf.oe_data_folder:
+        logging.info("Not using OE data cache folder (consider using --oe_data_folder) ...")
     if not conf.skip_oe_data:
         oe_class = OE(conf)
         reclist.check_recipes_in_oe(conf, oe_class)
@@ -45,7 +52,7 @@ def main():
                      "(remove --skip_oe_data to enable)")
 
     logging.info("")
-    logging.info("--- PHASE 3 - WRITE SBOM -------------------------------------------------")
+    logging.info("--- PHASE 3 - GENERATE & UPLOAD SBOM -------------------------------------")
     sbom = SBOM(conf.bd_project, conf.bd_version)
     sbom.process_recipes(reclist.recipes)
     if not sbom.output(conf.output_file):
@@ -60,8 +67,6 @@ def main():
         sys.exit(0)
 
     logging.info("Done creating SBOM file")
-    logging.info("")
-    logging.info("--- PHASE 4 - UPLOAD SBOM ------------------------------------------------")
     # bom = BOM(conf)
 
     if bom.upload_sbom(conf, bom, sbom):
@@ -70,17 +75,15 @@ def main():
     else:
         sys.exit(2)
 
-    logging.info("")
-    logging.info("--- PHASE 5 - CHECKING OE RECIPES IN BOM ---------------------------------")
     bom.get_proj()
     if not bom.wait_for_bom_completion():
         logging.error("Error waiting for project scan completion")
         sys.exit(2)
-    bom.get_data()
-    reclist.check_recipes_in_bom(conf, bom)
+    bom.get_comps()
+    reclist.check_recipes_in_bom(bom)
 
     logging.info("")
-    logging.info("--- PHASE 6 - SIGNATURE SCAN PACKAGES ------------------------------------")
+    logging.info("--- PHASE 4 - SIGNATURE SCAN PACKAGES ------------------------------------")
     if not conf.skip_sig_scan:
         if conf.package_dir and conf.download_dir:
             num, ret = reclist.scan_pkg_download_files(conf, bom)
@@ -98,21 +101,43 @@ def main():
         logging.info("Skipped (--skip_sig_scan specified)")
 
     logging.info("")
-    logging.info("--- PHASE 7 - APPLY CVE PATCHES ------------------------------------------")
-    if conf.cve_check_file:
-        bom.get_proj()
-        if not bom.wait_for_bom_completion():
-            logging.error("Error waiting for project scan completion")
-            sys.exit(2)
+    logging.info("--- PHASE 5 - CHECKING ALL RECIPES IN BOM ---------------------------------")
+    bom.get_proj()
+    if not bom.wait_for_bom_completion():
+        logging.error("Error waiting for project scan completion")
+        sys.exit(2)
+    bom.get_comps()
+    reclist.check_recipes_in_bom(bom)
+    if reclist.process_missing_recipes(conf, bom):
+        bom.wait_for_bom_completion()
+        bom.get_comps()
+        reclist.check_recipes_in_bom(bom)
+    reclist.report_recipes_in_bom(conf, bom)
 
-        bom.get_data()
-        bom.process_cve_file(conf.cve_check_file, reclist)
-        bom.process_patched_cves()
+    logging.info("")
+    logging.info("--- PHASE 6 - APPLY CVE PATCHES ------------------------------------------")
+    if conf.cve_check_file:
+        # bom.get_proj()
+
+        if bom.process_cve_file(conf.cve_check_file, reclist):
+            bom.process_patched_cves(conf)
     else:
         logging.info("Skipping CVE processing as no cve_check output file supplied")
 
+    if conf.process_kernel_vulns and bom.check_kernel_in_bom():
+        logging.info("Ignoring Kernel vulnerabilities for modules not included in kernel build ...")
+        kfilelist = bb.process_kernel_files(conf)
+        kfile = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix='.lst')
+        kfile.write('\n'.join(kfilelist))
+        kfile.close()
+
+        bdkv_main.process_kernel_vulns(blackduck_url=conf.bd_url, blackduck_api_token=conf.bd_api,
+                                       kernel_source_file=kfile.name, project=conf.bd_project,
+                                       version=conf.bd_version, logger=logging,
+                                       blackduck_trust_cert=conf.bd_trustcert)
+
     logging.info("")
-    logging.info("DONE")
+    logging.info("bd_scan_yocto_via_sbom DONE")
 
 
 if __name__ == '__main__':
