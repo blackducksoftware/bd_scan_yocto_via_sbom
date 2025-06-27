@@ -327,7 +327,7 @@ class BB:
                     # Get most recent file
                     cfile = cvelist[-1]
                     if os.path.isfile(cfile):
-                        cvefile = tempfile
+                        cvefile = cfile
 
         if not os.path.isfile(cvefile):
             logging.warning(f"CVE check file {cvefile} could not be located - skipping CVE processing")
