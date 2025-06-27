@@ -1,4 +1,4 @@
-# Black Duck SCA Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.1.0
+# Black Duck SCA Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.1.1
 
 # PROVISION OF THIS SCRIPT
 This script is provided under the MIT license (see LICENSE file).
