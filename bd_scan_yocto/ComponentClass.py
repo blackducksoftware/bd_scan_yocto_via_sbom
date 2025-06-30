@@ -42,12 +42,15 @@ class Component:
             if 'origins' not in self.data:
                 return []
             for origin in self.data['origins']:
-                if origin['externalNamespace'] == 'openembedded':
+                if 'externalNamespace' in origin and origin['externalNamespace'] == 'openembedded':
                     orig = origin['externalId'].split('/')
                     origlist.append('/'.join(orig[1:]))
-                else:
+                elif 'externalId' in origin:
                     origlist.append(origin['externalId'])
+                else:
+                    print(self.name, self.version)
+                    print(origin)
             return origlist
         except KeyError as e:
-            logging.error(f"Error in get_origin(): {e}")
+            logging.debug(f"Error processing component {self.name}/{self.version} for origins: {e}")
             return []
