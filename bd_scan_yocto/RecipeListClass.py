@@ -94,7 +94,7 @@ class RecipeList:
         all_download_files = BB.get_download_files(conf)
         found_files = self.find_files(conf, all_pkg_files, all_download_files)
         if len(found_files) > 0:
-            tdir = self.copy_files(found_files)
+            tdir = self.copy_files(conf, found_files)
             if tdir and bom.run_detect_sigscan(conf, tdir):
                 return len(found_files), True
             else:
@@ -140,24 +140,27 @@ class RecipeList:
         return found_files
 
     @staticmethod
-    def copy_files(files):
-        temppkgdir = tempfile.mkdtemp(prefix="bd_sig_pkgs")
+    def copy_files(conf, files):
+        try:
+            temppkgdir = tempfile.mkdtemp(prefix="bd_sig_pkgs")
+            proj_string = conf.bd_project + "_" + conf.bd_version
+            temppkgdir = os.path.join(temppkgdir, proj_string)
+            if not os.path.isdir(temppkgdir):
+                os.mkdir(temppkgdir)
 
-        # print(temppkgdir)
-        count = 0
-        for file in files:
-            try:
-                shutil.copy(file, temppkgdir)
-                count += 1
-            except Exception as e:
-                logging.warning(f"Unable to copy package file {file} to temporary scan folder - {e}")
+            count = 0
+            for file in files:
+                    shutil.copy(file, temppkgdir)
+                    count += 1
 
-        logging.info(f"Copying recipe package files")
-        logging.info(f"- Copied {count} package files ...")
-        if count > 0:
-            return temppkgdir
-        else:
-            return ''
+            logging.info(f"Copying recipe package files")
+            logging.info(f"- Copied {count} package files ...")
+            if count > 0:
+                return temppkgdir
+
+        except Exception as e:
+            logging.error(f"Unable to copy package files {e}")
+        return ''
 
     def report_recipes_in_bom(self, conf: "Config", bom: "BOM"):
 
@@ -253,7 +256,7 @@ class RecipeList:
             return
         comps_added = False
         try:
-            add_sbom = SBOM(conf.bd_project, conf.bd_version)
+            add_sbom = SBOM(conf.bd_project, conf.bd_version, sbom_version="2.0")
             for recipe in self.recipes:
                 if recipe.matched_in_bom:
                     continue
@@ -288,10 +291,16 @@ class RecipeList:
 
                         if recipe.matched_in_bom:
                             break
+
+                if conf.sbom_custom_components and not recipe.matched_in_bom:
+                    # v1.1.2 - add component to sbom for custom component creation
+                    add_sbom.add_recipe(recipe, clean_version=True)
+                    comps_added = True
+
             if comps_added:
                 if not add_sbom.output(conf.output_file):
                     logging.error("Unable to create SBOM file")
-                if bom.upload_sbom(conf, bom, add_sbom):
+                if bom.upload_sbom(conf, bom, add_sbom, allow_create_custom_comps=True):
                     logging.info(f"Uploaded SBOM file '{add_sbom.file}' to create project "
                                  f"'{conf.bd_project}' version '{conf.bd_version}'")
                 else:

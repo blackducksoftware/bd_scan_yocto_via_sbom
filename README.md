@@ -1,4 +1,4 @@
-# Black Duck SCA Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.1.1
+# Black Duck SCA Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.1.4
 
 # PROVISION OF THIS SCRIPT
 This script is provided under the MIT license (see LICENSE file).
@@ -326,6 +326,15 @@ For recipes where a package manager is used, then a standard Detect scan in DETE
 Multiple scans can be combined into the same Black Duck project (ensure to use the Detect option `--detect.project.codelocation.unmap=false` to stop previous scans from being unmapped).
 
 # RELEASE NOTES
+
+- **v1.1.2**
+  - Modification to improve creation of custom components by SBOM import - removing creation when recipes unmatched in first SBOM import,
+and added to 2nd SBOM import which runs when or when --add_comps_by_cpe specified to add CPE lookup packages.
+  - Modified SBOM creation to remove date/time and sig scan location to remove temporary folder name to allow rescanning without unmapping (required for Detect 11) - Default unmapping will be
+removed when Detect11 implemented.
+
+- **v1.1.1**
+  - Minor fix to cve_check output file identification
 
 - **v1.1.0**
   - Added `--add_comps_by_cpe` option to look for unmatched packages via CPE.

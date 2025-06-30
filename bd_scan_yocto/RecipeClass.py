@@ -32,6 +32,14 @@ class Recipe:
         ret_version = re.sub(r"AUTOINC.*", r"X", version, flags=re.IGNORECASE)
         return ret_version
 
+    def clean_version_string(self):
+        # Remove +git*
+        # Remove -snapshot*
+        # ret_version = re.sub(r"\+git.*", r"+gitX", version, flags=re.IGNORECASE)
+        varr = re.split("[+_-]", self.version)
+        ret_version = varr[0]
+        return ret_version
+
     @staticmethod
     def get_epoch_and_version(version):
         arr = version.split(':')
