@@ -215,8 +215,9 @@ class BB:
             with open(lic_manifest_file, "r") as lfile:
                 lines = lfile.readlines()
                 ver = ''
-                recipe = ''
+                recipe_name = ''
                 prev_recipe = ''
+                licstring = ''
                 for line in lines:
                     # PACKAGE NAME: name
                     # PACKAGE VERSION: ver
@@ -231,7 +232,7 @@ class BB:
                     elif line.startswith("RECIPE NAME:"):
                         recipe_name = line.split(': ')[1]
                     elif line.startswith("LICENSE:"):
-                        license = line.split(': ')[1]
+                        licstring = line.split(': ')[1]
                     elif line.startswith("FILES:"):
                         if prev_recipe == conf.kernel_recipe:
                             kfiles = line.split(': ')[1]
@@ -239,13 +240,18 @@ class BB:
 
                     if recipe_name and ver:
                         packages_total += 1
-                        rec_obj = Recipe(recipe_name, ver, license=license)
+                        if licstring:
+                            rec_obj = Recipe(recipe_name, ver, license=licstring)
+                        else:
+                            rec_obj = Recipe(recipe_name, ver)
+
                         if not reclist.check_recipe_exists(recipe_name):
                             reclist.recipes.append(rec_obj)
                             recipes_total += 1
                         ver = ''
                         prev_recipe = recipe_name
                         recipe_name = ''
+                        licstring = ''
 
                 logging.info(f"- {packages_total} packages found in {lic_manifest_file} ({recipes_total} recipes)")
 
@@ -483,7 +489,7 @@ class BB:
         try:
             for kfile in conf.kernel_files:
                 if kfile.endswith(".tgz"):
-                    tpath = os.path.join(conf.deploy_dir, "images", conf.machine.replace('_','-'), '**', kfile)
+                    tpath = os.path.join(conf.deploy_dir, "images", conf.machine.replace('_', '-'), '**', kfile)
                     kfilelist = sorted(glob.glob(tpath, recursive=True), key=os.path.getmtime, reverse=True)
                     if len(kfilelist) == 0 or not os.path.isfile(kfilelist[-1]):
                         continue
