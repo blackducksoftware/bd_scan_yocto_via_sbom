@@ -5,7 +5,7 @@ from .BOMClass import BOM
 
 
 class Recipe:
-    def __init__(self, name, version, rel=None):
+    def __init__(self, name, version, rel=None, license=None):
         self.name = name
         self.orig_version = version
         self.epoch = ''
@@ -19,6 +19,7 @@ class Recipe:
         self.matched_in_bom = False
         self.recipename_in_oe = False
         self.matched_oe_exact = False
+        self.license = license
 
     def add_layer(self, layer):
         self.layer = layer

@@ -229,21 +229,23 @@ class BB:
                     elif line.startswith("VERSION:"):
                         ver = line.split(': ')[1]
                     elif line.startswith("RECIPE NAME:"):
-                        recipe = line.split(': ')[1]
+                        recipe_name = line.split(': ')[1]
+                    elif line.startswith("LICENSE:"):
+                        license = line.split(': ')[1]
                     elif line.startswith("FILES:"):
                         if prev_recipe == conf.kernel_recipe:
                             kfiles = line.split(': ')[1]
                             conf.kernel_files = kfiles.split(' ')
 
-                    if recipe and ver:
+                    if recipe_name and ver:
                         packages_total += 1
-                        rec_obj = Recipe(recipe, ver)
-                        if not reclist.check_recipe_exists(recipe):
+                        rec_obj = Recipe(recipe_name, ver, license=license)
+                        if not reclist.check_recipe_exists(recipe_name):
                             reclist.recipes.append(rec_obj)
                             recipes_total += 1
                         ver = ''
-                        prev_recipe = recipe
-                        recipe = ''
+                        prev_recipe = recipe_name
+                        recipe_name = ''
 
                 logging.info(f"- {packages_total} packages found in {lic_manifest_file} ({recipes_total} recipes)")
 

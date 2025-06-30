@@ -119,7 +119,8 @@ class SBOM:
         #     recipe_version = recipe_version.replace('+git', '+gitX')
 
         recipe_name = self.filter_special_chars(recipe_name)
-        recipe_version = self.filter_special_chars(recipe_version)
+        if not clean_version:
+            recipe_version = self.filter_special_chars(recipe_version)
 
         package_json = {
             "SPDXID": self.quote(f"SPDXRef-package-{spdxid}"),
@@ -135,6 +136,10 @@ class SBOM:
             "name": self.quote(recipe_name),
             "versionInfo": self.quote(f"{recipe_version}")
         }
+        if recipe.license:
+            package_json["licenseConcluded"] = recipe.license
+            package_json["licenseDeclared"] = recipe.license
+
         self.json['packages'].append(package_json)
         rel_json = {
             "spdxElementId": self.quote(f"SPDXRef-package-{spdxid}"),
