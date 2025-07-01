@@ -20,6 +20,7 @@ class Recipe:
         self.recipename_in_oe = False
         self.matched_oe_exact = False
         self.license = license
+        self.custom_component = False
 
     def add_layer(self, layer):
         self.layer = layer

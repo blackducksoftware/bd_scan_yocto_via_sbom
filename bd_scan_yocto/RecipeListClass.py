@@ -178,6 +178,8 @@ class RecipeList:
                 fullid += " (EXACT VERSION)"
             elif recipe.matched_oe:
                 fullid += f" (Closest version {recipe.oe_recipe['pv']}-{recipe.oe_recipe['pr']})"
+            elif recipe.custom_component:
+                fullid += f" (CUSTOM COMPONENT CREATED)"
 
             if not recipe.matched_in_bom:
                 not_in_bom.append(fullid)
