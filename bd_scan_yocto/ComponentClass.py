@@ -1,4 +1,4 @@
-import logging
+# import logging
 
 
 class Component:
@@ -6,6 +6,7 @@ class Component:
         self.name = name
         self.version = version
         self.data = data
+        self.clean_name, self.clean_ver = self.get_clean_name_ver()
 
     def get_matchtypes(self):
         try:
@@ -36,21 +37,38 @@ class Component:
         except KeyError:
             return False
 
-    def get_origins(self):
-        origlist = []
-        try:
+    # def get_origins(self):
+    #     origlist = []
+    #     try:
+    #         if 'origins' not in self.data:
+    #             return []
+    #         for origin in self.data['origins']:
+    #             if 'externalNamespace' in origin and origin['externalNamespace'] == 'openembedded':
+    #                 orig = origin['externalId'].split('/')
+    #                 origlist.append('/'.join(orig[1:]))
+    #             elif 'externalId' in origin:
+    #                 origlist.append(origin['externalId'])
+    #             elif 'componentName' in self.data and 'componentVersionName' in self.data:
+    #                 origlist.append(f"{self.data['componentName']}/{self.data['componentVersionName']}")
+    #         return origlist
+    #     except KeyError as e:
+    #         logging.debug(f"Error processing component {self.name}/{self.version} for origins: {e}")
+    #         return []
+
+    def get_clean_name_ver(self):
+        if self.data:
             if 'origins' not in self.data:
-                return []
-            for origin in self.data['origins']:
-                if 'externalNamespace' in origin and origin['externalNamespace'] == 'openembedded':
-                    orig = origin['externalId'].split('/')
-                    origlist.append('/'.join(orig[1:]))
-                elif 'externalId' in origin:
-                    origlist.append(origin['externalId'])
-                else:
-                    print(self.name, self.version)
-                    print(origin)
-            return origlist
-        except KeyError as e:
-            logging.debug(f"Error processing component {self.name}/{self.version} for origins: {e}")
-            return []
+                return self.data['componentName'], self.data['componentVersionName']
+            else:
+                origin = self.data['origins'][0]
+                if 'externalNamespace' in origin and 'externalId' in origin:
+                    origarr = origin['externalId'].replace('//', '/').split('/')
+                    if len(origarr) >= 2:
+                        if origin['externalNamespace'] == 'openembedded':
+                            return origarr[1], origarr[2]
+                        elif origin['externalId'].startswith('git:'):
+                            return origarr[2], origarr[3]
+                        else:
+                            return origarr[0], origarr[1]
+
+        return self.name, self.version

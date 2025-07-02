@@ -231,6 +231,8 @@ class RecipeList:
         for recipe in self.recipes:
             if recipe.check_in_bom(bom):
                 recipe.matched_in_bom = True
+            else:
+                recipe.matched_in_bom = False
 
     # def get_cpes(self):
     #     cpes = []
