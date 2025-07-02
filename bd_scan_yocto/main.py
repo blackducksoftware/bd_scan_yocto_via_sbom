@@ -79,8 +79,7 @@ def main():
     if not bom.wait_for_bom_completion():
         logging.error("Error waiting for project scan completion")
         sys.exit(2)
-    bom.get_comps()
-    reclist.check_recipes_in_bom(bom)
+    bom.process(reclist)
 
     logging.info("")
     logging.info("--- PHASE 4 - SIGNATURE SCAN PACKAGES ------------------------------------")
@@ -106,12 +105,10 @@ def main():
     if not bom.wait_for_bom_completion():
         logging.error("Error waiting for project scan completion")
         sys.exit(2)
-    bom.get_comps()
-    reclist.check_recipes_in_bom(bom)
+    bom.process(reclist)
     if reclist.process_missing_recipes(conf, bom):
         bom.wait_for_bom_completion()
-        bom.get_comps()
-        reclist.check_recipes_in_bom(bom)
+        bom.process(reclist)
     reclist.report_recipes_in_bom(conf, bom)
 
     logging.info("")

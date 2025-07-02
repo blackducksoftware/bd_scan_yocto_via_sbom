@@ -21,8 +21,7 @@ dependencies = [
     "bd-kernel-vulns",
     "requests",
     "semver",
-    "aiohttp",
-    "asyncio"
+    "aiohttp"
 ]
 
 [project.urls]

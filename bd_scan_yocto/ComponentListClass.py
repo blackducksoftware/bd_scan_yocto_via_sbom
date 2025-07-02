@@ -23,7 +23,7 @@ class ComponentList:
                 count += 1
         return count
 
-    def check_recipe_in_list(self, recipe_name, recipe_ver=''):
+    def check_recipe_in_list(self, rec: "RecipeClass"):
         try:
             # for component in self.components:
             #     comp_origs = component.get_origins()
@@ -39,16 +39,17 @@ class ComponentList:
             #                     return True
             #     else:
             #         logging.info(f"ComponentList:check_recipe_in_list: unable to process recipe {recipe_name}")
-            if recipe_name in self.component_names:
-                if not recipe_ver:
+            if rec.cpe_comp_href:
+                if rec.cpe_comp_href in self.get_hrefs():
                     return True
-                index = self.component_names.index(recipe_name)
+            if rec.name in self.component_names:
+                index = self.component_names.index(rec.name)
                 comp = self.components[index]
-                if comp.version == recipe_ver:
+                if comp.version == rec.version:
                     return True
 
         except Exception as e:
-            logging.error(f"Error finding recipe {recipe_name} - {e}")
+            logging.error(f"Error finding recipe {rec.name} - {e}")
 
         return False
 
@@ -57,3 +58,11 @@ class ComponentList:
             if component.name == 'Linux Kernel':
                 return True
         return False
+
+    def get_hrefs(self):
+        arr = []
+        for comp in self.components:
+            href = comp.get_href()
+            if href:
+                arr.append(href)
+        return arr

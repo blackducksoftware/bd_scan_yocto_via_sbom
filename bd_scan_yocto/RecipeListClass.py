@@ -227,7 +227,7 @@ class RecipeList:
             except IOError as error:
                 logging.error(f"Unable to write recipe report file {conf.recipe_report} - {error}")
 
-    def check_recipes_in_bom(self, bom: "BOM"):
+    def mark_recipes_in_bom(self, bom: "BOM"):
         for recipe in self.recipes:
             if recipe.check_in_bom(bom):
                 recipe.matched_in_bom = True
@@ -288,6 +288,7 @@ class RecipeList:
                                     orig = orig_data[0]
                                     o_vername = orig['versionName']
                                     add_sbom.add_component(recipe.name, o_vername, orig['_meta']['href'])
+                                    recipe.cpe_comp_href = orig['_meta']['href']
                                     comps_added = True
                                     recipe.matched_in_bom = True
                                     logging.info(f"Added component {recipe.name}/{recipe.version} using CPE in SBOM")

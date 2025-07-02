@@ -72,3 +72,7 @@ class Component:
                             return origarr[0], origarr[1]
 
         return self.name, self.version
+
+    def get_href(self):
+        if self.data and '_meta' in self.data and 'href' in self.data['_meta']:
+            return self.data['_meta']['href']

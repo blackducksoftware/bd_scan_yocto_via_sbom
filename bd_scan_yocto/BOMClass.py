@@ -360,8 +360,8 @@ class BOM:
 
         return cmd
 
-    def check_recipe_in_bom(self, name, ver):
-        return self.complist.check_recipe_in_list(name, ver)
+    def check_recipe_in_bom(self, rec: "RecipeClass"):
+        return self.complist.check_recipe_in_list(rec)
 
     def check_kernel_in_bom(self):
         return self.complist.check_kernel_in_bom()
@@ -398,3 +398,7 @@ class BOM:
 
         count = asyncio.run(self.vulnlist.async_ignore_vulns(conf, self.bd, cve_list))
         return count
+
+    def process(self, reclist: "RecipeListClass"):
+        self.get_comps()
+        reclist.mark_recipes_in_bom()
