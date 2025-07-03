@@ -10,7 +10,8 @@ import tempfile
 
 
 class SBOM:
-    def __init__(self, proj, ver):
+    def __init__(self, proj, ver, sbom_version='1.0'):
+        self.sbom_version = sbom_version
         self.package_id = self.create_spdx_ident()
         hex_string = self.create_spdx_ident()
         self.namespace = f"https://blackducksoftware.github.io/spdx/{proj}-{hex_string}"
@@ -30,7 +31,8 @@ class SBOM:
                 ],
                 "licenseListVersion": "3.13"
             },
-            "name": self.quote(f"{proj}-{ver}-" + mytime.strftime("%Y%m%dT%H%M%S")),
+            # "name": self.quote(f"{proj}-{ver}-" + mytime.strftime("%Y%m%dT%H%M%S")),
+            "name": self.quote(f"{proj}-{ver}-" + self.sbom_version),
             "documentDescribes": [
                 self.quote(f"SPDXRef-package-{self.package_id}")
             ],
@@ -78,7 +80,7 @@ class SBOM:
         rand_hex_str = f"{hex1}-{hex2}-{hex3}-{hex4}-{hex5}"
         return rand_hex_str
 
-    def add_recipe(self, recipe: "Recipe"):
+    def add_recipe(self, recipe: "Recipe", clean_version=False):
         spdxid = self.create_spdx_ident()
         if recipe.oe_recipe == {}:
             if recipe.layer:
@@ -86,10 +88,13 @@ class SBOM:
             else:
                 recipe_layer = 'meta'
             recipe_name = recipe.name
+            recipe_version = recipe.version
+            if clean_version:
+                recipe_version = recipe.clean_version_string()
             if recipe.epoch:
-                recipe_version = f"{recipe.epoch}:{recipe.version}"
+                recipe_version = f"{recipe.epoch}:{recipe_version}"
             else:
-                recipe_version = recipe.version
+                recipe_version = recipe_version
             if recipe.release:
                 recipe_pr = recipe.release
             else:
@@ -114,7 +119,8 @@ class SBOM:
         #     recipe_version = recipe_version.replace('+git', '+gitX')
 
         recipe_name = self.filter_special_chars(recipe_name)
-        recipe_version = self.filter_special_chars(recipe_version)
+        if not clean_version:
+            recipe_version = self.filter_special_chars(recipe_version)
 
         package_json = {
             "SPDXID": self.quote(f"SPDXRef-package-{spdxid}"),
@@ -130,6 +136,10 @@ class SBOM:
             "name": self.quote(recipe_name),
             "versionInfo": self.quote(f"{recipe_version}")
         }
+        if recipe.license:
+            package_json["licenseConcluded"] = recipe.license
+            package_json["licenseDeclared"] = recipe.license
+
         self.json['packages'].append(package_json)
         rel_json = {
             "spdxElementId": self.quote(f"SPDXRef-package-{spdxid}"),

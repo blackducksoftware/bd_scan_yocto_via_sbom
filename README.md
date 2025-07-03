@@ -1,391 +1,397 @@
-# Black Duck SCA Scan Yocto Script - bd_scan_yocto_via_sbom.py v1.1.1
+Here's an improved version of the README, focusing on clarity, conciseness, and user-friendliness, while retaining all essential information:
 
-# PROVISION OF THIS SCRIPT
-This script is provided under the MIT license (see LICENSE file).
+-----
 
-It does not represent any extension of licensed functionality of Black Duck Software itself and is provided as-is, without warranty or liability.
+# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.1.2
 
-If you have comments or issues, please raise a GitHub issue here. Black Duck support is not able to respond to support tickets for this OSS utility. Users of this pilot project commit to engage properly with the authors to address any identified issues.
+-----
 
-# INTRODUCTION
-## OVERVIEW OF BD_SCAN_YOCTO_VIA_SBOM
+## Provision of This Script
 
-This utility will create a Black Duck SCA project from a Yocto project, including
-- Scanning the Yocto project artefacts to generate an SPDX SBOM file which will be uploaded to the specified Black Duck server to create a project version
-- Filtering recipes using data from the OpenEmbedded (OE) APIs to 'fix-up' recipes moved to new layers or with different local versions/revisions
-- Signature scanning packages/downloaded archives (for recipes not matched from OE data)
-- Applying patches for locally patched CVEs identified from `cve_check` if this data is available
+This script is provided under the MIT license (see `LICENSE` file).
 
-This utility has some benefits over the alternative Black Duck SCA Yocto scan processes [Detect](https://detect.blackduck.com/doc) and [bd-scan-yocto](https://github.com/matthewb66/bd_scan_yocto), in particular by matching modified original OE recipes and not needing to specify the Bitbake environment script to run Detect Bitbake dependency scans.
+It does not extend the licensed functionality of Black Duck Software. It is provided as-is, without warranty or liability.
 
-Note that, from Black Duck SCA version 2024.7 onwards, the use of SPDX SBOM upload provides for the optional, automatic creation of custom components 
-for recipes not matched in the BD KB using the option `--sbom_create_custom_components`. This would enable the creation of a complete SBOM including 3rd party or local, custom components.
+For comments or issues, please **raise a GitHub issue in this repository**. Black Duck Support cannot respond to support tickets for this open-source utility. Users are encouraged to engage with the authors to address any identified issues.
 
-See the `BEST PRACTICE RECOMMENDATIONS` section below for guidance on optimising Yocto project scans using this utility.
+-----
 
-## INSTALLATION
+## Introduction
 
-1. Create virtualenv
-2. Run `pip3 install bd_scan_yocto_via_sbom --upgrade`
+### Overview of `bd_scan_yocto_via_sbom`
 
-Alternatively, if you want to build and install the utility locally:
+This script is for **licensed users of Black Duck Software only**. You will need a Black Duck SCA server and an API key to use it.
 
-1. clone the repository
-2. Create virtualenv
-3. Build the utility `python3 -m build`
-4. Install the package `pip3 install dist/bd_scan_yocto_via_sbom-1.0.X-py3-none-any.whl --upgrade`
+While [Black Duck Detect](https://detect.blackduck.com/doc) is the default scan utility for Black Duck SCA and supports Yocto projects, its Yocto scans have limitations. The scan will only identify standard recipes from OpenEmbedded.org and **do not cover**:
 
-Alternatively, clone the repository locally:
+  * Modified or custom recipes.
+  * Recipes moved to new layers or with changed package versions/revisions.
+  * Custom kernel identification or kernel vulnerability mapping.
+  * Copyright and deep license data.
+  * Snippet or other code scanning within custom recipes.
 
-1. Clone the repository
-2. Ensure prerequisite packages are installed (see list in pyproject.toml)
+This utility addresses these gaps by creating a comprehensive Black Duck SCA project from your Yocto build. It achieves this by:
 
-## PREREQUISITES
+  * Scanning Yocto project artifacts to **generate an SPDX SBOM** (Software Bill of Materials), which is then uploaded to your Black Duck server to create a project version.
+  * **Filtering and "fixing-up" recipes** using data from the OpenEmbedded (OE) APIs to correctly identify recipes moved to new layers or with different local versions/revisions.
+  * **Signature scanning** packages and downloaded archives for recipes not matched by OE data.
+  * **Optionally adding unmatched components** via CPE lookup or by creating custom components through a second SBOM upload.
+  * **Applying patches for locally patched CVEs** identified from `cve_check` data (if available).
+  * **Optionally processing the Linux Kernel** to filter out vulnerabilities not within the sources compiled into your specific kernel.
 
-1. Yocto v2.1 or newer
-2. Black Duck SCA server 2024.1 or newer
-3. Black Duck SCA API with either Global Code Scanner and Global Project Manager roles or Project Code Scanner and BOM Manager roles for an existing project
-4. Multi-target Bitbake configurations are not supported - use this utility on a single target at a time
-5. A built Yocto project is required with access to the build platform; alternatively specific outputs from the build can be used instead although some script features may not be supported
-6. Python 3.10 or newer
+For guidance on optimizing Yocto project scans with this utility, refer to the **Best Practice Recommendations** section below.
 
-## HOW TO RUN
+### Understanding Yocto and Why This Script is Needed
 
-If you installed the utility as a package:
+Yocto is a powerful, local build system for creating custom Linux images. It's **not a package manager** but a highly customizable environment. Key characteristics that make comprehensive scanning challenging include:
 
-1. Set the Bitbake environment (for example `source oe-init-build-env`)
-2. Invoke virtualenv where utility was installed
-3. Run `bd-scan-yocto-via-sbom OPTIONS`
+  * **No Centralized Repository:** Unlike other Linux distributions, Yocto downloads software packages from external locations at build time.
+  * **Extensive Customization:** Yocto projects can be heavily modified, with changes to the build environment, layers, recipes, and the addition of custom recipes and patches.
+  * **Recipe Misconception:** Recipe names do not fully identify software packages. Recipes are local text files that can be modified to download different software from anywhere.
+  * **Hidden Dependencies:** Packages within recipes can embed other open-source software not explicitly listed in the Yocto manifest.
+  * **Post-Build Analysis:** Due to Yocto's dynamic nature, it's only feasible to accurately determine what was built and packaged into an image *after* the build is complete.
 
-Alternatively, if you have cloned the repository locally:
+This script employs multiple techniques to **reverse-engineer a built Yocto project** to identify its included packages, report license information, and map vulnerabilities from the package origins.
 
-1. Set the Bitbake environment (for example `source oe-init-build-env`)
-2. Invoke virtualenv where dependency packages were installed
-3. Run `python3 PATH_TO_REPOSITORY/run.py OPTIONS`
+The script can also **identify and process the Linux kernel**, determining its custom configuration and modules to ignore vulnerabilities reported against excluded modules.
 
-## BEST PRACTICE RECOMMENDATIONS
+-----
+
+## Installation
+
+You have a few options for installing this utility:
+
+### Option 1: Install from PyPI (Recommended)
+
+1.  Create a virtual environment:
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate # On Windows: .\venv\Scripts\activate
+    ```
+2.  Install the package:
+    ```bash
+    pip3 install bd_scan_yocto_via_sbom --upgrade
+    ```
+
+### Option 2: Build and Install Locally
+
+1.  Clone the repository:
+    ```bash
+    git clone <repository-url>
+    cd bd_scan_yocto_via_sbom
+    ```
+2.  Create a virtual environment (if you haven't already):
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate # On Windows: .\venv\Scripts\activate
+    ```
+3.  Build the utility:
+    ```bash
+    python3 -m build
+    ```
+4.  Install the package:
+    ```bash
+    pip3 install dist/bd_scan_yocto_via_sbom-1.0.X-py3-none-any.whl --upgrade
+    ```
+    (Replace `1.0.X` with the actual version number of the built wheel file.)
+
+### Option 3: Clone Repository and Install Prerequisites
+
+1.  Clone the repository:
+    ```bash
+    git clone <repository-url>
+    cd bd_scan_yocto_via_sbom
+    ```
+2.  Ensure prerequisite packages are installed (see the `pyproject.toml` file for a list).
+
+-----
+
+## Prerequisites
+
+Before running the script, ensure you meet the following requirements:
+
+1.  **Yocto v2.1 or newer**
+2.  **Black Duck SCA server 2024.1 or newer**
+3.  **Black Duck SCA API Token** with either:
+      * **Global Code Scanner** and **Global Project Manager** roles, OR
+      * **Project Code Scanner** and **BOM Manager** roles for an existing project.
+4.  **Single-target Bitbake configurations only** are supported. Run this utility on one target at a time.
+5.  A **built Yocto project** with access to the build platform. Alternatively, specific outputs from the build can be used, though some script features may be limited.
+6.  **Python 3.10 or newer**
+
+-----
+
+## How to Run
+
+### If you installed the utility as a package:
+
+1.  Set the Bitbake environment (e.g., `source oe-init-build-env`).
+2.  Activate your virtual environment (e.g., `source venv/bin/activate`).
+3.  Run the script:
+    ```bash
+    bd-scan-yocto-via-sbom OPTIONS
+    ```
+
+### If you cloned the repository locally:
+
+1.  Set the Bitbake environment (e.g., `source oe-init-build-env`).
+2.  Activate your virtual environment where dependency packages were installed (e.g., `source venv/bin/activate`).
+3.  Run the script:
+    ```bash
+    python3 PATH_TO_REPOSITORY/run.py OPTIONS
+    ```
+
+-----
+
+## Best Practice Recommendations
 
 For optimal Yocto scan results, consider the following:
 
-1. The utility will call Bitbake by default to extract the environment and layer information by default. Locations and other values (license.manifest, machine, target, download_dir, package_dir, image_package_type) extracted from the environment can be overridden using command line options. Also consider using `--skip_bitbake` and `--bitbake_layers_file FILE` options to bypass calling Bitbake (where FILE contains the
-output of the `bitbake-layers show-recipes` command (although will stop other features from operating)
-2. Use the `--recipe_report REPFILE` option to create a report of matched and unmatched recipes in the BOM. In particular check the recipes in the `RECIPES NOT IN BOM - MATCHED IN OE DATA` section.
-3. Use the `--oe_data_folder FOLDER` option to cache the downloaded OE data (~300MB on every run) and reuse the same folder on subsequent runs noting that the OE data does not change frequently. 
-4. Add the `cve_check` class to the Bitbake local.conf to ensure patched CVEs are identified, and then check that PHASE 6 picks up the cve-check file (see CVE PATCHING below). Optionally specify the output CVE check file using `--cve_check_file FILE`.
-5. Where recipes have been modified from original versions against the standard OE recipes, use the `--max_oe_version_distance X.X.X` option to specify fuzzy matching against OE recipes (distance values in the range '0.0.1' to '0.0.10' are recommended), although this can also cause some matches to be disabled. Create
-2 projects and compare the results with and without this option.
-6. If you wish to add the Linux kernel and other packages specified in the image manifest only, 
-consider using the `--process_image_manifest` option and optionally specifying the image manifest license file path (`--image_license_manifest FILEPATH`) where it does not exist in the same folder as the license.manifest file.
-7. Consider running Signature scan on all packages as opposed to the default of ONLY those not matched by identifier (use `--scan_all_packages` - useful for deep license and copyright analysis of standard OE recipes). Will require BOM curation to remove duplicates and partial matches.
-8. Consider using `--add_comps_by_cpe` to add packages not matched from all other methods by CPE lookup. 
-9. Consider using `--process_kernel_vulns` to ignore kernel vulns not within compiled kernel sources (requires `--process_image_manifest`).
-
-## OTHER OPTIONS
-
-There are several additional options to modify the behaviour of this utility including:
-- Skip using the data from the OpenEmbedded API to verify original recipes, layers, version using `--skip_oe_data`
-- Optionally run the command `bitbake -g` to create a 'task-depends.dot' file and specify the `--task_depends_dot_file FILE` option as well as `-l license.manifest` to improve recipe release identification (or do not specify license.manifest to scan dev dependencies)
-- Create SPDX output file for manual upload and debug (do not upload to Black Duck to create project - use `--output_file OUTPUT`) - script will stop after initial creation of SBOM
-- Specify license.manifest, machine, target, download_dir, package_dir, image_package_type to override values extracted from Bitbake environment
-- Skip Signature scan of downloaded archives and packages (use `--skip_sig_scan`)
-- Add image manifest recipes (use `--process_image_manifest` or `--image_license_manifest FILE`)
-- Run Signature scan on all packages as opposed to only those not matched by identifier (use `--scan_all_packages` - useful for deep license and copyright analysis of standard OE recipes). Will require BOM curation to remove duplicates and partial matches (Signature scanning is intended to find partial matches for review).
-
-## COMMAND LINE OPTIONS
-
-      usage: bd-scan-yocto-via-sbom [-h] [--blackduck_url BLACKDUCK_URL] [--blackduck_api_token BLACKDUCK_API_TOKEN] [--blackduck_trust_cert] [-p PROJECT] [-v VERSION] <OTHER OPTIONS>
-
-      Create BD Yocto project from license.manifest
-      
-     -h, --help            show this help message and exit
-
-    REQUIRED:
-     --blackduck_url BLACKDUCK_URL
-            Black Duck server URL (REQUIRED - will also use BLACKDUCK_URL env var)
-     --blackduck_api_token BLACKDUCK_API_TOKEN
-            Black Duck API token (REQUIRED - will also use BLACKDUCK_API_TOKEN env var)
-     -p PROJECT, --project PROJECT 
-            Black Duck project to create (REQUIRED)
-     -v VERSION, --version VERSION
-            Black Duck project version to create (REQUIRED)
-     -t TARGET, --target TARGET
-            Yocto target (e.g. 'core-image-sato' - single target configuration only supported)
-
-    OPTIONAL:
-     --blackduck_trust_cert
-            Black Duck trust server cert (can use BLACKDUCK_TRUST_CERT env var)
-
-    YOCTO PROJECT CONFIGURATION OPTIONAL:
-     -l LICENSE_MANIFEST, --license_manifest LICENSE_MANIFEST
-            license.manifest file path (Latest file in standard location will be used if not specified)
-     --process_image_manifest
-            Process the image_license.manifest file to process recipes from the core image using the
-            default location. Alternatively specify the image_license.manifest file path.
-     -i IMAGE_LICENSE_MANIFEST, --image_license_manifest IMAGE_LICENSE_MANIFEST
-            Specify the image_license.manifest file path to process recipes from the core image (usually including the kernel).
-     --task_depends_dot_file
-            Process task-depends.dot file created by 'bitbake -g' command (if 'license.manifest' is NOT also specified,
-            then process ALL recipes including dev dependencies)
-     -b BITBAKE_LAYERS, --bitbake_layers_file BITBAKE_LAYERS
-            File containing output of 'bitbake-layers show-recipes' command (Only suitable if Bitbake
-            cannot be called locally - will reduce accuracy and stop other features from operating)
-     -c CVE_CHECK_FILE, --cve_check_file CVE_CHECK_FILE
-            CVE check output file (in .cve or .json format) to mark locally patched CVEs as patched in 
-            project (Most recent file will be located by default - use this option to specify alternate file)
-     --build_dir BUILD_DIR
-            Alternate Yocto build folder (usually poky/build identified by default)
-     --download_dir DOWNLOAD_DIR
-            Alternate directory where original OSS source is downloaded (usually poky/build/downloads identified by default)
-     --package_dir PACKAGE_DIR
-            Alternate directory where package files are downloaded (for example poky/build/tmp/deploy/rpm/<ARCH> identified by default)
-     --image_package_type IMAGE_PACKAGE_TYPE
-            Package type used for installing packages (specify one of rpm, deb or ipx - default rpm)
-     --kernel_recipe
-            Define non-standard kernel recipe name ('linux-yocto' is assumed by default)
-
-    SCRIPT BEHAVIOUR:
-     --skip_oe_data
-            Do not download OE data to check layers, versions & revisions
-     --oe_data_folder OE_DATA_FOLDER
-            Folder to contain OE data files - if files do not exist they will be downloaded, 
-            if files exist then will be used without download
-     --max_oe_version_distance MAX_OE_VERSION_DISTANCE
-            Where no exact match, use closest previous recipe version up to specified distance.
-            Distance should be specified as MAJOR.MINOR.PATCH (e.g. 0.1.0)
-     --skip_sig_scan
-            Do not Signature scan downloads and packages
-     --scan_all_packages
-            Signature scan all packages (only recipes not matched from OE data are scanned by default)
-     --add_comps_by_cpe
-            Where packages are not mapped in the BOM, or discovered in the Signature scan, lookup
-            CPEs and add missing packages. Note not all packages have published CPEs (which only exist where
-            CVEs have been reported) so not all missing packages can be added using this technique.
-     --process_kernel_vulns
-            Process compiled kernel sources to ignore vulns affecting modules not compiled into custom kernel.
-            Requires using --process_image_manifest to include the kernel recipe and --kernel_recipe XXX to
-            specify a non-standard kernel recipe ('linux-yocto' is assumed).
-
-    CONNECTION & DETECT OPTIONS:
-     --detect_jar_path DETECT_JAR_PATH
-            Detect jar path
-     --detect_opts DETECT_OPTS
-            Additional Detect options (remove leading '--' from Detect options)
-     --api_timeout
-            Specify API timeout in seconds (default 60) - will be used in Detect as --detect.timeout
-     --sbom_create_custom_components
-            Create custom components when uploading SBOM (default False)
-     --no_unmap
-            Do not unmap previous code locations (scans) when running the initial scan (default is to unmap)
-
-    GENERAL:
-     --recipe_report REPFILE
-            Create report file with a list of recipes including those not matched in the BOM
-     -o OUTPUT, --output OUTPUT
-            Specify output SBOM SPDX file for manual upload (if specified then BD project will not be 
-            created automatically and CVE patching not supported)
-     --debug
-            Debug logging mode
-     --logfile LOGFILE
-            Logging output file
+1.  **Override Bitbake Environment Values:** By default, the utility calls Bitbake to extract environment and layer information. You can override values like last build locations, `license.manifest`, `machine`, `target`, `download_dir`, `package_dir`, and `image_package_type` using command-line options. Use `-l PATH/license.manifest` to specify a different `license.manifest` file.
+2.  **Generate a Recipe Report:** Use the `--recipe_report REPFILE` option to create a report of matched and unmatched recipes in the BOM, which is useful for analysis and debugging.
+3.  **Cache OE Data:** The `--oe_data_folder FOLDER` option allows you to cache downloaded OE data (approx. 300MB) and reuse it in subsequent runs, saving download time. OE data doesn't change frequently.
+4.  **Identify Patched CVEs:** Add the `cve_check` class to your Bitbake `local.conf` to identify patched CVEs. Ensure **PHASE 6** picks up the `cve-check` file. Optionally, specify the output CVE check file using `--cve_check_file FILE` if an alternative location is needed.
+5.  **Fuzzy Match Modified Recipes:** For recipes modified from original versions, use `--max_oe_version_distance X.X.X` (e.g., `0.0.1` to `0.0.10`) for fuzzy matching against OE recipes. Be cautious, as this can sometimes disable correct matches. It's recommended to create two projects and compare results with and without this option.
+6.  **Process Image Manifest:** To include the Linux kernel and other packages specified in the image manifest, consider using the `--process_image_manifest` option. Optionally, specify the `image_license_manifest` file path (`--image_license_manifest FILEPATH`).
+7.  **Add Components by CPE:** Use `--add_comps_by_cpe` to add packages not matched by other methods through CPE lookup. Note that not all packages have published CPEs.
+8.  **Process Kernel Vulnerabilities:** To ignore kernel vulnerabilities not within compiled kernel sources, use `--process_kernel_vulns`. This option also requires `--process_image_manifest`.
 
-### MINIMUM REQUIRED OPTIONS
+-----
 
-- `--blackduck_url BD_URL --blackduck_api_token BD_API -p BD_PROJECT -v BD_VERSION -t YOCTO_TARGET`
+## Other Options
 
-Optionally add the `--blackduck_trust_cert` option to trust the Black Duck server certificate.
+Several other options are available to modify the script's behavior:
 
-Also consider using `--oe_data_folder FOLDER` with an existing folder to cache the OE recipe data on subsequent runs to save large downloads at each execution.
+  * **Skip OE Data:** Use `--skip_oe_data` to bypass downloading OE API data, which is used for verifying original recipes, layers, and versions.
+  * **Improve Recipe Release Identification:** Optionally run `bitbake -g` to create a `task-depends.dot` file and specify `--task_depends_dot_file FILE` along with `-l license.manifest`. If `-l license.manifest` is *not* specified, it will scan development dependencies.
+  * **Generate SBOM for Manual Upload/Debug:** Use `--output_file OUTPUT` to create an SPDX output file for manual upload and debugging. The script will stop after creating the initial SBOM and will not upload it to Black Duck or process CVE patching.
+  * **Override Bitbake Environment Values:** Explicitly specify `license.manifest`, `machine`, `target`, `download_dir`, `package_dir`, and `image_package_type` to override values detected from the Bitbake environment.
+  * **Control Signature Scanning:**
+      * `--skip_sig_scan`: Skips signature scanning of downloaded archives and packages.
+      * `--scan_all_packages`: Runs signature scan on *all* packages, not just those unmatched by identifier (useful for deep license and copyright analysis of standard OE recipes and detecting embedded OSS). This may require BOM curation to remove duplicates; consider using the [bd\_sig\_filter](https://github.com/blackducksoftware/bd_sig_filter) script.
+
+-----
+
+## Command Line Options
+
+```
+usage: bd-scan-yocto-via-sbom [-h] [--blackduck_url BLACKDUCK_URL] [--blackduck_api_token BLACKDUCK_API_TOKEN] [--blackduck_trust_cert] [-p PROJECT] [-v VERSION] <OTHER OPTIONS>
+
+Create BD Yocto project from license.manifest
+```
+
+### Required Options:
+
+  * `-h, --help`: Show this help message and exit.
+  * `--blackduck_url BLACKDUCK_URL`: Black Duck server URL (also uses `BLACKDUCK_URL` environment variable).
+  * `--blackduck_api_token BLACKDUCK_API_TOKEN`: Black Duck API token (also uses `BLACKDUCK_API_TOKEN` environment variable).
+  * `-p PROJECT, --project PROJECT`: Black Duck project to create or update.
+  * `-v VERSION, --version VERSION`: Black Duck project version to create or update.
+  * `-t TARGET, --target TARGET`: Yocto target (e.g., 'core-image-sato' - single target configuration only supported).
+
+### Optional:
+
+  * `--blackduck_trust_cert`: Trust Black Duck server certificate (also uses `BLACKDUCK_TRUST_CERT` environment variable).
+
+### Yocto Project Configuration Optional:
+
+  * `-l LICENSE_MANIFEST, --license_manifest LICENSE_MANIFEST`: Path to `license.manifest` file. If not specified, the latest file in the standard location will be used.
+  * `--process_image_manifest`: Process the `image_license.manifest` file (default location) to include recipes from the core image.
+  * `-i IMAGE_LICENSE_MANIFEST, --image_license_manifest IMAGE_LICENSE_MANIFEST`: Specify the path to `image_license.manifest` to process recipes from the core image (usually including the kernel).
+  * `--task_depends_dot_file`: Process the `task-depends.dot` file created by `bitbake -g`. If `license.manifest` is *not* also specified, all recipes, including dev dependencies, will be processed.
+  * `-b BITBAKE_LAYERS, --bitbake_layers_file BITBAKE_LAYERS`: File containing output of `bitbake-layers show-recipes`. Only suitable if Bitbake cannot be called locally (reduces accuracy and disables other features).
+  * `-c CVE_CHECK_FILE, --cve_check_file CVE_CHECK_FILE`: CVE check output file (in `.cve` or `.json` format) to mark locally patched CVEs. The most recent file will be located by default; use this option to specify an alternate file.
+  * `--build_dir BUILD_DIR`: Alternate Yocto build folder (defaults to `poky/build`).
+  * `--download_dir DOWNLOAD_DIR`: Alternate directory where original OSS source is downloaded (defaults to `poky/build/downloads`).
+  * `--package_dir PACKAGE_DIR`: Alternate directory where package files are downloaded (e.g., `poky/build/tmp/deploy/rpm/<ARCH>`).
+  * `--image_package_type IMAGE_PACKAGE_TYPE`: Package type used for installing packages (specify one of `rpm`, `deb`, or `ipx` - default `rpm`).
+  * `--kernel_recipe`: Define a non-standard kernel recipe name (defaults to 'linux-yocto').
+
+### Script Behavior:
+
+  * `--skip_oe_data`: Do not download OE data to check layers, versions, and revisions.
+  * `--oe_data_folder OE_DATA_FOLDER`: Folder to contain OE data files. If files don't exist, they will be downloaded; if they exist, they will be used without re-downloading.
+  * `--max_oe_version_distance MAX_OE_VERSION_DISTANCE`: When no exact match, use the closest previous recipe version up to the specified distance (e.g., `0.0.1` to `0.0.10` is recommended).
+  * `--skip_sig_scan`: Do not signature scan downloads and packages. By default, only recipes not matched from OE data are scanned.
+  * `--scan_all_packages`: Signature scan all packages (default: only recipes not matched from OE data are scanned).
+  * `--add_comps_by_cpe`: Look up CPEs for packages not mapped in the BOM or discovered by signature scan and add missing packages. Note: not all packages have published CPEs.
+  * `--process_kernel_vulns`: Process compiled kernel sources to ignore vulnerabilities affecting modules not compiled into the custom kernel. Requires `--process_image_manifest`.
+
+### Connection & Detect Options:
+
+  * `--detect_jar_path DETECT_JAR_PATH`: Path to the Detect JAR file.
+  * `--detect_opts DETECT_OPTS`: Additional Detect options (remove leading `--` from Detect options).
+  * `--api_timeout`: Specify API timeout in seconds (default 60). Used in Detect as `--detect.timeout`.
+  * `--sbom_create_custom_components`: Create custom components when uploading SBOM (default `False`). **USE WITH CAUTION.**
+  * `--no_unmap`: Do not unmap previous code locations (scans) when running the initial scan (default is to unmap).
+
+### General:
+
+  * `--recipe_report REPFILE`: Create a report file with a list of recipes, including those not matched in the BOM.
+  * `-o OUTPUT, --output OUTPUT`: Specify output SPDX SBOM file for manual upload. If specified, the Black Duck project will not be created automatically, and CVE patching is not supported.
+  * `--debug`: Enable debug logging mode.
+  * `--logfile LOGFILE`: Output logging to a specified file.
 
-Server credentials can also be specified using standard environment variables (BLACKDUCK_URL, BLACKDUCK_API_TOKEN and BLACKDUCK_TRUST_CERT).
+-----
 
-### DETAILED DESCRIPTION OF OPTIONS
+### Minimum Required Options
 
-- `--blackduck_url, --blackduck_api_token, --blackduck_trust_cert`:
-  - REQUIRED - Connection credentials to Black Duck server. Can also be picked up from the environment variables BLACKDUCK_URL,
-BLACKDUCK_API_TOKEN and BLACKDUCK_TRUST_CERT. Required to create the BD project version automatically and optionally process CVE patch status; not required if `--output` specified.
+To run the script, you must provide:
+
+`--blackduck_url BD_URL --blackduck_api_token BD_API -p BD_PROJECT -v BD_VERSION -t YOCTO_TARGET`
+
+Optionally, add `--blackduck_trust_cert` to trust the Black Duck server certificate.
+
+Consider using `--oe_data_folder FOLDER` with an existing folder to **cache OE recipe data** on subsequent runs, saving large downloads.
 
-- `--project PROJECT --version VERSION` (also -p -v):
-  - REQUIRED - Black Duck project and version to create
+Server credentials can also be specified using the standard environment variables: `BLACKDUCK_URL`, `BLACKDUCK_API_TOKEN`, and `BLACKDUCK_TRUST_CERT`.
 
-- `--license_manifest LICENSE_MANIFEST_FILE` (also -l):
-  - Optionally specify yocto license.manifest file created by Bitbake. Usually located in the folder `tmp/deploy/licenses/<yocto-image>-<yocto-machine>/license.manifest` which should be determined from Bitbake environment by default (unless `--skip_bitbake` used).
+-----
 
-- `--target TARGET` (also -t):
-  - Bitbake target (e.g. `core-image-sato`) - required unless `--skip_bitbake` used.
+### Detailed Description of Options
+
+  * **`--blackduck_url`, `--blackduck_api_token`, `--blackduck_trust_cert`**:
+      * **REQUIRED** for automatically creating the Black Duck project version and optionally processing CVE patch status. Can be picked up from environment variables. Not required if `--output` is specified.
+  * **`--project PROJECT --version VERSION` (`-p`, `-v`)**:
+      * **REQUIRED** Black Duck project and version to update or create.
+  * **`--license_manifest LICENSE_MANIFEST_FILE` (`-l`)**:
+      * Optionally specify the Yocto `license.manifest` file created by Bitbake. Usually located in `tmp/deploy/licenses/<yocto-image>-<yocto-machine>/license.manifest`. The last build location should be determined from the Bitbake environment by default (unless `--skip_bitbake` is used).
+  * **`--target TARGET` (`-t`)**:
+      * Bitbake target (e.g., `core-image-sato`). Required unless `--skip_bitbake` is used.
+  * **`--skip_bitbake`**:
+      * Do not extract Bitbake environment and layers information using Bitbake commands. Requires `bitbake-layers` output to be specified and will prevent multiple features from operating, so it's **not advised**.
+  * **`--task_depends_dot_file TASK_DEPENDS_FILE`**:
+      * Process `task-depends.dot` file created by `bitbake -g`. If `license.manifest` is *not* also specified, all recipes, including dev dependencies, will be processed. `--target` is also required.
+  * **`--bitbake_layers_file BITBAKE_OUTPUT_FILE` (`-b`)**:
+      * Optionally specify the output of the command `bitbake-layers show-recipes` stored in a file. Should be used with `--skip_bitbake`, but will prevent many other script features from operating, so it's **not recommended**.
+  * **`--output SBOM_FILE` (`-o`)**:
+      * Create an output SBOM file for manual upload. Does not create a Black Duck project version and skips additional steps. **Use only for debug purposes.**
+  * **`--cve_checkfile CVE_CHECK_FILE`**:
+      * Optionally specify the output file from `cve_check` (a custom class that generates a list of patched CVEs). Usually located in `build/tmp/deploy/images/XXX`. Should be determined from the Bitbake environment by default (unless `--skip_bitbake` is used).
+  * **`--skip_oe_data`**:
+      * Do not download layers/recipes/layers from `layers.openembedded.org` APIs. These are used to review origin layers and revisions within recipes to ensure more components are matched against the Black Duck KnowledgeBase (KB). Useful where recipes have been upgraded to new versions against the template recipes provided by OE.
+  * **`--oe_data_folder FOLDER`**:
+      * Creates OE data files in the specified folder if they don't already exist. If files exist, they are used without re-downloading. This allows offline usage of OE data or reduces large data transfers if the script is run frequently. **RECOMMENDED.**
+  * **`--skip_sig_scan`**:
+      * Do not run Signature Scan on packages and downloaded archives for unmatched recipes. By default, recipes *not* matched against OE data will be Signature scanned.
+  * **`--scan_all_packages`**:
+      * Signature scan all recipes, including those matched against OE recipes. By default, only recipes *not* matched against OE data are Signature scanned.
+  * **`--max_oe_version_distance MAJOR.MINOR.PATCH`**:
+      * Specify a version distance to enable closest (previous) recipe version matching against OE data where exact matches are unavailable. By default, OE recipe versions must match exactly to replace layers and revision values. Setting this value allows close (previous) recipe version matching. The value must be in `MAJOR.MINOR.PATCH` format (e.g., `0.10.0`).
+      * **CAUTION**: Setting this value too high may cause components to be matched against older recipes in the OE data, potentially leading to different vulnerability reports. It's generally better to maintain a close relationship between matched versions and project versions. Consider values in the range `0.0.1` to `0.0.10`.
+  * **`--process_image_manifest` OR `--image_license_manifest PATH`**:
+      * Include processing of the `image_license.manifest` file to add recipes from the core image to the BOM (usually including the Linux kernel). Also specify `--kernel_recipe XXX` if the kernel recipe is not `linux_yocto`.
+  * **`--recipe_report REPFILE`**:
+      * Create a report of matched and unmatched recipes in the specified `REPFILE`.
+  * **`--add_comps_by_cpe`**:
+      * For packages not matched by other techniques (OE recipe name lookup or Signature scan), look up CPEs and add matching components. This will not add all missing packages, as CPEs only exist where CVEs have been reported.
+  * **`--process_kernel_vulns`**:
+      * Process compiled kernel sources to ignore vulnerabilities affecting modules not compiled into the custom kernel. **Requires** using `--process_image_manifest` to include the kernel recipe and `--kernel_recipe XXX` to specify a non-standard kernel recipe.
+  * **`--sbom_create_custom_components` (USE WITH CAUTION)**:
+      * Creates Custom Components in Black Duck SCA when *all other* scan techniques do not match recipes. The license reported in `license.manifest` will be used. Custom Components are designed for unknown components but lack associated vulnerabilities, deep license data, or copyrights.
+      * **Caution**: This option creates new, permanent custom components mapped to PURLs. These PURLs will be matched in all future scans, even if new data is added to the KB for the recipe. Use the **Manage --\> Unmatched Origins** view to disassociate PURLs from custom components if you don't want them matched in future scans. Deleting custom components once created and referenced in projects is not possible unless the projects themselves are removed. Do not use this option until you fully understand its implications.
 
-- `--skip_bitbake`:
-  - Do not extract Bitbake environment and layers information using Bitbake commands - requires license.manifest and/or task-depends.dot file and bitbake-layers output to be specified.
+### Example Distance Calculations for `--max_oe_version_difference`
+
+  * Recipe version is `3.2.4` - closest previous OE recipe version is `3.2.1`: Distance value needed: minimum `0.0.3`
+  * Recipe version is `3.2.4` - closest previous OE recipe version is `3.0.1`: Distance value needed: minimum `0.2.0`
+  * Recipe version is `3.2.4` - closest previous OE recipe version is `2.0.1`: Distance value needed: minimum `1.0.0`
 
-- `--task_depends_dot_file TASK_DEPENDS_FILE`:
-  - Process task-depends.dot file created by 'bitbake -g' command which will process ALL recipes including dev dependencies unless 'license.manifest' is also specified, --target is also required). The benefit of referencing this file is that recipe revisions can be determined.
+Note that lower-order values are overridden by higher-order values (e.g., a distance of `1.0.0` is equivalent to `1.999.999`).
 
-- `--bitbake_layers_file BITBAKE_OUTPUT_FILE` (also -b):
-  - Optionally specify output of the command `bitbake-layers show-recipes` stored in the specified file.  Should be determined from Bitbake environment by default (unless `--skip_bitbake` used).
+-----
 
-- `--output SBOM_FILE` (also -o):
-  - Create an output SBOM file for manual upload; do not create BD project version and skip additional steps (use only for debug purposes)
+## CVE Patching
 
-- `--cve_checkfile CVE_CHECK_FILE`:
-  - Optionally specify output file from run of the `cve_check` custom class which generates a list of patched CVEs. Usually located in the
-folder `build/tmp/deploy/images/XXX`.  Should be determined from Bitbake environment by default (unless `--skip_bitbake` used)
+The Yocto `cve_check` class processes Bitbake dependencies within the development environment, generating a list of CVEs identified from the NVD for *all* packages in that environment.
 
-- `--skip_oe_data`:
-  - Do not download layers/recipes/layers from layers.openembedded.org APIs to review origin layers and revisions used in recipes to 
-ensure more accurate matching and complete BOMs.
+For patched CVE remediation in your Black Duck project, you need to add the `cve_check` bbclass to your Yocto build configuration to generate the CVE check log output. Add the following line to your `build/conf/local.conf` (or similar) file:
 
-- `--oe_data_folder FOLDER`:
-  - Create OE data files in the specified folder if not already existing. If OE data files exist already in this folder,
-use them to review layers and revisions to ensure more accurate matching and complete BOMs. Allows offline usage
-of OE data or reduction of large data transfers if script is run frequently.
+```
+INHERIT += "cve-check"
+```
 
-- `--skip_sig_scan`:
-  - Do not send identified package and downloaded archives for Signature scanning. By default, recipes
-not matched against OE data will be Signature scanned.
+Then, **rebuild your project** (e.g., using `bitbake core-image-sato`) to run the CVE check action and generate the required CVE log files without a full rebuild.
 
- - `--scan_all_packages`:
-   - Signature scan all recipes including those matched against OE recipes. By default, only recipes
-not matched against OE data will be Signature scanned.
+The script should automatically locate the `cve-check` output file (usually under `poky/tmp/deploy/images/licenses`), but you can also specify the file using the `--cve_check_file CVE_CHECK_FILE` option.
 
-- `--max_oe_version_distance MAJOR.MINOR.PATCH`:
-  - Specify version distance to enable closest (previous) recipe version matching against OE data where exact matches not available.
-By default, when `--get_oe_data` is specified, OE recipe versions must match the version exactly to replace layers and revision values.
-Setting this value will allow close (previous) recipe version matching.
-The value needs to be of the format MAJOR.MINOR.PATCH (e.g. '0.10.0').
-CAUTION - setting this value to a large value will cause versions of components to be matched against previous recipes maintained in the OE data,
-which may lead to different levels of reported vulnerabilities. It is preferable to maintain close relation between the matched
-versions and the ones in the project and then to identify unmatched components which can be added as custom components or manually. Consequently
-only consider using values which allow versions from different MINOR or MAJOR versions in exceptional circumstances (meaning the supplied
-value should probably be in the range 0.0.1 to 0.0.10).
+-----
 
-- `--process_image_manifest` OR `--image_license_manifest PATH`:
-  - Include processing of image_license.manifest file to add recipes from the core image to the BOM (usually including Linux kernel).
+## Troubleshooting
 
-- `--recipe_report REPFILE`:
-  - Create a report of matched and unmatched recipes in specified REPFILE.
+  * **Ensure required options are specified**: Double-check that you've provided all minimum required options, including the Yocto target (`-t`).
+  * **Verify prerequisites and build status**: Confirm all prerequisites are met and that you have a built Yocto project with a generated `license.manifest` file.
+  * **Enable debug logging**: Use the `--debug` option to turn on detailed logging.
+  * **Check code locations in Black Duck**: After the scan, verify that your Black Duck project's **Source** tab shows 2 or 3 separate code locations: one for the initial SBOM import, one for Signature Scan, and optionally one for CPE matching/custom components.
+  * **Review Phase 6 information**: If Phase 6 runs, check the `total components in BOM` against `total recipes in Yocto project`. The `Recipes matched in OE data but not in BOM` count indicates recipes found in OE data but not matched against the Black Duck KB. Review these (also listed in Phase 5) to see if they were identified by subsequent Signature Scan, and consider manually adding the origin OSS components to the Project Version if needed.
+  * **Missing packages**: If a specific package appears missing from the project, confirm you are looking for the **recipe name**, not the package name. (See FAQs for an explanation of Yocto recipes vs. packages.) Also, check that the package file was included in the Signature Scan within the **Source** tab.
+  * **Linux kernel missing**: Consider using the `--process_image_manifest` or `--image_license_manifest PATH` options to include packages in the image manifest, which usually includes the Linux kernel. If the kernel still isn't identified due to a custom name format, consider adding the required kernel version manually to the project.
 
-- `--add_comps_by_cpe`:
-  - For packages not matched by other techniques (OE recipe name lookup or Signature scan of downloaded packages), lookup CPEs and add components which match. Will not add all missing packages as CPEs only exist where CVEs have been reported.
+-----
 
-- `--process_kernel_vulns`:
-  - For packages not matched by other techniques (OE recipe name lookup or Signature scan of downloaded packages), lookup CPEs and add components which match. Will not add all missing packages as CPEs only exist where CVEs have been reported.
-  
-### EXAMPLE DISTANCE CALCULATIONS
+## How to Report Issues with This Script
 
-- Recipe version is 3.2.4 - closest previous OE recipe version is 3.2.1: Distance value would need to be minimum 0.0.3
-- Recipe version is 3.2.4 - closest previous OE recipe version is 3.0.1: Distance value would need to be minimum 0.2.0
-- Recipe version is 3.2.4 - closest previous OE recipe version is 2.0.1: Distance value would need to be minimum 1.0.0
+If you encounter issues, please **create an issue in GitHub** and include the following information:
 
-Note that lower order values are overridden by higher order (for example distance 1.0.0 is equivalant to 1.999.999).
+  * Your Organization name (to validate your Black Duck license).
+  * A clear description of the issue.
+  * Yocto version in use (obtain with `bitbake -e | grep DISTRO_CODENAME`).
+  * The `license.manifest` file for your build.
+  * The output of the command `bitbake-layers show-recipes`.
+  * The log output from this script with `--debug` enabled (use `--logfile LOGFILE` to save to a file).
+  * The recipe report file (use `--recipe_report REPFILE`).
 
-## CVE PATCHING
+-----
 
-The Yocto `cve_check` class works on the Bitbake dependencies within the dev environment, and produces a list of CVEs identified from the NVD for ALL packages in the development environment.
+## Additional Scan Possibilities (Outside This Script)
 
-For patched CVE remediation in the Black Duck project, you will need to add the `cve_check` bbclass to the Yocto build configuration to generate the CVE check log output. Add the following line to the `build/conf/local.conf` file:
+For custom C/C++ recipes or recipes built with other languages and package managers, you can combine this script with other scan types:
 
-       INHERIT += "cve-check"
+  * **C/C++ Recipes**: The advanced [blackduck\_c\_cpp](https://pypi.org/project/blackduck-c-cpp/) utility can be used during the build process to identify compiled sources, system includes, and operating system dependencies. You would need to modify the recipe's build command to call `blackduck-c-cpp` as part of a scanning cycle after configuring it to connect to your Black Duck server.
+  * **Package Manager-Based Recipes**: For recipes utilizing a package manager, a standard **Detect scan in DETECTOR mode** can be used to analyze project dependencies separately.
 
-Then rebuild the project (using for example `bitbake core-image-sato`)  to run the CVE check action and generate the required CVE log files without a full rebuild.
+**Combining Multiple Scans**: Multiple scans can be combined into the same Black Duck project. Ensure you use the Detect option `--detect.project.codelocation.unmap=false` to prevent previous scans from being unmapped.
 
-The script should locate the path for the output file from cve-check, but you can also specify the file using the option `--cve_check_file CVE_CHECK_FILE` which is usually located in the `poky/tmp/deploy/images
+-----
 
-## TROUBLESHOOTING
+## Release Notes
 
-- Ensure that you have specified the required minimum options including the Yocto target (-t).
+  * **v1.1.2**
+      * Improved custom component creation by SBOM import: now removed when recipes are unmatched in the first SBOM import and added to the second SBOM import (which runs when `--add_comps_by_cpe` is specified).
+      * Moved SBOM custom component creation step to after Signature scan and optional addition of packages using CPE - to ensure packages only added if truly unmatched.
+      * Removed date/time from SBOM document name and signature scan temporary folder names, allowing rescanning without unmapping (required for Detect 11). Default unmapping will be removed when Detect 11 is implemented.
+      * Removed asyncio as dependency (bundled in Python 3.4+)
+  * **v1.1.1**
+      * Minor fix for `cve_check` output file identification.
+  * **v1.1.0**
+      * Added `--add_comps_by_cpe` option to look for unmatched packages via CPE.
+      * Changed vulnerability patching to use asynchronous updates for improved speed.
+      * Added custom kernel source scanning to ignore vulnerabilities affecting uncompiled kernel modules (requires `--process_kernel_vulns` and `process_image_manifest`).
 
-- Check all the prerequisites, and that there is a built Yocto project with a generated license.manifest file.
+-----
 
-- Use the option --debug to turn on debug logging.
+## FAQs
 
-- After scan completion, check that there are at least 2 separate code locations in the Source tab in the Black Duck project (one for SBOM import and the other for Signature scan).
+1.  **Why can't I rely on the license data provided by Yocto in the `license.manifest` file?**
+    The licenses reported by Bitbake come directly from the recipe files. However, the true applicable license for each package is the one declared in its origin repository, which may differ. Furthermore, most open-source licenses require the full license text and copyrights in the distribution. Many OSS packages also embed other OSS with different licenses, sometimes with re-licensing restrictions. Black Duck uses licenses from the origin packages, supports full license text and copyrights, and offers optional deep license analysis to identify embedded licenses within packages.
 
-- Check the information from PHASE 5 (if it is run) in particular the total components in BOM against total recipes in Yocto project. The `Recipes matched in OE data but not in BOM` counts recipes which were found in OE data but could not be matched against the BD KB. Check to see if these recipes (also listed in Phase 5) are identified by subsequent Signature scan and consider adding the origin OSS components as manual additions in the Project Version.
+2.  **Can this utility be used on a Yocto image without access to the build environment?**
+    Yes, potentially. Use the options `--skip_bitbake -l LIC_MANIFEST_FILE --bitbake_layers_file LAYERS_FILE`, where `LIC_MANIFEST_FILE` is the path to your `license.manifest` file and `LAYERS_FILE` contains the output of `bitbake-layers show-recipes`.
 
-- If you are looking for a specific package which appears to be missing from the project, confirm that you are looking for the recipe name not the package name. See the FAQs for an explanation of Yocto recipes versus packages. Check that the package file was included in the Signature scan (within the Source tab).
+3.  **Why can't I simply use the `cve-check` class provided by Yocto to determine unpatched vulnerabilities?**
+    The `cve-check` class processes all recipes in the build and attempts to associate CVEs from the NVD using CPEs. This often leads to a large number of false positive CVEs, as it reports all packages (including build dependencies) rather than just those in the distributed image. For example, a sample Yocto 4.1 minimal build might report 160 unpatched CVEs, with 14 for zlib, while Black Duck might show only 3 patched and 0 unpatched for the zlib version in the build.
 
-## HOW TO REPORT ISSUES WITH THIS SCRIPT
+4.  **Why couldn't I just use the `create-spdx` class provided by Yocto to export a full SBOM?**
+    The Yocto `create-spdx` class generates SPDX JSON files for packages, including useful data like file lists and hashes. However, many SPDX fields (e.g., license text, copyrights) are often blank (`NO-ASSERTION`), and packages are not identified by PURL, making effective import into other tools (including Black Duck) difficult.
 
-If you encounter issues using the script, then please create an issue in GitHub, ensuring that you include the following information:
+5.  **I cannot see a specific package in the Black Duck project.**
+    Use the `--recipe_report FILE` option to list matched and missing recipes. Black Duck reports recipes in the Yocto project, not individual packages. Multiple packages can be combined into a single recipe and are generally considered part of that recipe's main component. Check if the package file was included in the Signature Scan (within the Source tab).
 
-- Your Organisation name (to validate you have a Black Duck license)
-- Description of the issue
-- Yocto version in use (use the command `bitbake -e | grep DISTRO_CODENAME`)
-- The `license.manifest` file for the build
-- The output of the command `bitbake-layers show-recipes`
-- The log output from this script with `--debug` enabled (use the `--logfile LOGFILE` option to output to a file )
-- The recipe report file (use `--recipe_report REPFILE`)
+6.  **I cannot see the Linux kernel in the Black Duck project.**
+    Consider using the `--process_image_manifest` or `--image_license_manifest PATH` options to process packages in the image manifest, which usually includes the Linux kernel. If the kernel still cannot be identified due to a custom name format, consider adding the required kernel version manually to the project.
 
-# ADDITIONAL SCAN OPTIONS
+7.  **I am using another Yocto wrapper like KAS ([https://kas.readthedocs.io/](https://kas.readthedocs.io/)) and cannot run Bitbake, or the script fails for some other reason.**
+    Use the options `--skip_bitbake -l LIC_MANIFEST_FILE --bitbake_layers_file LAYERS_FILE`, where `LIC_MANIFEST_FILE` is the path to your `license.manifest` file and `LAYERS_FILE` contains the output of `bitbake-layers show-recipes`. Note that this will disable several features, including CVE patching, kernel vulnerability identification, and package scanning.
 
-For a custom C/C++ recipe, or where other languages and package managers are used to build custom recipes, other types of scan could be considered in addition to the techniques used in this script.
-
-For C/C++ recipes, the advanced [blackduck_c_cpp](https://pypi.org/project/blackduck-c-cpp/) utility could be used as part of the build to identify the compiled sources, system includes and operating system dependencies. You would need to modify the build command for the recipe to call the `blackduck-c-cpp` utility as part of a scanning cycle after it had been configured to connect to the Black Duck server.
-
-For recipes where a package manager is used, then a standard Detect scan in DETECTOR mode could be utilised to analyse the project dependencies separately.
-
-Multiple scans can be combined into the same Black Duck project (ensure to use the Detect option `--detect.project.codelocation.unmap=false` to stop previous scans from being unmapped).
-
-# RELEASE NOTES
-
-- **v1.1.0**
-  - Added `--add_comps_by_cpe` option to look for unmatched packages via CPE.
-  - Changed vulnerability patching to use asynchronous update for improved speed.
-  - Added custom kernel source scanning to ignore vulns affecting uncompiled kernel modules - use `--process_kernel_vulns` and `process_image_manifest`
-
-# FAQs
-
-1. **Why can't I rely on the license data provided by Yocto in the license.manifest file?**
-
-   _The licenses reported by Bitbake come straight from the recipe files used to build the project.
-   However, the applicable license for each package is the actual declared license reported in the origin repository,
-   which may not match the license name in the recipe used to build/install the package. Furthermore, the obligations of
-   most OSS licenses require that the full license text is included in the distribution along with any relevant copyrights.
-   Another concern is that most OSS packages use or encapsulate other OSS which can have different licenses to the declared
-   license in the main package, and in some cases re-licensing is not allowed meaning that the declared license of the main
-   is not applicable. Black Duck uses the licenses from the origin packages (not the Yocto recipe), supports full
-   license text and copyrights as well as optional deep license analysis to identify embedded licenses within packages._
-
-
-2. **Can this utility be used on a Yocto image without access to the build environment?**
-   
-   _Yes possibly - Use the options `--skip_bitbake -l LIC_MANIFEST_FILE --bitbake_layers_file LAYERS_FILE` where LIC_MANIFEST_FILE is the path to the specific license.manifest file and LAYERS_FILE
-   contains the output of the command `bitbake-layers show-recipes`_.
-
-
-4. **Why can't I simply use the `cve-check` class provided by Yocto to determine unpatched vulnerabilities?**
-
-   _The cve-check class processes all recipes in the build and then looks up packages in the NVD to try to associate CVEs. The script reports all packages including build dependencies as opposed to the packages only in the distributed image which is usually not useful.
-   The CVE association uses CPE (package enumerators) to match packages, but this uses wildcards which result in a large number of false positive CVEs being reported.
-   For example, for a sample Yocto 4.1 minimal build, cve-check reported 160 total unpatched CVEs of which 14 were shown against zlib, however the Black Duck project shows that none of these should be associated with the zlib version in the build (only 3 patched and 0 unpatched vulnerabilities should be shown in the project)._
-
-
-5. **Why couldn't I just use the `create-spdx` class provided by Yocto to export a full SBOM?**
-
-   _The Yocto `create-spdx` class produces SPDX JSON files for the packages in the project with the runtime packages also identified,
-   including useful data such as the list of files in the image per package with hashes.
-   However, many of the SPDX fields are blank (NO-ASSERTION) including license text, copyrights etc.
-   The packages are also not identified by PURL so the SBOM cannot be effectively imported into other tools (including Black Duck)._
-
-
-6. **I cannot see a specific package in the Black Duck project.**
-
-   _Use the `--recipe_report FILE` option to list matched and missing recipes. Note that Black Duck reports recipes in the Yocto project not individual packages.
-Multiple packages can be combined into a single recipe, but these are typically not downloaded separately and are considered to be part of the main component managed by the recipe, not individual OSS components._
-
-
-7. **I cannot see the Linux kernel in the Black Duck project.**
-
-   _Consider using the `--process_image_manifest` OR `--image_license_manifest PATH` options to add processing of the
-    packages in the image manifest usually including the Linux kernel. Note that the kernel cannot always be identified due to a custom name format being used in Yocto in which case consider adding the required kernel version to the project manually._
-
-
-8. **I am using another Yocto wrapper such as KAS https://kas.readthedocs.io/ and cannot run bitbake, or the script fails for some other reason.**
-
-   _Use the options `--skip_bitbake -l LIC_MANIFEST_FILE --bitbake_layers_file LAYERS_FILE` where LIC_MANIFEST_FILE is the path to the specific license.manifest file and LAYERS_FILE
-   contains the output of the command `bitbake-layers show-recipes`._ Note that this will stop several features from being supported including CVE patching, kernel vuln identification, package scanning etc.
-
-9. **I want to scan all recipes including Dev dependencies as opposed to only those in the delivered image**
-
-   _Run the command `bitbake -g` to create a `task-depends.dot` file, then use the option `--task_depends_dot_file FILE` 
-   where FILE contains the path to the file._
-
+8.  **I want to scan all recipes, including development dependencies, as opposed to only those in the delivered image.**
+    Run the command `bitbake -g` to create a `task-depends.dot` file, then use the option `--task_depends_dot_file FILE`, where `FILE` is the path to the generated file.

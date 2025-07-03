@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bd_scan_yocto_via_sbom"
-version = "1.1.1"
+version = "1.1.2"
 authors = [
   { name="Matthew Brady", email="mbrad@blackduck.com" },
 ]
@@ -21,8 +21,7 @@ dependencies = [
     "bd-kernel-vulns",
     "requests",
     "semver",
-    "aiohttp",
-    "asyncio"
+    "aiohttp"
 ]
 
 [project.urls]

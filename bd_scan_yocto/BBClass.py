@@ -215,8 +215,9 @@ class BB:
             with open(lic_manifest_file, "r") as lfile:
                 lines = lfile.readlines()
                 ver = ''
-                recipe = ''
+                recipe_name = ''
                 prev_recipe = ''
+                licstring = ''
                 for line in lines:
                     # PACKAGE NAME: name
                     # PACKAGE VERSION: ver
@@ -229,21 +230,31 @@ class BB:
                     elif line.startswith("VERSION:"):
                         ver = line.split(': ')[1]
                     elif line.startswith("RECIPE NAME:"):
-                        recipe = line.split(': ')[1]
+                        recipe_name = line.split(': ')[1]
+                    elif line.startswith("LICENSE:"):
+                        licstring = line.split(': ')[1]
                     elif line.startswith("FILES:"):
                         if prev_recipe == conf.kernel_recipe:
                             kfiles = line.split(': ')[1]
                             conf.kernel_files = kfiles.split(' ')
 
-                    if recipe and ver:
+                    if recipe_name and ver:
                         packages_total += 1
-                        rec_obj = Recipe(recipe, ver)
-                        if not reclist.check_recipe_exists(recipe):
+                        if licstring:
+                            expression = re.sub(r'\b([\w.-]+)\b\s*&\s*\b([\w.-]+)\b', r'(\1 AND \2)', licstring)
+                            expression = re.sub(r'\b([\w.-]+)\b\s*\|\s*\b([\w.-]+)\b', r'(\1 OR \2)', expression)
+                            rec_obj = Recipe(recipe_name, ver, license=expression)
+                            rec_obj.custom_component = True
+                        else:
+                            rec_obj = Recipe(recipe_name, ver)
+
+                        if not reclist.check_recipe_exists(recipe_name):
                             reclist.recipes.append(rec_obj)
                             recipes_total += 1
                         ver = ''
-                        prev_recipe = recipe
-                        recipe = ''
+                        prev_recipe = recipe_name
+                        recipe_name = ''
+                        licstring = ''
 
                 logging.info(f"- {packages_total} packages found in {lic_manifest_file} ({recipes_total} recipes)")
 
@@ -481,7 +492,7 @@ class BB:
         try:
             for kfile in conf.kernel_files:
                 if kfile.endswith(".tgz"):
-                    tpath = os.path.join(conf.deploy_dir, "images", conf.machine.replace('_','-'), '**', kfile)
+                    tpath = os.path.join(conf.deploy_dir, "images", conf.machine.replace('_', '-'), '**', kfile)
                     kfilelist = sorted(glob.glob(tpath, recursive=True), key=os.path.getmtime, reverse=True)
                     if len(kfilelist) == 0 or not os.path.isfile(kfilelist[-1]):
                         continue

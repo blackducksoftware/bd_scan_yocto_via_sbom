@@ -186,7 +186,7 @@ class BOM:
         return uptodate
 
     @staticmethod
-    def upload_sbom(conf: "Config", bom: "BOM", sbom: "SBOM"):
+    def upload_sbom(conf: "Config", bom: "BOM", sbom: "SBOM", allow_create_custom_comps=False):
         url = bom.bd.base_url + "/api/scan/data"
         headers = {
             'X-CSRF-TOKEN': bom.bd.session.auth.csrf_token,
@@ -194,12 +194,16 @@ class BOM:
             'Accept': '*/*',
         }
 
+        create_custom_comps = conf.sbom_custom_components
+        if not allow_create_custom_comps:
+            create_custom_comps = False
+
         try:
             files = {'file': (sbom.file, open(sbom.file, 'rb'), 'application/spdx')}
             multipart_form_data = {
                 'projectName': conf.bd_project,
                 'versionName': conf.bd_version,
-                'autocreate': conf.sbom_custom_components
+                'autocreate': create_custom_comps
             }
             # headers['Content-Type'] = 'multipart/form-data; boundary=6o2knFse3p53ty9dmcQvWAIx1zInP11uCfbm'
             response = requests.post(url, headers=headers, files=files, data=multipart_form_data,
@@ -356,8 +360,8 @@ class BOM:
 
         return cmd
 
-    def check_recipe_in_bom(self, name, ver):
-        return self.complist.check_recipe_in_list(name, ver)
+    def check_recipe_in_bom(self, rec: "RecipeClass"):
+        return self.complist.check_recipe_in_list(rec)
 
     def check_kernel_in_bom(self):
         return self.complist.check_kernel_in_bom()
@@ -394,3 +398,8 @@ class BOM:
 
         count = asyncio.run(self.vulnlist.async_ignore_vulns(conf, self.bd, cve_list))
         return count
+
+    def process(self, reclist: "RecipeListClass"):
+        self.wait_for_bom_completion()
+        self.get_comps()
+        reclist.mark_recipes_in_bom(self)

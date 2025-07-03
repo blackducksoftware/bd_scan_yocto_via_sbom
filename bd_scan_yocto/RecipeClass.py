@@ -5,7 +5,7 @@ from .BOMClass import BOM
 
 
 class Recipe:
-    def __init__(self, name, version, rel=None):
+    def __init__(self, name, version, rel=None, license=None):
         self.name = name
         self.orig_version = version
         self.epoch = ''
@@ -19,6 +19,9 @@ class Recipe:
         self.matched_in_bom = False
         self.recipename_in_oe = False
         self.matched_oe_exact = False
+        self.license = license
+        self.custom_component = False
+        self.cpe_comp_href = ''
 
     def add_layer(self, layer):
         self.layer = layer
@@ -32,6 +35,14 @@ class Recipe:
         ret_version = re.sub(r"AUTOINC.*", r"X", version, flags=re.IGNORECASE)
         return ret_version
 
+    def clean_version_string(self):
+        # Remove +git*
+        # Remove -snapshot*
+        # ret_version = re.sub(r"\+git.*", r"+gitX", version, flags=re.IGNORECASE)
+        varr = re.split("[+_-]", self.version)
+        ret_version = varr[0]
+        return ret_version
+
     @staticmethod
     def get_epoch_and_version(version):
         arr = version.split(':')
@@ -43,7 +54,7 @@ class Recipe:
         logging.info(f"Processed Recipe '{self.name}': {self.full_id()}")
 
     def check_in_bom(self, bom: BOM):
-        return bom.check_recipe_in_bom(self.name, self.version)
+        return bom.check_recipe_in_bom(self)
 
     def full_id(self):
         return f"{self.layer}/{self.name}/{self.version}"
