@@ -256,9 +256,10 @@ class RecipeList:
         return ''
 
     def process_missing_recipes(self, conf: "Config", bom: "BOM"):
-        if not conf.add_comps_by_cpe:
-            return
         comps_added = False
+        if not conf.add_comps_by_cpe and not conf.sbom_create_custom_components:
+            return comps_added
+
         try:
             add_sbom = SBOM(conf.bd_project, conf.bd_version, sbom_version="2.0")
             for recipe in self.recipes:
@@ -291,7 +292,7 @@ class RecipeList:
                                     recipe.cpe_comp_href = orig['_meta']['href']
                                     comps_added = True
                                     recipe.matched_in_bom = True
-                                    logging.info(f"Added component {recipe.name}/{recipe.version} using CPE in SBOM")
+                                    logging.info(f"Added component {recipe.name}/{recipe.version} to SBOM using CPE")
                                     break
 
                         if recipe.matched_in_bom:
@@ -300,13 +301,15 @@ class RecipeList:
                 if conf.sbom_custom_components and not recipe.matched_in_bom:
                     # v1.1.2 - add component to sbom for custom component creation
                     add_sbom.add_recipe(recipe, clean_version=True)
+                    logging.info(f"Added component {recipe.name}/{recipe.version} to SBOM as custom component")
+
                     comps_added = True
 
             if comps_added:
                 if not add_sbom.output(conf.output_file):
                     logging.error("Unable to create SBOM file")
                 if bom.upload_sbom(conf, bom, add_sbom, allow_create_custom_comps=True):
-                    logging.info(f"Uploaded SBOM file '{add_sbom.file}' to create project "
+                    logging.info(f"Uploaded add-on SBOM file '{add_sbom.file}' to modify project "
                                  f"'{conf.bd_project}' version '{conf.bd_version}'")
                 else:
                     return False

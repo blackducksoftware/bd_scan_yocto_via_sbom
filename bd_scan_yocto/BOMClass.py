@@ -400,5 +400,6 @@ class BOM:
         return count
 
     def process(self, reclist: "RecipeListClass"):
+        self.wait_for_bom_completion()
         self.get_comps()
-        reclist.mark_recipes_in_bom()
+        reclist.mark_recipes_in_bom(self)

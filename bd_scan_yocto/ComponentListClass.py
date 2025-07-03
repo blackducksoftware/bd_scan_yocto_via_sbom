@@ -40,13 +40,19 @@ class ComponentList:
             #     else:
             #         logging.info(f"ComponentList:check_recipe_in_list: unable to process recipe {recipe_name}")
             if rec.cpe_comp_href:
-                if rec.cpe_comp_href in self.get_hrefs():
+                all_hrefs = self.get_hrefs()
+                href = rec.cpe_comp_href.split('/origins/')
+                if href[0] in all_hrefs:
                     return True
             if rec.name in self.component_names:
                 index = self.component_names.index(rec.name)
                 comp = self.components[index]
-                if comp.version == rec.version:
+                recver = rec.version.split('+')[0]
+                if recver in comp.version or comp.version in recver:
                     return True
+            else:
+                # Component name not in list
+                logging.debug(f'check_recipe_in_list: Component name {rec.name} missing from complist')
 
         except Exception as e:
             logging.error(f"Error finding recipe {rec.name} - {e}")

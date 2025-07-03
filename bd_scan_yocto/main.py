@@ -76,9 +76,6 @@ def main():
         sys.exit(2)
 
     bom.get_proj()
-    if not bom.wait_for_bom_completion():
-        logging.error("Error waiting for project scan completion")
-        sys.exit(2)
     bom.process(reclist)
 
     logging.info("")
@@ -100,19 +97,17 @@ def main():
         logging.info("Skipped (--skip_sig_scan specified)")
 
     logging.info("")
-    logging.info("--- PHASE 5 - CHECKING ALL RECIPES IN BOM ---------------------------------")
+    logging.info("--- PHASE 5 - CHECKING RECIPES -------------------------------------------")
     bom.get_proj()
-    if not bom.wait_for_bom_completion():
-        logging.error("Error waiting for project scan completion")
-        sys.exit(2)
     bom.process(reclist)
     if reclist.process_missing_recipes(conf, bom):
-        bom.wait_for_bom_completion()
         bom.process(reclist)
+    logging.info("")
+    logging.info("--- PHASE 6 - BOM REPORT -------------------------------------------------")
     reclist.report_recipes_in_bom(conf, bom)
 
     logging.info("")
-    logging.info("--- PHASE 6 - APPLY CVE PATCHES ------------------------------------------")
+    logging.info("--- PHASE 7 - APPLY CVE PATCHES ------------------------------------------")
     if conf.cve_check_file:
         # bom.get_proj()
 

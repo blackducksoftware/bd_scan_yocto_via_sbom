@@ -57,22 +57,24 @@ class Component:
 
     def get_clean_name_ver(self):
         if self.data:
-            if 'origins' not in self.data:
+            if 'origins' not in self.data or len(self.data['origins']) == 0:
                 return self.data['componentName'], self.data['componentVersionName']
             else:
                 origin = self.data['origins'][0]
                 if 'externalNamespace' in origin and 'externalId' in origin:
                     origarr = origin['externalId'].replace('//', '/').split('/')
+                    # print(origin['externalId'])
                     if len(origarr) >= 2:
                         if origin['externalNamespace'] == 'openembedded':
                             return origarr[1], origarr[2]
                         elif origin['externalId'].startswith('git:'):
-                            return origarr[2], origarr[3]
+                            if len(origarr) > 4:
+                                return origarr[3], origarr[4]
                         else:
                             return origarr[0], origarr[1]
 
         return self.name, self.version
 
     def get_href(self):
-        if self.data and '_meta' in self.data and 'href' in self.data['_meta']:
-            return self.data['_meta']['href']
+        if self.data and 'componentVersion' in self.data:
+            return self.data['componentVersion']
