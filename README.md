@@ -1,5 +1,3 @@
-Here's an improved version of the README, focusing on clarity, conciseness, and user-friendliness, while retaining all essential information:
-
 -----
 
 # Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.1.2
