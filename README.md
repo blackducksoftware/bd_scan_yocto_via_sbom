@@ -156,7 +156,7 @@ For optimal Yocto scan results, consider the following:
 
 -----
 
-## Other Options
+## Other Scan Options
 
 Several other options are available to modify the script's behavior:
 
@@ -170,7 +170,7 @@ Several other options are available to modify the script's behavior:
 
 -----
 
-## Command Line Options
+## Command Line Parameters
 
 ```
 usage: bd-scan-yocto-via-sbom [-h] [--blackduck_url BLACKDUCK_URL] [--blackduck_api_token BLACKDUCK_API_TOKEN] [--blackduck_trust_cert] [-p PROJECT] [-v VERSION] <OTHER OPTIONS>
@@ -180,7 +180,7 @@ Create BD Yocto project from license.manifest
 
   * `-h, --help`: Show this help message and exit.
 
-### Required Options:
+### Required:
 
   * `--blackduck_url BLACKDUCK_URL`: Black Duck server URL (also uses `BLACKDUCK_URL` environment variable).
   * `--blackduck_api_token BLACKDUCK_API_TOKEN`: Black Duck API token (also uses `BLACKDUCK_API_TOKEN` environment variable).
@@ -216,7 +216,7 @@ Create BD Yocto project from license.manifest
   * `--add_comps_by_cpe`: Look up CPEs for packages not mapped in the BOM or discovered by signature scan and add missing packages. Note: not all packages have published CPEs.
   * `--process_kernel_vulns`: Process compiled kernel sources to ignore vulnerabilities affecting modules not compiled into the custom kernel. Requires `--process_image_manifest`.
 
-### Connection & Detect Options:
+### Connection & Detect Configuration:
 
   * `--detect_jar_path DETECT_JAR_PATH`: Path to the Detect JAR file.
   * `--detect_opts DETECT_OPTS`: Additional Detect options (remove leading `--` from Detect options).
@@ -233,7 +233,7 @@ Create BD Yocto project from license.manifest
 
 -----
 
-### Minimum Required Options
+### Minimum Required Parameters
 
 To run the script, you must provide:
 
@@ -247,7 +247,7 @@ Server credentials can also be specified using the standard environment variable
 
 -----
 
-### Detailed Description of Options
+### Detailed Description of Parameters
 
   * **`--blackduck_url`, `--blackduck_api_token`, `--blackduck_trust_cert`**:
       * **REQUIRED** for automatically creating the Black Duck project version and optionally processing CVE patch status. Can be picked up from environment variables. Not required if `--output` is specified.
