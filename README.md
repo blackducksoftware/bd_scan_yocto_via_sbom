@@ -178,9 +178,10 @@ usage: bd-scan-yocto-via-sbom [-h] [--blackduck_url BLACKDUCK_URL] [--blackduck_
 Create BD Yocto project from license.manifest
 ```
 
+  * `-h, --help`: Show this help message and exit.
+
 ### Required Options:
 
-  * `-h, --help`: Show this help message and exit.
   * `--blackduck_url BLACKDUCK_URL`: Black Duck server URL (also uses `BLACKDUCK_URL` environment variable).
   * `--blackduck_api_token BLACKDUCK_API_TOKEN`: Black Duck API token (also uses `BLACKDUCK_API_TOKEN` environment variable).
   * `-p PROJECT, --project PROJECT`: Black Duck project to create or update.
