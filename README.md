@@ -32,7 +32,7 @@ This utility addresses these gaps by creating a comprehensive Black Duck SCA pro
 
   * Scanning Yocto project artifacts to **generate an SPDX SBOM** (Software Bill of Materials), which is then uploaded to your Black Duck server to create a project version.
   * **Filtering and "fixing-up" recipes** using data from the OpenEmbedded (OE) APIs to correctly identify local recipes moved to new layers or with different local versions/revisions.
-  * **Signature scanning** packages and downloaded archives for recipes not matched by OE data.
+  * **Signature scanning** packages and downloaded archives for recipes not matched by OE data (with the option to scan all packages).
   * **Optionally adding unmatched components** via CPE lookup or by creating custom components through a second SBOM upload.
   * **Applying patches for locally patched CVEs** identified from `cve_check` data (if available).
   * **Optionally processing the Linux Kernel** to filter out vulnerabilities not within the sources compiled into your specific kernel build.
@@ -145,12 +145,12 @@ Before running the script, ensure you meet the following requirements:
 
 For optimal Yocto scan results, consider the following:
 
-1.  **Override Bitbake Environment Values:** By default, the utility calls Bitbake to extract environment and layer information. You can override values including `license.manifest`, `machine`, `target`, `download_dir`, `package_dir`, and `image_package_type` using command-line parameters. Use `-l PATH/license.manifest` to specify a different `license.manifest` file.
+1.  **Override Bitbake Environment Values:** By default, the utility calls Bitbake to extract environment and layer information. You can override values including `license.manifest`, `machine`, `target`, `download_dir`, `package_dir`, and `image_package_type` using command-line parameters. Use `-l PATH/license.manifest` to specify a different `license.manifest` file (latest build will be used by default).
 2.  **Generate a Recipe Report:** Use the `--recipe_report REPFILE` parameter to create a report of matched and unmatched recipes in the BOM, which is useful for analysis and debugging.
 3.  **Cache OE Data:** The `--oe_data_folder FOLDER` parameter allows you to cache downloaded OE data (approx. 300MB) and reuse it in subsequent runs, saving download time. OE data doesn't change frequently.
 4.  **Identify Patched CVEs:** Add the `cve_check` class to your Bitbake `local.conf` to identify patched CVEs. Ensure **PHASE 6** picks up the `cve-check` file. Optionally, specify the output CVE check file using `--cve_check_file FILE` if an alternative location is needed.
-5.  **Fuzzy Match Modified Recipes:** For recipes modified from original versions, use `--max_oe_version_distance X.X.X` (e.g., `0.0.1` to `0.0.10`) for fuzzy matching against OE recipes. Be cautious, as this can sometimes disable correct matches. It's recommended to create two projects and compare results with and without this parameter.
-6.  **Process Image Manifest:** To include the Linux kernel and other packages specified in the image manifest, consider using the `--process_image_manifest` parameter. Optionally, specify the `image_license_manifest` file path (`--image_license_manifest FILEPATH`).
+5.  **Fuzzy Match Modified Recipes:** For recipes modified from standard OE versions, use `--max_oe_version_distance X.X.X` (e.g., `0.0.1` to `0.0.10`) for fuzzy matching against OE recipes. Be cautious, as this can sometimes disable correct matches. It's recommended to create two projects and compare results with and without this parameter.
+6.  **Process Image Manifest:** To include the Linux kernel and other packages specified in the image manifest, consider using the `--process_image_manifest` parameter. Optionally, specify the `image_license.manifest` file path (`--image_license_manifest FILEPATH`) if the latest build is not required.
 7.  **Add Components by CPE:** Use `--add_comps_by_cpe` to add packages not matched by other methods through CPE lookup. Note that not all packages have published CPEs.
 8.  **Process Kernel Vulnerabilities:** To ignore kernel vulnerabilities not within compiled kernel sources, use `--process_kernel_vulns`. This parameter also requires `--process_image_manifest`.
 9.  **Add Custom Components for Unmatched recipes - USE WITH CAUTION** Where OSS recipes are not matched by any other method, and for custom or commercial recipes, you can consider using the
@@ -164,10 +164,9 @@ the PURL associated is deleted under 'Management-->Unmatched Components'.
 
 Several other options are available to modify the script's behavior:
 
-  * **Skip OE Data:** Use `--skip_oe_data` to bypass downloading OE API data, which is used for verifying original recipes, layers, and versions.
-  * **Improve Recipe Release Identification:** Optionally run `bitbake -g` to create a `task-depends.dot` file and specify `--task_depends_dot_file FILE` along with `-l license.manifest`. If `-l license.manifest` is *not* specified, it will scan development dependencies.
-  * **Generate SBOM for Manual Upload/Debug:** Use `--output_file OUTPUT` to create an SPDX output file for manual upload and debugging. The script will stop after creating the initial SBOM and will not upload it to Black Duck or process CVE patching.
-  * **Override Bitbake Environment Values:** Explicitly specify `license.manifest`, `machine`, `target`, `download_dir`, `package_dir`, and `image_package_type` to override values detected from the Bitbake environment.
+  * **Skip OE Data:** Use `--skip_oe_data` to bypass downloading OE API data (used for verifying original recipes, layers, and versions).
+  * **Improve Recipe Release Identification:** Optionally run `bitbake -g` to create a `task-depends.dot` file and specify `--task_depends_dot_file FILE` along with `-l license.manifest`. If `-l license.manifest` is *not* also specified, it will scan all development dependencies (not just those in the built image).
+  * **Generate SBOM for Manual Upload/Debug:** Use `--output_file OUTPUT` to create an SPDX output file for debugging. The script will stop after creating the initial SBOM and will not upload it to Black Duck or process CVE patching.
   * **Control Signature Scanning:**
       * `--skip_sig_scan`: Skips signature scanning of downloaded archives and packages.
       * `--scan_all_packages`: Runs signature scan on *all* packages, not just those unmatched by identifier (useful for deep license and copyright analysis of standard OE recipes and detecting embedded OSS). This may require BOM curation to remove duplicates; consider using the [bd\_sig\_filter](https://github.com/blackducksoftware/bd_sig_filter) script.
