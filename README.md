@@ -1,6 +1,6 @@
 -----
 
-# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.1.2
+# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.1.3
 
 -----
 
@@ -358,9 +358,11 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 ## Release Notes
 
+  * **v1.1.3**
+      * Minor fix to enforce --process_image_manifest if --process_kernel_vulns specified (as image manifest required to locate kernel image package and extract kernel modules).
   * **v1.1.2**
-      * Improved custom component creation by SBOM import: now removed when recipes are unmatched in the first SBOM import and added to the second SBOM import (which runs when `--add_comps_by_cpe` is specified).
-      * Moved SBOM custom component creation step to after Signature scan and optional addition of packages using CPE - to ensure packages only added if truly unmatched.
+      * Improved custom component creation by SBOM import: added to the second SBOM import (which runs when `--add_comps_by_cpe` is specified).
+      * Moved SBOM custom component creation step to after Signature scan alongside optional addition of packages using CPE - to ensure custom packages only added if truly unmatched.
       * Removed date/time from SBOM document name and signature scan temporary folder names, allowing rescanning without unmapping (required for Detect 11). Default unmapping will be removed when Detect 11 is implemented.
       * Removed asyncio as dependency (bundled in Python 3.4+)
   * **v1.1.1**

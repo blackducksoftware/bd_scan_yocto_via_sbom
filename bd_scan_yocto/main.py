@@ -114,19 +114,26 @@ def main():
         if bom.process_cve_file(conf.cve_check_file, reclist):
             bom.process_patched_cves(conf)
     else:
-        logging.info("Skipping CVE processing as no cve_check output file supplied")
+        logging.info("Skipped CVE processing as no cve_check output file supplied")
 
+    logging.info("")
+    logging.info("--- PHASE 8 - PROCESS KERNEL VULNS ---------------------------------------")
     if conf.process_kernel_vulns and bom.check_kernel_in_bom():
         logging.info("Ignoring Kernel vulnerabilities for modules not included in kernel build ...")
         kfilelist = bb.process_kernel_files(conf)
-        kfile = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix='.lst')
-        kfile.write('\n'.join(kfilelist))
-        kfile.close()
+        if len(kfilelist) == 0:
+            logging.error("Unable to extract kernel source modules from kernel image - skipping")
+        else:
+            kfile = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix='.lst')
+            kfile.write('\n'.join(kfilelist))
+            kfile.close()
 
-        bdkv_main.process_kernel_vulns(blackduck_url=conf.bd_url, blackduck_api_token=conf.bd_api,
-                                       kernel_source_file=kfile.name, project=conf.bd_project,
-                                       version=conf.bd_version, logger=logging,
-                                       blackduck_trust_cert=conf.bd_trustcert)
+            bdkv_main.process_kernel_vulns(blackduck_url=conf.bd_url, blackduck_api_token=conf.bd_api,
+                                           kernel_source_file=kfile.name, project=conf.bd_project,
+                                           version=conf.bd_version, logger=logging,
+                                           blackduck_trust_cert=conf.bd_trustcert)
+    else:
+        logging.info(f"Skipped as --process_kernel_vulns not specified")
 
     logging.info("")
     logging.info("bd_scan_yocto_via_sbom DONE")

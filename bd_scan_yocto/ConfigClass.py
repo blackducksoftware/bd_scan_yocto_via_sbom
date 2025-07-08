@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.1.2"
+script_version = "v1.1.3"
 
 
 class Config:
@@ -315,6 +315,10 @@ class Config:
         # if not self.license_manifest and not self.task_depends_dot_file:
         #     logging.error(f"License manifest and/or task-depends.dot file must be specified - terminating")
         #     terminate = True
+
+        if self.process_kernel_vulns and not self.process_image_manifest:
+            logging.warning(f"Option --process_kernel_vulns requires --process_image_manifest - setting process_image_manifest")
+            self.process_image_manifest = True
 
         if args.detect_opts != '':
             self.detect_opts = args.detect_opts.replace('detect', '--detect')
