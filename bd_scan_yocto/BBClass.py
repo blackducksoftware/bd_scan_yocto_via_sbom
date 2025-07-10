@@ -241,8 +241,8 @@ class BB:
                     if recipe_name and ver:
                         packages_total += 1
                         if licstring:
-                            expression = re.sub(r'\b([\w.-]+)\b\s*&\s*\b([\w.-]+)\b', r'(\1 AND \2)', licstring)
-                            expression = re.sub(r'\b([\w.-]+)\b\s*\|\s*\b([\w.-]+)\b', r'(\1 OR \2)', expression)
+                            expression = '(' + re.sub(r'\s*&\s*', ' AND ', licstring) + ')'
+                            expression = '(' + re.sub(r'\s*\|\s*', ' AND ', expression) + ')'
                             rec_obj = Recipe(recipe_name, ver, license=expression)
                             rec_obj.custom_component = True
                         else:
