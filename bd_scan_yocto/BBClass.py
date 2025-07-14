@@ -18,9 +18,6 @@ class BB:
 
     def process(self, conf: "Config", reclist: "RecipeList"):
         if not conf.skip_bitbake:
-            logging.info(f"Checking Bitbake environment ...")
-            if not self.check_bitbake():
-                return False
             self.process_bitbake_env(conf)
             layers_file = self.run_showlayers()
         elif conf.bitbake_layers_file:
@@ -169,7 +166,8 @@ class BB:
                 logging.error(f"Run command '{command}' failed with error {ret.returncode} - {ret.stderr}")
                 return False, ''
             return True, ret.stdout
-        except subprocess.CalledProcessError as e:
+        # except subprocess.CalledProcessError as e:
+        except Exception as e:
             logging.error(f"Run command '{command}' failed with error {e}")
             return False, ''
 

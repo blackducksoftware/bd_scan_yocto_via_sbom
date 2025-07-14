@@ -36,6 +36,11 @@ def main():
 
     reclist = RecipeList()
     bb = BB()
+    logging.info(f"Checking Bitbake environment ...")
+    if not bb.check_bitbake():
+        logging.error("Unable to run bitbake command")
+        sys.exit(2)
+
     if not bb.process(conf, reclist):
         sys.exit(2)
 
