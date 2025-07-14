@@ -45,25 +45,27 @@ class Config:
                             default="")
         parser.add_argument("-l", "--license_manifest", type=str,
                             help="OPTIONAL license.manifest file path (usually determined from Bitbake env - default "
-                                 "'license.manifest')")
+                                 "'license.manifest')", default="license.manifest")
         parser.add_argument("--process_image_manifest",
                             help="Process image_license.manifest file - equivalent to '--modes IMAGE_MANIFEST'",
                             action='store_true')
         parser.add_argument("-i", "--image_license_manifest", type=str,
                             help="OPTIONAL image_license.manifest file path "
-                                 "(usually determined from Bitbake env - default 'image_license.manifest')")
+                                 "(usually determined from Bitbake env - default 'image_license.manifest')", default="")
         parser.add_argument("-b", "--bitbake_layers_file", type=str,
                             help="OPTIONAL File containing output of 'bitbake-layers show-recipes' command (usually "
-                                 "determined from Bitbake command)")
+                                 "determined from Bitbake command)", default="")
         parser.add_argument("--task_depends_dot_file", type=str,
                             help="OPTIONAL Process task-depends.dot file created by 'bitbake -g' command "
                                  "(if 'license.manifest' is not also specified, will process ALL recipes including dev "
-                                 "dependencies, --target is also required)")
+                                 "dependencies, --target is also required)", default="")
         parser.add_argument("-c", "--cve_check_file", type=str,
-                            help="OPTIONAL CVE check output file to mark locally patched CVEs as patched in project")
+                            help="OPTIONAL CVE check output file to mark locally patched CVEs as patched in project",
+                            default="")
         parser.add_argument("-o", "--output", type=str,
                             help="OPTIONAL Specify output SBOM SPDX file for manual upload (if specified then BD "
-                                 "project will not be created automatically and CVE patching not supported)")
+                                 "project will not be created automatically and CVE patching not supported)",
+                            default="")
         parser.add_argument("--skip_oe_data",
                             help="OPTIONAL Download and use OE data to check layers, versions & revisions",
                             action='store_true')
@@ -110,9 +112,9 @@ class Config:
         parser.add_argument("--debug",
                             help="Debug logging mode", action='store_true')
         parser.add_argument("--logfile", type=str,
-                            help="Logging output file")
+                            help="Logging output file", default="")
         parser.add_argument("--recipe_report", type=str,
-                            help="Output recipe report to file")
+                            help="Output recipe report to file", default="")
         parser.add_argument("--no_unmap",
                             help="Do not unmap previous scans when running new scan",
                             action='store_true')
