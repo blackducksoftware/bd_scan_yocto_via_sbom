@@ -146,7 +146,8 @@ class RecipeList:
             proj_string = conf.bd_project + "_" + conf.bd_version
             temppkgdir = os.path.join(temppkgdir, proj_string)
             if not os.path.isdir(temppkgdir):
-                os.mkdir(temppkgdir)
+                # os.mkdir(temppkgdir)
+                os.makedirs(temppkgdir, exist_ok=True)
 
             count = 0
             for file in files:
@@ -171,24 +172,29 @@ class RecipeList:
         not_matched_oe_in_bom = []
         not_in_bom_recipename_in_oe = []
         logging.info(f"Missing Recipes:")
+        count_missing = 0
         for recipe in self.recipes:
             fullid = recipe.full_id()
 
             if recipe.matched_oe_exact:
-                fullid += " (EXACT VERSION)"
+                fullid += " (OE EXACT VERSION)"
             elif recipe.matched_oe:
-                fullid += f" (Closest version {recipe.oe_recipe['pv']}-{recipe.oe_recipe['pr']})"
+                fullid += f" (OE Closest version {recipe.oe_recipe['pv']}-{recipe.oe_recipe['pr']})"
             elif recipe.custom_component:
                 fullid += f" (CUSTOM COMPONENT CREATED)"
+            elif recipe.cpe_comp_href:
+                fullid += f" (CPE MATCHED COMPONENT)"
 
             if not recipe.matched_in_bom:
                 not_in_bom.append(fullid)
                 if recipe.matched_oe:
                     matched_oe_not_in_bom.append(fullid)
                     logging.info(f"- Recipe {fullid}: Matched in OE data but NOT found in BOM")
+                    count_missing += 1
                 else:
                     not_matched_oe_not_in_bom.append(fullid)
                     logging.debug(f"- Recipe {fullid}: NOT matched in OE data and NOT found in BOM")
+                    count_missing += 1
                 if recipe.recipename_in_oe:
                     not_in_bom_recipename_in_oe.append(fullid)
             else:
@@ -197,6 +203,10 @@ class RecipeList:
                     not_matched_oe_in_bom.append(fullid)
                     # logging.debug(f"- Recipe {fullid}: Not matched in OE data but found in BOM")
             #     logging.info(f"- Recipe {recipe.name}/{recipe.version}: Found in BOM")
+
+        if count_missing == 0:
+            logging.info(" - None")
+            logging.info("")
 
         logging.info("")
         logging.info(" Summary of Components Mapped in Black Duck BOM:")
@@ -257,7 +267,7 @@ class RecipeList:
 
     def process_missing_recipes(self, conf: "Config", bom: "BOM"):
         comps_added = False
-        if not conf.add_comps_by_cpe and not conf.sbom_create_custom_components:
+        if not conf.add_comps_by_cpe and not conf.sbom_custom_components:
             return comps_added
 
         try:
