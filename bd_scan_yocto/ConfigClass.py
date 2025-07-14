@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.1.4"
+script_version = "v1.2.0"
 
 
 class Config:
@@ -13,101 +13,120 @@ class Config:
                                                      'optionally process CVEs, signature scan package & download files',
                                          prog='bd-yocto-import-sbom')
 
-        parser.add_argument("--blackduck_url", type=str, help="Black Duck server URL (REQUIRED "
-                                                              "- can use BLACKDUCK_URL env var)", default="")
-        parser.add_argument("--blackduck_api_token", type=str, help="Black Duck API token (REQUIRED "
-                                                                    "- can use BLACKDUCK_API_TOKEN env var)",
+        parser.add_argument("--blackduck_url", type=str,
+                            help="Black Duck server URL (REQUIRED - can use BLACKDUCK_URL env var)", default="")
+        parser.add_argument("--blackduck_api_token", type=str,
+                            help="Black Duck API token (REQUIRED - can use BLACKDUCK_API_TOKEN env var)",
                             default="")
-        parser.add_argument("--blackduck_trust_cert", help="Black Duck trust server cert "
-                                                           "(can use BLACKDUCK_TRUST_CERT env var)",
+        parser.add_argument("--blackduck_trust_cert",
+                            help="Black Duck trust server cert (can use BLACKDUCK_TRUST_CERT env var)",
                             action='store_true')
-        parser.add_argument("-p", "--project", help="Black Duck project to create (REQUIRED)", default="")
-        parser.add_argument("-v", "--version", help="Black Duck project version to create (REQUIRED)",
+        parser.add_argument("-p", "--project", type=str,
+                            help="Black Duck project to create (REQUIRED)", default="")
+        parser.add_argument("-v", "--version", type=str,
+                            help="Black Duck project version to create (REQUIRED)",
                             default="")
-        parser.add_argument("--skip_bitbake", help="Do not run Bitbake command",
+
+        parser.add_argument("--modes", type=str,
+                            help="Specify scan modes to include - comma-separated list from ALL,DEFAULT,"
+                                 "OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,SIG_SCAN_ALL,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS."
+                                 "(DEFAULT = OE_RECIPES,SIG_SCAN,CVE_PATCHES)",
+                            default="")
+
+
+        parser.add_argument("--skip_bitbake",
+                            help="Do not run 'bitbake -e' or 'bitbake-layers show-recipes' commands to extract data",
                             action='store_true')
-        parser.add_argument("-t", "--target",
-                            help="Yocto target (e.g. core-image-sato - REQUIRED if license.manifest not specified or --task_depends_dot_file used)",
+        parser.add_argument("-t", "--target", type=str,
+                            help="Yocto target (e.g. core-image-sato - REQUIRED if license.manifest not specified or "
+                                 "--task_depends_dot_file specified)",
                             default="")
-        parser.add_argument("--machine",
+        parser.add_argument("--machine", type=str,
                             help="OPTIONAL Yocto machine (usually determined from Bitbake env)",
                             default="")
-        parser.add_argument("-l", "--license_manifest", help="OPTIONAL license.manifest file path "
-                                                             "(usually determined from Bitbake env - default "
-                                                             "'license.manifest')",
-                            default="")
+        parser.add_argument("-l", "--license_manifest", type=str,
+                            help="OPTIONAL license.manifest file path (usually determined from Bitbake env - default "
+                                 "'license.manifest')")
         parser.add_argument("--process_image_manifest",
-                            help="Process image_license.manifest file",
+                            help="Process image_license.manifest file - equivalent to '--modes IMAGE_MANIFEST'",
                             action='store_true')
-        parser.add_argument("-i", "--image_license_manifest",
+        parser.add_argument("-i", "--image_license_manifest", type=str,
                             help="OPTIONAL image_license.manifest file path "
-                                 "(usually determined from Bitbake env - default "
-                                 "'image_license.manifest')",
-                            default="")
-        parser.add_argument("-b", "--bitbake_layers_file",
+                                 "(usually determined from Bitbake env - default 'image_license.manifest')")
+        parser.add_argument("-b", "--bitbake_layers_file", type=str,
                             help="OPTIONAL File containing output of 'bitbake-layers show-recipes' command (usually "
-                                 "determined from Bitbake command)",
-                            default="")
-        parser.add_argument("--task_depends_dot_file",
+                                 "determined from Bitbake command)")
+        parser.add_argument("--task_depends_dot_file", type=str,
                             help="OPTIONAL Process task-depends.dot file created by 'bitbake -g' command "
                                  "(if 'license.manifest' is not also specified, will process ALL recipes including dev "
-                                 "dependencies, --target is also required)",
-                            default="")
-        parser.add_argument("-c", "--cve_check_file",
-                            help="OPTIONAL CVE check output file to mark locally patched CVEs as patched in project",
-                            default="")
-        parser.add_argument("-o", "--output",
+                                 "dependencies, --target is also required)")
+        parser.add_argument("-c", "--cve_check_file", type=str,
+                            help="OPTIONAL CVE check output file to mark locally patched CVEs as patched in project")
+        parser.add_argument("-o", "--output", type=str,
                             help="OPTIONAL Specify output SBOM SPDX file for manual upload (if specified then BD "
-                                 "project will not be created automatically and CVE patching not supported)",
-                            default="")
+                                 "project will not be created automatically and CVE patching not supported)")
         parser.add_argument("--skip_oe_data",
                             help="OPTIONAL Download and use OE data to check layers, versions & revisions",
                             action='store_true')
-        parser.add_argument("--oe_data_folder",
+        parser.add_argument("--oe_data_folder", type=str,
                             help="Folder to contain OE data files - if files do not exist they will be downloaded, "
                                  "if files exist then will be used without download", default="")
-        parser.add_argument("--max_oe_version_distance",
+        parser.add_argument("--max_oe_version_distance", type=str,
                             help="Where no exact match, use closest previous recipe version up to specified distance."
                                  "Distance should be specified as MAJOR.MINOR.PATCH (e.g. 0.1.0)", default='0.0.0')
 
-        parser.add_argument("--build_dir", type=str, help="OPTIONAL Alternative build folder (usually "
-                                                          "determined from Bitbake env)", default="")
-        parser.add_argument("--download_dir",
+        parser.add_argument("--build_dir", type=str,
+                            help="OPTIONAL Alternative build folder (usually determined from Bitbake env)", default="")
+        parser.add_argument("--download_dir", type=str,
                             help="OPTIONAL Download directory where original OSS source is downloaded (usually "
                                  "determined from Bitbake env)",
                             default="")
-        parser.add_argument("--package_dir",
+        parser.add_argument("--package_dir", type=str,
                             help="OPTIONAL Download directory where package files are downloaded (usually "
                                  "determined from Bitbake env)",
                             default="")
-        parser.add_argument("--image_package_type",
+        parser.add_argument("--image_package_type", type=str,
                             help="Package type used for installing packages (e.g. rpm, deb or ipx)",
                             default="rpm")
 
-        parser.add_argument("--skip_sig_scan", help="Do not Signature scan downloads and packages",
+        parser.add_argument("--skip_sig_scan",
+                            help="Do not Signature scan downloads and packages",
                             action='store_true')
         parser.add_argument("--scan_all_packages",
-                            help="Signature scan all packages (only recipes not matched"
-                                 "from OE data are scanned by default)",
+                            help="Signature scan all packages (only recipes not matched from OE data are scanned by "
+                                 "default) - equivalent to '--modes SIG_SCAN_ALL'",
                             action='store_true')
-        parser.add_argument("--detect_jar_path", help="OPTIONAL BD Detect jar path", default="")
-        parser.add_argument("--detect_opts", help="OPTIONAL Additional BD Detect options (remove leading '--')", default="")
-        parser.add_argument("--api_timeout", help="OPTIONAL API and Detect timeout in seconds (default 600)",
+        parser.add_argument("--detect_jar_path", type=str,
+                            help="OPTIONAL BD Detect jar path", default="")
+        parser.add_argument("--detect_opts", type=str,
+                            help="OPTIONAL Additional BD Detect options (remove leading '--')", default="")
+        parser.add_argument("--api_timeout", type=int,
+                            help="OPTIONAL API and Detect timeout in seconds (default 600)",
                             default="600")
         parser.add_argument("--sbom_create_custom_components",
-                            help="Create custom components for unmatched components on SBOM upload",
+                            help="Create custom components for unmatched components on SBOM upload - equivalent to "
+                                 "'--modes CUSTOM_COMPS'",
                             action='store_true')
 
-        parser.add_argument("--debug", help="Debug logging mode", action='store_true')
-        parser.add_argument("--logfile", help="Logging output file", default="")
-        parser.add_argument("--recipe_report", help="Output recipe report to file", default="")
-        parser.add_argument("--no_unmap", help="Do not unmap previous scans when running new scan",
+        parser.add_argument("--debug",
+                            help="Debug logging mode", action='store_true')
+        parser.add_argument("--logfile", type=str,
+                            help="Logging output file")
+        parser.add_argument("--recipe_report", type=str,
+                            help="Output recipe report to file")
+        parser.add_argument("--no_unmap",
+                            help="Do not unmap previous scans when running new scan",
                             action='store_true')
-        parser.add_argument("--add_comps_by_cpe", help="Use CPE to add recipes not matched by OE lookup or signature scan",
+        parser.add_argument("--add_comps_by_cpe",
+                            help="Use CPE to add recipes not matched by OE lookup or signature scan - equivalent to '--modes CPE_COMPS'",
                             action='store_true')
-        parser.add_argument("--process_kernel_vulns", help="Process kernel modules to ignore vulns not in compiled kernel modules (requires --process_image_manifest)",
+        parser.add_argument("--process_kernel_vulns",
+                            help="Process kernel modules to ignore vulns not in compiled kernel modules (assumes"
+                                 "--process_image_manifest) - equivalent to '--modes KERNEL_VULNS'",
                             action='store_true')
-        parser.add_argument("--kernel_recipe", help="Alternate kernel recipe name - used in CPE matching --add_comps_by_cpe (default 'linux-yocto')", default="linux-yocto")
+        parser.add_argument("--kernel_recipe", type=str,
+                            help="Alternate kernel recipe name - used in CPE matching --add_comps_by_cpe "
+                                 "(default 'linux-yocto')", default="linux-yocto")
 
         args = parser.parse_args()
 
@@ -123,7 +142,7 @@ class Config:
         self.skip_bitbake = args.skip_bitbake
         self.license_manifest = ''
         self.image_license_manifest = ''
-        self.process_image_manifest = args.process_image_manifest
+        self.process_image_manifest = False
         self.target = args.target
         self.machine = args.machine
         self.task_depends_dot_file = ''
@@ -138,20 +157,22 @@ class Config:
         self.build_dir = ''
         self.log_dir = ''
         self.image_package_type = args.image_package_type
-        self.skip_sig_scan = False
+        self.run_sig_scan = True
         self.scan_all_packages = False
         self.detect_jar = ''
         self.detect_opts = ''
         self.api_timeout = args.api_timeout
-        self.sbom_custom_components = args.sbom_create_custom_components
+        self.run_custom_components = False
         self.cve_check_dir = ''
         self.license_dir = ''
         self.recipe_report = ''
         self.unmap = not args.no_unmap
-        self.add_comps_by_cpe = args.add_comps_by_cpe
-        self.process_kernel_vulns = args.process_kernel_vulns
+        self.run_cpe_components = False
+        self.process_kernel_vulns = False
         self.kernel_recipe = args.kernel_recipe
         self.kernel_files = []
+        self.process_oe_recipes = True
+        self.process_cves = True
 
         terminate = False
         if args.debug:
@@ -175,6 +196,66 @@ class Config:
         logging.info("SUPPLIED ARGUMENTS:")
         for arg in vars(args):
             logging.info(f"    --{arg}={getattr(args, arg)}")
+
+        # Check modes
+        # ALL,DEFAULT,OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,SIG_SCAN_ALL,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS
+
+        # modes = ("ALL","DEFAULT","OE_RECIPES","IMAGE_MANIFEST","SIG_SCAN","SIG_SCAN_ALL","CVE_PATCHES","CPE_COMPS","CUSTOM_COMPS","KERNEL_VULNS")
+        mode_dict = {
+            "OE_RECIPES": "process_oe_recipes",
+            "IMAGE_MANIFEST": "process_image_manifest",
+            "SIG_SCAN": "run_sig_scan",
+            "SIG_SCAN_ALL": "scan_all_packages",
+            "CVE_PATCHES": "process_cves",
+            "CPE_COMPS": "run_cpe_components",
+            "CUSTOM_COMPS": "run_custom_components",
+            "KERNEL_VULNS": "process_kernel_vulns"
+        }
+
+        if args.modes != '':
+            modes_to_set = []
+            for mode in args.modes.split(','):
+                if mode == 'ALL':
+                    # logging.debug(f" - Setting ALL scan modes")
+                    for key in mode_dict.keys():
+                        if key != 'SIG_SCAN_ALL':
+                            modes_to_set.append(key)
+                            # setattr(self, mode_dict[val], True)
+                elif mode == 'DEFAULT':
+                    # logging.debug(f" - Setting DEFAULT scan modes")
+                    for key in ["OE_RECIPES","SIG_SCAN","CVE_PATCHES"]:
+                        modes_to_set.append(key)
+                        # setattr(self, mode_dict[key], True)
+                elif mode in mode_dict.keys():
+                    modes_to_set.append(mode)
+                else:
+                    logging.error(f"Invalid --modes option {mode} specified - ignored")
+
+            for mode in mode_dict.keys():
+                if mode in modes_to_set:
+                    setattr(self, mode_dict[mode], True)
+                else:
+                    setattr(self, mode_dict[mode], False)
+
+        if args.process_image_manifest:
+            self.process_image_manifest = args.process_image_manifest
+            logging.debug("Will process image manifest (--process_image_manifest specified)")
+        if args.sbom_create_custom_components:
+            logging.debug("Will create custom components (--sbom_create_custom_components specified)")
+            self.run_custom_components = args.sbom_create_custom_components
+        if args.add_comps_by_cpe:
+            logging.debug("Will create components by CPE --add_comps_by_cpe specified)")
+            self.run_cpe_components = args.add_comps_by_cpe
+        if args.process_kernel_vulns:
+            logging.debug("Will process kernel vulns --process_kernel_vulns specified)")
+            self.process_kernel_vulns = args.process_kernel_vulns
+
+        logging.info("")
+        logging.info("Scan modes:")
+        for mode in mode_dict.keys():
+            logging.info(f" - {mode}: {getattr(self,mode_dict[mode])}")
+
+        sys.exit(0)
 
         bd_connect = True
         if args.output:
@@ -290,7 +371,7 @@ class Config:
                 self.download_dir = args.download_dir
 
         if args.skip_sig_scan:
-            self.skip_sig_scan = True
+            self.run_sig_scan = False
         elif args.scan_all_packages:
             self.scan_all_packages = True
 

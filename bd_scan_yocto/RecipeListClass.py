@@ -267,7 +267,7 @@ class RecipeList:
 
     def process_missing_recipes(self, conf: "Config", bom: "BOM"):
         comps_added = False
-        if not conf.add_comps_by_cpe and not conf.sbom_custom_components:
+        if not conf.run_cpe_components and not conf.run_custom_components:
             return comps_added
 
         try:
@@ -308,7 +308,7 @@ class RecipeList:
                         if recipe.matched_in_bom:
                             break
 
-                if conf.sbom_custom_components and not recipe.matched_in_bom:
+                if conf.run_custom_components and not recipe.matched_in_bom:
                     # v1.1.2 - add component to sbom for custom component creation
                     add_sbom.add_recipe(recipe, clean_version=True)
                     logging.info(f"Added component {recipe.name}/{recipe.version} to SBOM as custom component")

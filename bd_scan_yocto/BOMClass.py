@@ -194,7 +194,7 @@ class BOM:
             'Accept': '*/*',
         }
 
-        create_custom_comps = conf.sbom_custom_components
+        create_custom_comps = conf.run_custom_components
         if not allow_create_custom_comps:
             create_custom_comps = False
 

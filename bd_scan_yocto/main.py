@@ -80,7 +80,7 @@ def main():
 
     logging.info("")
     logging.info("--- PHASE 4 - SIGNATURE SCAN PACKAGES ------------------------------------")
-    if not conf.skip_sig_scan:
+    if conf.run_sig_scan:
         if conf.package_dir and conf.download_dir:
             num, ret = reclist.scan_pkg_download_files(conf, bom)
             if num > 0:
