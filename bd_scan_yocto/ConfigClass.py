@@ -29,10 +29,9 @@ class Config:
 
         parser.add_argument("--modes", type=str,
                             help="Specify scan modes to include - comma-separated list from ALL,DEFAULT,"
-                                 "OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,SIG_SCAN_ALL,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS."
-                                 "(DEFAULT = OE_RECIPES,SIG_SCAN,CVE_PATCHES)",
+                                 "OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,SIG_SCAN_ALL,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,"
+                                 "KERNEL_VULNS. (DEFAULT = OE_RECIPES,SIG_SCAN,CVE_PATCHES)",
                             default="")
-
 
         parser.add_argument("--skip_bitbake",
                             help="Do not run 'bitbake -e' or 'bitbake-layers show-recipes' commands to extract data",
@@ -118,7 +117,8 @@ class Config:
                             help="Do not unmap previous scans when running new scan",
                             action='store_true')
         parser.add_argument("--add_comps_by_cpe",
-                            help="Use CPE to add recipes not matched by OE lookup or signature scan - equivalent to '--modes CPE_COMPS'",
+                            help="Use CPE to add recipes not matched by OE lookup or signature scan - equivalent "
+                                 "to '--modes CPE_COMPS'",
                             action='store_true')
         parser.add_argument("--process_kernel_vulns",
                             help="Process kernel modules to ignore vulns not in compiled kernel modules (assumes"
@@ -200,7 +200,8 @@ class Config:
         # Check modes
         # ALL,DEFAULT,OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,SIG_SCAN_ALL,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS
 
-        # modes = ("ALL","DEFAULT","OE_RECIPES","IMAGE_MANIFEST","SIG_SCAN","SIG_SCAN_ALL","CVE_PATCHES","CPE_COMPS","CUSTOM_COMPS","KERNEL_VULNS")
+        # modes = ("ALL","DEFAULT","OE_RECIPES","IMAGE_MANIFEST","SIG_SCAN","SIG_SCAN_ALL","CVE_PATCHES","CPE_COMPS",
+        # "CUSTOM_COMPS","KERNEL_VULNS")
         mode_dict = {
             "OE_RECIPES": "process_oe_recipes",
             "IMAGE_MANIFEST": "process_image_manifest",
@@ -223,7 +224,7 @@ class Config:
                             # setattr(self, mode_dict[val], True)
                 elif mode == 'DEFAULT':
                     # logging.debug(f" - Setting DEFAULT scan modes")
-                    for key in ["OE_RECIPES","SIG_SCAN","CVE_PATCHES"]:
+                    for key in ["OE_RECIPES", "SIG_SCAN", "CVE_PATCHES"]:
                         modes_to_set.append(key)
                         # setattr(self, mode_dict[key], True)
                 elif mode in mode_dict.keys():
@@ -254,8 +255,6 @@ class Config:
         logging.info("Scan modes:")
         for mode in mode_dict.keys():
             logging.info(f" - {mode}: {getattr(self,mode_dict[mode])}")
-
-        sys.exit(0)
 
         bd_connect = True
         if args.output:
@@ -398,7 +397,8 @@ class Config:
         #     terminate = True
 
         if self.process_kernel_vulns and not self.process_image_manifest:
-            logging.warning(f"Option --process_kernel_vulns requires --process_image_manifest - setting process_image_manifest")
+            logging.warning(f"Option --process_kernel_vulns requires --process_image_manifest - "
+                            f"setting process_image_manifest")
             self.process_image_manifest = True
 
         if args.detect_opts != '':
