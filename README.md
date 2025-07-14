@@ -1,6 +1,6 @@
 -----
 
-# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.1.3
+# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.1.4
 
 -----
 
@@ -358,6 +358,8 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 ## Release Notes
 
+  * **v1.1.4**
+      * Minor bug fix for sbom_create_custom_components and more
   * **v1.1.3**
       * Minor fix to enforce --process_image_manifest if --process_kernel_vulns specified (as image manifest required to locate kernel image package and extract kernel modules).
   * **v1.1.2**
