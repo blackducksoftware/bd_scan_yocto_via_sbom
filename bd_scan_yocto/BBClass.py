@@ -47,20 +47,20 @@ class BB:
 
     @staticmethod
     def check_bitbake():
-        # cmd = "bitbake"
-        # ret = self.run_cmd(cmd)
-        # if ret == b'':
-        #     logging.error("Command 'bitbake' not available - check environment or use --skip_bitbake and "
-        #                   "--license_manifest")
-        #     return False
-        #
-        # cmd = "bitbake-layers"
-        # ret = self.run_cmd(cmd)
-        # if ret == b'':
-        #     logging.error("Command 'bitbake-layers' not available - check environment or use --skip_bitbake and "
-        #                   "--bitbake_layers_file")
-        #     return False
-        #
+        cmd = ["bitbake"]
+        ret, out = BB.run_cmd(cmd)
+        if ret == b'':
+            logging.error("Command 'bitbake' not available - check environment or use --skip_bitbake and "
+                          "--license_manifest")
+            return False
+
+        cmd = ["bitbake-layers"]
+        ret, out = BB.run_cmd(cmd)
+        if ret == b'':
+            logging.error("Command 'bitbake-layers' not available - check environment or use --skip_bitbake and "
+                          "--bitbake_layers_file")
+            return False
+
         return True
 
     def run_bitbake_env(self):
@@ -283,7 +283,8 @@ class BB:
 
             if not conf.license_manifest:
                 # if not conf.target or not conf.machine:
-                #     logging.error("Manifest file not specified, and it could not be determined as Target not specified or "
+                #     logging.error("Manifest file not specified, and it could not be determined as
+                #     Target not specified or "
                 #                   "machine not identified from environment")
                 #     return False
                 # else:
@@ -314,8 +315,8 @@ class BB:
             if conf.image_license_manifest != '' and os.path.isfile(conf.image_license_manifest):
                 logging.info(f"Will process image license manifest file '{conf.image_license_manifest}'")
             else:
-                logging.warning(f"--process_image_manifest specified but unable to locate image_license.manifest file - "
-                                f"Will skip processing image manifest")
+                logging.warning(f"--process_image_manifest specified but unable to locate image_license.manifest "
+                                f"file - Will skip processing image manifest")
                 conf.process_image_manifest = False
 
         # CVE JSON is at build/tmp/log/cve/cve-summary.json
@@ -461,10 +462,12 @@ class BB:
         try:
             if reclist.count() > 0:
                 create_reclist = False
-                logging.info(f"Processing '{conf.task_depends_dot_file}' to update recipe list from '{conf.license_manifest}'")
+                logging.info(f"Processing '{conf.task_depends_dot_file}' to update recipe list from "
+                             f"'{conf.license_manifest}'")
             else:
                 create_reclist = True
-                logging.info(f"Processing '{conf.task_depends_dot_file}' to create recipe list (license.manifest not specified)")
+                logging.info(f"Processing '{conf.task_depends_dot_file}' to create recipe list "
+                             f"(license.manifest not specified)")
 
             recipes_total = 0
 

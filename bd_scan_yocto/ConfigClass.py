@@ -45,7 +45,7 @@ class Config:
                             default="")
         parser.add_argument("-l", "--license_manifest", type=str,
                             help="OPTIONAL license.manifest file path (usually determined from Bitbake env - default "
-                                 "'license.manifest')", default="license.manifest")
+                                 "'license.manifest')", default="")
         parser.add_argument("--process_image_manifest",
                             help="Process image_license.manifest file - equivalent to '--modes IMAGE_MANIFEST'",
                             action='store_true')
