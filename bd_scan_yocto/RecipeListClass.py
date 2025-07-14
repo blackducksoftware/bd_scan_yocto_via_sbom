@@ -85,7 +85,8 @@ class RecipeList:
         logging.info(f"- {self.count()} Total Recipes")
         logging.info(f"- {recipes_in_oe} Recipes found in OE Data:")
         logging.info(f"    - {exact_recipes_in_oe} with exact version match")
-        logging.info(f"    - {recipes_in_oe - exact_recipes_in_oe} with close version match (mapped to closest version)")
+        logging.info(f"    - {recipes_in_oe - exact_recipes_in_oe} with close version match "
+                     f"(mapped to closest version)")
         logging.info(f"    - {exact_layers} with the same layer as OE")
         logging.info(f"    - {changed_layers} exist in different OE layer (mapped to original)")
 
@@ -126,7 +127,7 @@ class RecipeList:
             for path in all_pkg_files:
                 filename = os.path.basename(path)
                 # pattern = f"{os.path.join(global_values.pkg_dir, global_values.machine)}/" \
-                #           f"{recipe}[-_]{ver}-*.{global_values.image_pkgtype}"
+                #           f"{recipe}[-_]{ver}-*.{global_values.image_package_type}"
                 pkg_res = pkg_regex.match(filename)
 
                 if pkg_res is not None:
@@ -151,8 +152,8 @@ class RecipeList:
 
             count = 0
             for file in files:
-                    shutil.copy(file, temppkgdir)
-                    count += 1
+                shutil.copy(file, temppkgdir)
+                count += 1
 
             logging.info(f"Copying recipe package files")
             logging.info(f"- Copied {count} package files ...")
@@ -227,11 +228,13 @@ class RecipeList:
                     repfile.write("\n".join(not_matched_oe_in_bom))
                     repfile.write(f"\n\nRECIPES NOT IN BOM ({len(not_in_bom)}):\n")
                     repfile.write("\n".join(not_in_bom))
-                    repfile.write(f"\n\nRECIPES NOT IN BOM - NOT MATCHED IN OE DATA ({len(not_matched_oe_not_in_bom)}):\n")
+                    repfile.write(f"\n\nRECIPES NOT IN BOM - NOT MATCHED IN OE DATA "
+                                  f"({len(not_matched_oe_not_in_bom)}):\n")
                     repfile.write("\n".join(not_matched_oe_not_in_bom))
                     repfile.write(f"\n\nRECIPES NOT IN BOM - MATCHED IN OE DATA ({len(matched_oe_not_in_bom)}):\n")
                     repfile.write("\n".join(matched_oe_not_in_bom))
-                    repfile.write(f"\n\nRECIPES NOT IN BOM - RECIPE EXISTS IN OE DATA BUT NO VERSION MATCH ({len(not_in_bom_recipename_in_oe)}):\n")
+                    repfile.write(f"\n\nRECIPES NOT IN BOM - RECIPE EXISTS IN OE DATA BUT NO VERSION "
+                                  f"MATCH ({len(not_in_bom_recipename_in_oe)}):\n")
                     repfile.write("\n".join(not_in_bom_recipename_in_oe))
                 logging.info(f"Output full recipe report to '{conf.recipe_report}'")
             except IOError as error:
@@ -293,7 +296,8 @@ class RecipeList:
                                 orig_data = None
                                 for orig in orig_arr:
                                     if orig['rel'] == 'origins':
-                                        orig_data = bom.get_data(orig['href'], "application/vnd.blackducksoftware.component-detail-5+json")
+                                        orig_data = bom.get_data(
+                                            orig['href'], "application/vnd.blackducksoftware.component-detail-5+json")
                                         break
                                 if orig_data:
                                     orig = orig_data[0]

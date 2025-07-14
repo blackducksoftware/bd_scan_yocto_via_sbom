@@ -125,18 +125,18 @@ class BB:
                     deb_dir = val
                     logging.info(f"Bitbake Env: deb_dir={deb_dir}")
                 elif re.search('^IMAGE_PKGTYPE=', mline):
-                    conf.image_pkgtype = val
-                    logging.info(f"Bitbake Env: image_pkgtype={conf.image_pkgtype}")
+                    conf.image_package_type = val
+                    logging.info(f"Bitbake Env: image_package_type={conf.image_package_type}")
                 elif re.search('^LOG_DIR=', mline):
                     conf.log_dir = val
                     logging.info(f"Bitbake Env: log_dir={conf.log_dir}")
 
         if not conf.package_dir:
-            if conf.image_pkgtype == 'rpm' and rpm_dir:
+            if conf.image_package_type == 'rpm' and rpm_dir:
                 conf.package_dir = rpm_dir
-            elif conf.image_pkgtype == 'ipk' and ipk_dir:
+            elif conf.image_package_type == 'ipk' and ipk_dir:
                 conf.package_dir = ipk_dir
-            elif conf.image_pkgtype == 'deb' and deb_dir:
+            elif conf.image_package_type == 'deb' and deb_dir:
                 conf.package_dir = deb_dir
             logging.info(f"Calculated: package_dir={conf.package_dir}")
 
@@ -153,7 +153,7 @@ class BB:
                 logging.info(f"Calculated: download_dir={conf.download_dir}")
 
         if not conf.package_dir and conf.deploy_dir:
-            temppath = os.path.join(conf.deploy_dir, conf.image_pkgtype)
+            temppath = os.path.join(conf.deploy_dir, conf.image_package_type)
             if os.path.isdir(temppath):
                 conf.package_dir = temppath
                 logging.info(f"Calculated: package_dir={conf.package_dir}")
