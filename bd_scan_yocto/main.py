@@ -16,6 +16,11 @@ empty_dir = tempfile.TemporaryDirectory()
 
 def main():
     conf = Config()
+    bb = BB()
+    logging.info(f"Checking Bitbake environment ...")
+    if not bb.check_bitbake():
+        logging.error("Terminating")
+        sys.exit(2)
 
     logging.info("")
     logging.info("--- PHASE 1 - INITIATE PROJECT -------------------------------------------")
@@ -35,11 +40,6 @@ def main():
             sys.exit(2)
 
     reclist = RecipeList()
-    bb = BB()
-    logging.info(f"Checking Bitbake environment ...")
-    if not bb.check_bitbake():
-        logging.error("Unable to run bitbake command")
-        sys.exit(2)
 
     if not bb.process(conf, reclist):
         sys.exit(2)

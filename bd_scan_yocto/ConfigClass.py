@@ -191,7 +191,9 @@ class Config:
         else:
             logging.basicConfig(level=loglevel)
 
+        logging.info("**************************************************************************")
         logging.info(f"Black Duck Yocto scan via SBOM utility - {script_version}")
+        logging.info("**************************************************************************")
         logging.info('')
         logging.info("--- PHASE 0 - CONFIG -----------------------------------------------------")
 
