@@ -44,19 +44,19 @@ class BB:
 
     @staticmethod
     def check_bitbake():
-        cmd = ["bitbake"]
+        cmd = ["bitbake", "--version"]
         ret, out = BB.run_cmd(cmd)
         if not ret:
             logging.error("Command 'bitbake' not available - check environment or use --skip_bitbake and "
                           "--license_manifest")
             return False
 
-        cmd = ["bitbake-layers"]
-        ret, out = BB.run_cmd(cmd)
-        if not ret:
-            logging.error("Command 'bitbake-layers' not available - check environment or use --skip_bitbake and "
-                          "--bitbake_layers_file")
-            return False
+        # cmd = ["bitbake-layers", "show-recipes"]
+        # ret, out = BB.run_cmd(cmd)
+        # if not ret:
+        #     logging.error("Command 'bitbake-layers' not available - check environment or use --skip_bitbake and "
+        #                   "--bitbake_layers_file")
+        #     return False
 
         return True
 
