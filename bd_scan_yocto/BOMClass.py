@@ -231,6 +231,7 @@ class BOM:
 
         elif cve_file.endswith('.json'):
             return self.process_cve_file_json(cve_file, reclist)
+        return False
 
     def process_cve_file_cve(self, cve_file, reclist: "RecipeList"):
         try:

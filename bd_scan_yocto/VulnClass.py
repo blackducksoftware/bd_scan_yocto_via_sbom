@@ -70,6 +70,8 @@ class Vuln:
                 rel_vuln = self.get_linked_vuln(bd)
             return rel_vuln
 
+        return ''
+
     def patch(self, bd):
         status = "PATCHED"
         comment = "Patched by bitbake recipe"
