@@ -168,42 +168,54 @@ class RecipeList:
 
         in_bom = []
         not_in_bom = []
-        matched_oe_not_in_bom = []
-        not_matched_oe_not_in_bom = []
-        not_matched_oe_in_bom = []
-        not_in_bom_recipename_in_oe = []
+        matched_oe = []
+        matched_cpe = []
+        matched_custom = []
+        matched_sig = []
+        # matched_oe_not_in_bom = []
+        # not_matched_oe_not_in_bom = []
+        # not_matched_oe_in_bom = []
+        # not_in_bom_recipename_in_oe = []
         logging.info(f"Missing Recipes:")
         count_missing = 0
         for recipe in self.recipes:
             fullid = recipe.full_id()
 
-            if recipe.matched_oe_exact:
-                fullid += " (OE EXACT VERSION)"
-            elif recipe.matched_oe:
-                fullid += f" (OE Closest version {recipe.oe_recipe['pv']}-{recipe.oe_recipe['pr']})"
-            elif recipe.custom_component:
-                fullid += f" (CUSTOM COMPONENT CREATED)"
-            elif recipe.cpe_comp_href:
-                fullid += f" (CPE MATCHED COMPONENT)"
-
-            if not recipe.matched_in_bom:
-                not_in_bom.append(fullid)
-                if recipe.matched_oe:
-                    matched_oe_not_in_bom.append(fullid)
-                    logging.info(f"- Recipe {fullid}: Matched in OE data but NOT found in BOM")
-                    count_missing += 1
-                else:
-                    not_matched_oe_not_in_bom.append(fullid)
-                    logging.debug(f"- Recipe {fullid}: NOT matched in OE data and NOT found in BOM")
-                    count_missing += 1
-                if recipe.recipename_in_oe:
-                    not_in_bom_recipename_in_oe.append(fullid)
-            else:
+            if recipe.matched_in_bom:
+                if recipe.matched_oe_exact:
+                    fullid += " (OE EXACT VERSION)"
+                    matched_oe.append(fullid)
+                elif recipe.matched_oe:
+                    fullid += f" (OE Closest version {recipe.oe_recipe['pv']}-{recipe.oe_recipe['pr']})"
+                    matched_oe.append(fullid)
+                elif recipe.custom_component:
+                    fullid += f" (CUSTOM COMPONENT CREATED)"
+                    matched_custom.append(fullid)
+                elif recipe.cpe_comp_href:
+                    fullid += f" (CPE MATCHED COMPONENT)"
+                    matched_cpe.append(fullid)
                 in_bom.append(fullid)
-                if not recipe.matched_oe:
-                    not_matched_oe_in_bom.append(fullid)
-                    # logging.debug(f"- Recipe {fullid}: Not matched in OE data but found in BOM")
-            #     logging.info(f"- Recipe {recipe.name}/{recipe.version}: Found in BOM")
+            else:
+            #
+            # if not recipe.matched_in_bom:
+                not_in_bom.append(fullid)
+                logging.info(f"- Recipe {fullid}: NOT found in BOM")
+                # if recipe.matched_oe:
+                #     matched_oe_not_in_bom.append(fullid)
+                #     logging.info(f"- Recipe {fullid}: Matched in OE data but NOT found in BOM")
+                #     count_missing += 1
+                # else:
+                #     not_matched_oe_not_in_bom.append(fullid)
+                #     logging.debug(f"- Recipe {fullid}: NOT matched in OE data and NOT found in BOM")
+                #     count_missing += 1
+                # if recipe.recipename_in_oe:
+                #     not_in_bom_recipename_in_oe.append(fullid)
+            # else:
+            #     in_bom.append(fullid)
+            #     if not recipe.matched_oe:
+            #         not_matched_oe_in_bom.append(fullid)
+            #         # logging.debug(f"- Recipe {fullid}: Not matched in OE data but found in BOM")
+            # #     logging.info(f"- Recipe {recipe.name}/{recipe.version}: Found in BOM")
 
         if count_missing == 0:
             logging.info(" - None")
@@ -212,30 +224,33 @@ class RecipeList:
         logging.info("")
         logging.info(" Summary of Components Mapped in Black Duck BOM:")
         logging.info(f"- Total recipes in Yocto project - {self.count()}")
-        logging.info(f"- Total recipes matched in BOM - {bom.count_comps()}")
-        logging.info(f"    - Of which {len(not_matched_oe_in_bom)} not matched in OE data")
+        logging.info(f"- Total recipes matched in BOM - {len(in_bom)}")
+        logging.info(f"    - Of which {len(matched_oe)} matched from OE data")
+        logging.info(f"    - Of which {len(matched_sig)} identified using Signature scanning")
+        logging.info(f"    - Of which {len(matched_cpe)} matched via CPE lookup")
+        logging.info(f"    - Of which {len(matched_custom)} matched as custom components")
         logging.info(f"- Recipes NOT in BOM - {len(not_in_bom)}")
-        logging.info(f"    - Of which {len(matched_oe_not_in_bom)} matched in OE data")
-        logging.info(f"    - Of which {len(not_matched_oe_not_in_bom)} not matched in OE data")
-        logging.info(f"    - Of which {len(not_in_bom_recipename_in_oe)} not matched but recipe exists in OE data")
+        # logging.info(f"    - Of which {len(matched_oe_not_in_bom)} matched in OE data")
+        # logging.info(f"    - Of which {len(not_matched_oe_not_in_bom)} not matched in OE data")
+        # logging.info(f"    - Of which {len(not_in_bom_recipename_in_oe)} not matched but recipe exists in OE data")
 
         if conf.recipe_report != '':
             try:
                 with open(conf.recipe_report, "w") as repfile:
                     repfile.write(f"RECIPES IN BOM ({len(in_bom)}):\n")
                     repfile.write("\n".join(in_bom))
-                    repfile.write(f"\n\nRECIPES IN BOM - NOT MATCHED IN OE DATA ({len(not_matched_oe_in_bom)}):\n")
-                    repfile.write("\n".join(not_matched_oe_in_bom))
+                    # repfile.write(f"\n\nRECIPES IN BOM - NOT MATCHED IN OE DATA ({len(not_matched_oe_in_bom)}):\n")
+                    # repfile.write("\n".join(not_matched_oe_in_bom))
                     repfile.write(f"\n\nRECIPES NOT IN BOM ({len(not_in_bom)}):\n")
                     repfile.write("\n".join(not_in_bom))
-                    repfile.write(f"\n\nRECIPES NOT IN BOM - NOT MATCHED IN OE DATA "
-                                  f"({len(not_matched_oe_not_in_bom)}):\n")
-                    repfile.write("\n".join(not_matched_oe_not_in_bom))
-                    repfile.write(f"\n\nRECIPES NOT IN BOM - MATCHED IN OE DATA ({len(matched_oe_not_in_bom)}):\n")
-                    repfile.write("\n".join(matched_oe_not_in_bom))
-                    repfile.write(f"\n\nRECIPES NOT IN BOM - RECIPE EXISTS IN OE DATA BUT NO VERSION "
-                                  f"MATCH ({len(not_in_bom_recipename_in_oe)}):\n")
-                    repfile.write("\n".join(not_in_bom_recipename_in_oe))
+                    # repfile.write(f"\n\nRECIPES NOT IN BOM - NOT MATCHED IN OE DATA "
+                    #               f"({len(not_matched_oe_not_in_bom)}):\n")
+                    # repfile.write("\n".join(not_matched_oe_not_in_bom))
+                    # repfile.write(f"\n\nRECIPES NOT IN BOM - MATCHED IN OE DATA ({len(matched_oe_not_in_bom)}):\n")
+                    # repfile.write("\n".join(matched_oe_not_in_bom))
+                    # repfile.write(f"\n\nRECIPES NOT IN BOM - RECIPE EXISTS IN OE DATA BUT NO VERSION "
+                    #               f"MATCH ({len(not_in_bom_recipename_in_oe)}):\n")
+                    # repfile.write("\n".join(not_in_bom_recipename_in_oe))
                 logging.info(f"Output full recipe report to '{conf.recipe_report}'")
             except IOError as error:
                 logging.error(f"Unable to write recipe report file {conf.recipe_report} - {error}")
