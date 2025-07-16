@@ -182,18 +182,18 @@ class RecipeList:
             fullid = recipe.full_id()
 
             if recipe.matched_in_bom:
-                if recipe.matched_oe_exact:
-                    fullid += " (OE EXACT VERSION)"
-                    matched_oe.append(fullid)
-                elif recipe.matched_oe:
-                    fullid += f" (OE Closest version {recipe.oe_recipe['pv']}-{recipe.oe_recipe['pr']})"
-                    matched_oe.append(fullid)
-                elif recipe.custom_component:
+                if recipe.custom_component:
                     fullid += f" (CUSTOM COMPONENT CREATED)"
                     matched_custom.append(fullid)
                 elif recipe.cpe_comp_href:
                     fullid += f" (CPE MATCHED COMPONENT)"
                     matched_cpe.append(fullid)
+                elif recipe.matched_oe_exact:
+                    fullid += " (OE EXACT VERSION)"
+                    matched_oe.append(fullid)
+                elif recipe.matched_oe:
+                    fullid += f" (OE Closest version {recipe.oe_recipe['pv']}-{recipe.oe_recipe['pr']})"
+                    matched_oe.append(fullid)
                 in_bom.append(fullid)
             else:
             #
@@ -330,6 +330,7 @@ class RecipeList:
                 if conf.run_custom_components and not recipe.matched_in_bom:
                     # v1.1.2 - add component to sbom for custom component creation
                     add_sbom.add_recipe(recipe, clean_version=True)
+                    recipe.custom_component = True
                     logging.info(f"Added component {recipe.name}/{recipe.version} to SBOM as custom component")
 
                     comps_added = True
