@@ -164,7 +164,7 @@ class RecipeList:
             logging.error(f"Unable to copy package files {e}")
         return ''
 
-    def report_recipes_in_bom(self, conf: "Config", bom: "BOM"):
+    def report_recipes_in_bom(self, conf: "Config"):
 
         in_bom = []
         not_in_bom = []
@@ -257,10 +257,11 @@ class RecipeList:
 
     def mark_recipes_in_bom(self, bom: "BOM"):
         for recipe in self.recipes:
-            if recipe.check_in_bom(bom):
-                recipe.matched_in_bom = True
-            else:
-                recipe.matched_in_bom = False
+            if not recipe.matched_in_bom:
+                # if recipe.check_in_bom(bom):
+                #     recipe.matched_in_bom = True
+                if bom.check_recipe_in_bom(recipe):
+                    recipe.matched_in_bom = True
 
     # def get_cpes(self):
     #     cpes = []
@@ -320,14 +321,14 @@ class RecipeList:
                                     add_sbom.add_component(recipe.name, o_vername, orig['_meta']['href'])
                                     recipe.cpe_comp_href = orig['_meta']['href']
                                     comps_added = True
-                                    recipe.matched_in_bom = True
+                                    recipe.cpe_component = True
                                     logging.info(f"Added component {recipe.name}/{recipe.version} to SBOM using CPE")
                                     break
 
-                        if recipe.matched_in_bom:
+                        if recipe.cpe_component:
                             break
 
-                if conf.run_custom_components and not recipe.matched_in_bom:
+                if conf.run_custom_components and not recipe.cpe_component:
                     # v1.1.2 - add component to sbom for custom component creation
                     add_sbom.add_recipe(recipe, clean_version=True)
                     recipe.custom_component = True
@@ -338,7 +339,7 @@ class RecipeList:
             if comps_added:
                 if not add_sbom.output(conf.output_file):
                     logging.error("Unable to create SBOM file")
-                if bom.upload_sbom(conf, bom, add_sbom, allow_create_custom_comps=True):
+                if bom.upload_sbom(conf, add_sbom, allow_create_custom_comps=True):
                     logging.info(f"Uploaded add-on SBOM file '{add_sbom.file}' to modify project "
                                  f"'{conf.bd_project}' version '{conf.bd_version}'")
                 else:

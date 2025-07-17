@@ -185,12 +185,11 @@ class BOM:
 
         return uptodate
 
-    @staticmethod
-    def upload_sbom(conf: "Config", bom: "BOM", sbom: "SBOM", allow_create_custom_comps=False):
-        url = bom.bd.base_url + "/api/scan/data"
+    def upload_sbom(self, conf: "Config", sbom: "SBOM", allow_create_custom_comps=False):
+        url = self.bd.base_url + "/api/scan/data"
         headers = {
-            'X-CSRF-TOKEN': bom.bd.session.auth.csrf_token,
-            'Authorization': f"Bearer  {bom.bd.session.auth.bearer_token}",
+            'X-CSRF-TOKEN': self.bd.session.auth.csrf_token,
+            'Authorization': f"Bearer  {self.bd.session.auth.bearer_token}",
             'Accept': '*/*',
         }
 

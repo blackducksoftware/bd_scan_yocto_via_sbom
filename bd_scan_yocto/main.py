@@ -79,7 +79,7 @@ def main():
         logging.info("Done creating SBOM file")
         # bom = BOM(conf)
 
-        if bom.upload_sbom(conf, bom, sbom):
+        if bom.upload_sbom(conf, sbom):
             logging.info(f"Uploaded SBOM file '{sbom.file}' to create project "
                          f"'{conf.bd_project}' version '{conf.bd_version}'")
         else:
@@ -120,7 +120,7 @@ def main():
 
     logging.info("")
     logging.info("--- PHASE 6 - BOM REPORT -------------------------------------------------")
-    reclist.report_recipes_in_bom(conf, bom)
+    reclist.report_recipes_in_bom(conf)
 
     logging.info("")
     logging.info("--- PHASE 7 - APPLY CVE PATCHES ------------------------------------------")

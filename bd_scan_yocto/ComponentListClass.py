@@ -39,16 +39,16 @@ class ComponentList:
             #                     return True
             #     else:
             #         logging.info(f"ComponentList:check_recipe_in_list: unable to process recipe {recipe_name}")
-            if rec.cpe_comp_href:
+            if rec.cpe_component:
                 all_hrefs = self.get_hrefs()
                 href = rec.cpe_comp_href.split('/origins/')
                 if href[0] in all_hrefs:
                     return True
-            if rec.name in self.component_names:
+            elif rec.name in self.component_names:
                 index = self.component_names.index(rec.name)
                 comp = self.components[index]
                 recver = rec.version.split('+')[0]
-                if recver in comp.version or comp.version in recver:
+                if recver in comp.version or comp.version in recver:  # ToDo - logic needs checking
                     return True
             else:
                 # Component name not in list
