@@ -18,6 +18,9 @@ class BB:
 
     def process(self, conf: "Config", reclist: "RecipeList"):
         if not conf.skip_bitbake:
+            logging.info(f"Checking Bitbake environment ...")
+            if not self.check_bitbake():
+                return False
             self.process_bitbake_env(conf)
             layers_file = self.run_showlayers()
         elif conf.bitbake_layers_file:
@@ -44,20 +47,20 @@ class BB:
 
     @staticmethod
     def check_bitbake():
-        cmd = ["bitbake", "--version"]
-        ret, out = BB.run_cmd(cmd)
-        if not ret:
-            logging.error("Command 'bitbake' not available - check environment or use --skip_bitbake and "
-                          "--license_manifest")
-            return False
-
-        # cmd = ["bitbake-layers", "show-recipes"]
-        # ret, out = BB.run_cmd(cmd)
-        # if not ret:
+        # cmd = "bitbake"
+        # ret = self.run_cmd(cmd)
+        # if ret == b'':
+        #     logging.error("Command 'bitbake' not available - check environment or use --skip_bitbake and "
+        #                   "--license_manifest")
+        #     return False
+        #
+        # cmd = "bitbake-layers"
+        # ret = self.run_cmd(cmd)
+        # if ret == b'':
         #     logging.error("Command 'bitbake-layers' not available - check environment or use --skip_bitbake and "
         #                   "--bitbake_layers_file")
         #     return False
-
+        #
         return True
 
     def run_bitbake_env(self):
@@ -125,18 +128,18 @@ class BB:
                     deb_dir = val
                     logging.info(f"Bitbake Env: deb_dir={deb_dir}")
                 elif re.search('^IMAGE_PKGTYPE=', mline):
-                    conf.image_package_type = val
-                    logging.info(f"Bitbake Env: image_package_type={conf.image_package_type}")
+                    conf.image_pkgtype = val
+                    logging.info(f"Bitbake Env: image_pkgtype={conf.image_pkgtype}")
                 elif re.search('^LOG_DIR=', mline):
                     conf.log_dir = val
                     logging.info(f"Bitbake Env: log_dir={conf.log_dir}")
 
         if not conf.package_dir:
-            if conf.image_package_type == 'rpm' and rpm_dir:
+            if conf.image_pkgtype == 'rpm' and rpm_dir:
                 conf.package_dir = rpm_dir
-            elif conf.image_package_type == 'ipk' and ipk_dir:
+            elif conf.image_pkgtype == 'ipk' and ipk_dir:
                 conf.package_dir = ipk_dir
-            elif conf.image_package_type == 'deb' and deb_dir:
+            elif conf.image_pkgtype == 'deb' and deb_dir:
                 conf.package_dir = deb_dir
             logging.info(f"Calculated: package_dir={conf.package_dir}")
 
@@ -153,7 +156,7 @@ class BB:
                 logging.info(f"Calculated: download_dir={conf.download_dir}")
 
         if not conf.package_dir and conf.deploy_dir:
-            temppath = os.path.join(conf.deploy_dir, conf.image_package_type)
+            temppath = os.path.join(conf.deploy_dir, conf.image_pkgtype)
             if os.path.isdir(temppath):
                 conf.package_dir = temppath
                 logging.info(f"Calculated: package_dir={conf.package_dir}")
@@ -166,8 +169,7 @@ class BB:
                 logging.error(f"Run command '{command}' failed with error {ret.returncode} - {ret.stderr}")
                 return False, ''
             return True, ret.stdout
-        # except subprocess.CalledProcessError as e:
-        except Exception as e:
+        except subprocess.CalledProcessError as e:
             logging.error(f"Run command '{command}' failed with error {e}")
             return False, ''
 
@@ -240,11 +242,11 @@ class BB:
                         packages_total += 1
                         if licstring:
                             # expression = re.sub(r'\b([\w.-]+)\b\s*&\s*\b([\w.-]+)\b', r'(\1 AND \2)', licstring)
-                            expression = licstring.replace(' & ', ' AND ')
+                            expression = re.sub(' & ', ' AND ', licstring)
                             # expression = re.sub(r'\b([\w.-]+)\b\s*\|\s*\b([\w.-]+)\b', r'(\1 OR \2)', expression)
-                            expression = expression.replace(' | ', ' OR ')
+                            expression = re.sub(' \| ', ' OR ', expression)
 
-                            rec_obj = Recipe(recipe_name, ver, licstring=expression)
+                            rec_obj = Recipe(recipe_name, ver, license=expression)
                             rec_obj.custom_component = True
                         else:
                             rec_obj = Recipe(recipe_name, ver)
@@ -281,8 +283,7 @@ class BB:
 
             if not conf.license_manifest:
                 # if not conf.target or not conf.machine:
-                #     logging.error("Manifest file not specified, and it could not be determined as
-                #     Target not specified or "
+                #     logging.error("Manifest file not specified, and it could not be determined as Target not specified or "
                 #                   "machine not identified from environment")
                 #     return False
                 # else:
@@ -313,8 +314,8 @@ class BB:
             if conf.image_license_manifest != '' and os.path.isfile(conf.image_license_manifest):
                 logging.info(f"Will process image license manifest file '{conf.image_license_manifest}'")
             else:
-                logging.warning(f"--process_image_manifest specified but unable to locate image_license.manifest "
-                                f"file - Will skip processing image manifest")
+                logging.warning(f"--process_image_manifest specified but unable to locate image_license.manifest file - "
+                                f"Will skip processing image manifest")
                 conf.process_image_manifest = False
 
         # CVE JSON is at build/tmp/log/cve/cve-summary.json
@@ -460,12 +461,10 @@ class BB:
         try:
             if reclist.count() > 0:
                 create_reclist = False
-                logging.info(f"Processing '{conf.task_depends_dot_file}' to update recipe list from "
-                             f"'{conf.license_manifest}'")
+                logging.info(f"Processing '{conf.task_depends_dot_file}' to update recipe list from '{conf.license_manifest}'")
             else:
                 create_reclist = True
-                logging.info(f"Processing '{conf.task_depends_dot_file}' to create recipe list "
-                             f"(license.manifest not specified)")
+                logging.info(f"Processing '{conf.task_depends_dot_file}' to create recipe list (license.manifest not specified)")
 
             recipes_total = 0
 
