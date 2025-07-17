@@ -21,6 +21,7 @@ class Recipe:
         self.matched_oe_exact = False
         self.license = licstring
         self.custom_component = False
+        self.cpe_component = False
         self.cpe_comp_href = ''
 
     def add_layer(self, layer):
@@ -53,8 +54,8 @@ class Recipe:
     def print_recipe(self):
         logging.info(f"Processed Recipe '{self.name}': {self.full_id()}")
 
-    def check_in_bom(self, bom: BOM):
-        return bom.check_recipe_in_bom(self)
+    # def check_in_bom(self, bom: BOM):
+    #     return bom.check_recipe_in_bom(self)
 
     def full_id(self):
         return f"{self.layer}/{self.name}/{self.version}"
