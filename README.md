@@ -162,6 +162,39 @@ the associated PURL is deleted under 'Management-->Unmatched Components').
 
 -----
 
+## Scan Modes
+
+The new `--modes` option is a comma-delimited list of modes, used to control the multiple types of scan supported in the script.
+It can be used to replace the existing scan control parameters and simplify the command line.
+
+Explanation of modes:
+  - `DEFAULT`        - Includes OE_RECIPES,SIG,CVE_PATCHES
+  - `OE_RECIPES`     - Map components by OE recipe lookup (set by DEFAULT)
+  - `IMAGE_MANIFEST` - Process image manifest in addition to standard manifest (usually to add linux kernel)
+  - `SIG_SCAN`       - Scan unmatched recipes/packages using Signature scan (set by DEFAULT)
+  - `SIG_SCAN_ALL`   - Scan all recipes/packages using Signature scan
+  - `CPE_COMPS`      - Add unmatched recipes as packages by looking by CPE lookup (where CPEs available)
+  - `CUSTOM_COMPS`   - Create custom components for unmatched recipes
+  - `CVE_PATCHES`    - Process locally patched CVEs from cve_check (set by DEFAULT)
+  - `KERNEL_VULNS`   - Process kernel modules and mark vulns as unaffected where modules
+  - `ALL`            - Includes OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS (but not SIG_SCAN_ALL)
+
+Notes:
+  - DEFAULT is assumed if --modes not specified.
+  - How to add scan modes to the default set - `DEFAULT,IMAGE_MANIFEST,KERNEL_VULNS`.
+  - How to add SIG_SCAN_ALL to ALL - `ALL,SIG_SCAN_ALL`.
+
+Mapping of existing parameters to scan modes: 
+   * --process_image_manifest = IMAGE_MANIFEST
+   * --scan_all_packages = SIG_SCAN_ALL
+   * --add_comps_by_cpe = CPE_COMPS
+   * --process_kernel_vulns = KERNEL_VULNS
+   * --sbom_create_custom_components = CUSTOM_COMPS
+
+Specifying legacy parameters will override defined scan modes (including DEFAULT)
+
+-----
+
 ## Other Scan Options
 
   * **Improve Recipe Release Identification:** Optionally run `bitbake -g` to create a `task-depends.dot` file which is specified in `--task_depends_dot_file FILE` along with `-l license.manifest`. If `-l license.manifest` is *not* also specified, it will scan all development dependencies (not just those in the built image).
@@ -189,33 +222,8 @@ Create BD-SCA project version from Yocto project
   * `--blackduck_trust_cert`: Trust Black Duck server certificate (also uses `BLACKDUCK_TRUST_CERT` environment variable) - OPTIONAL.
 
 ### Scan Mode Configuration Parameter:
+
   * `--modes MODES`: A comma-delimited list of scan modes (no spaces) selected from [ALL,DEFAULT,OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,SIG_SCAN_ALL,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS]
-
-Explanation of modes:
-  - `DEFAULT`        - Includes OE_RECIPES,SIG,CVE_PATCHES
-  - `OE_RECIPES`     - Map components by OE recipe lookup (set by DEFAULT)
-  - `IMAGE_MANIFEST` - Process image manifest in addition to standard manifest (usually to add linux kernel)
-  - `SIG_SCAN`       - Scan unmatched recipes/packages using Signature scan (set by DEFAULT)
-  - `SIG_SCAN_ALL`   - Scan all recipes/packages using Signature scan
-  - `CPE_COMPS`      - Add unmatched recipes as packages by looking by CPE lookup (where CPEs available)
-  - `CUSTOM_COMPS`   - Create custom components for unmatched recipes
-  - `CVE_PATCHES`    - Process locally patched CVEs from cve_check (set by DEFAULT)
-  - `KERNEL_VULNS`   - Process kernel modules and mark vulns as unaffected where modules
-  - `ALL`            - Includes OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS (but not SIG_SCAN_ALL)
-
-Notes:
-  - DEFAULT is assumed if --modes not specified.
-  - Example adding scan modes to the default set - `DEFAULT,IMAGE_MANIFEST,KERNEL_VULNS`.
-  - Example adding SIG_SCAN_ALL to ALL - `ALL,SIG_SCAN_ALL`.
-  - Scan modes can be skipped by removing from the list (for example OE_RECIPES).
-
-Mapping of existing parameters to scan modes: 
-   * --process_image_manifest = IMAGE_MANIFEST
-   * --scan_all_packages = SIG_SCAN_ALL
-   * --add_comps_by_cpe = CPE_COMPS
-   * --process_kernel_vulns = KERNEL_VULNS
-   * --sbom_create_custom_components = CUSTOM_COMPS
-Specifying legacy parameters will override defined scan modes (including DEFAULT)
 
 ### Yocto Project Configuration Parameters OPTIONAL:
 
