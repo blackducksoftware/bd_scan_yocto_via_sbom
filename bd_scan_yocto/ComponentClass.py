@@ -78,3 +78,4 @@ class Component:
     def get_href(self):
         if self.data and 'componentVersion' in self.data:
             return self.data['componentVersion']
+        return ''

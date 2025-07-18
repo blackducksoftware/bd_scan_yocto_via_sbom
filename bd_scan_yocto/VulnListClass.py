@@ -18,7 +18,7 @@ class VulnList:
         skipped = 0
         for vuln in self.vulns:
             cve = vuln.get_cve(bd)
-            if cve in cve_list:
+            if cve and cve in cve_list:
                 if vuln.is_patched():
                     skipped += 1
                     continue
