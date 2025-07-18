@@ -39,7 +39,7 @@ class VulnList:
 
     async def async_ignore_vulns(self, conf, bd, cve_list):
         token = bd.session.auth.bearer_token
-        logging.info("Ignoring locally patched vulnerabilities ...")
+        logging.info("- Ignoring locally patched vulnerabilities ...")
 
         async with aiohttp.ClientSession(trust_env=True) as session:
             vuln_tasks = []

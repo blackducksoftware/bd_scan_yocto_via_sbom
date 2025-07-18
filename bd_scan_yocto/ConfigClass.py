@@ -290,7 +290,7 @@ class Config:
             self.bd_url = args.blackduck_url
         elif url is not None:
             self.bd_url = url
-            logging.info(f"BLACKDUCK_URL value {url} found from environment")
+            logging.info(f"BLACKDUCK_URL value {url} read from environment")
         elif bd_connect:
             logging.error("Black Duck URL not specified")
             terminate = True
@@ -309,14 +309,14 @@ class Config:
             self.bd_api = args.blackduck_api_token
         elif api is not None:
             self.bd_api = api
-            logging.info(f"BLACKDUCK_API_TOKEN value found from environment")
+            logging.info(f"BLACKDUCK_API_TOKEN value read from environment")
         elif bd_connect:
             logging.error("Black Duck API Token not specified")
             terminate = True
 
         trustcert = os.environ.get('BLACKDUCK_TRUST_CERT')
         if trustcert == 'true':
-            logging.info(f"BLACKDUCK_TRUST_CERT value found")
+            logging.info(f"BLACKDUCK_TRUST_CERT value read from environment")
             self.bd_trustcert = True
         elif args.blackduck_trust_cert:
             self.bd_trustcert = True

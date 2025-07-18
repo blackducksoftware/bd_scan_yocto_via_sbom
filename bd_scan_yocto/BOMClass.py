@@ -243,7 +243,6 @@ class BOM:
 
         patched_vulns = []
         pkgvuln = {}
-        cves_in_bm = 0
         for line in cvelines:
             arr = line.split(":")
             if len(arr) > 1:
@@ -258,13 +257,13 @@ class BOM:
                 elif key == "CVE STATUS":
                     pkgvuln['status'] = value
                     if pkgvuln['status'] == "Patched":
-                        patched_vulns.append(pkgvuln['CVE'])
-                        if reclist.check_recipe_exists(pkgvuln['package']):
-                            cves_in_bm += 1
+                        cve = pkgvuln['CVE']
+                        if reclist.check_recipe_exists(pkgvuln['package']) and cve not in patched_vulns:
+                            patched_vulns.append(cve)
                     pkgvuln = {}
 
-        logging.info(f"      {len(patched_vulns)} total patched CVEs identified of which {cves_in_bm}"
-                     f" are for recipes in the yocto image")
+        logging.info(f"      {len(patched_vulns)} total patched CVEs loaded from cve_check file "
+                     f"(CVEs not identified in project yet")
         self.CVEPatchedVulnList = patched_vulns
         if len(patched_vulns) > 0:
             return True
@@ -274,22 +273,27 @@ class BOM:
         try:
             data = None
             with open(cve_file, "r") as cf:
-                logging.info(f"- loaded Patched CVEs from file {cve_file}")
                 data = json.load(cf)
 
+            logging.info(f"- loaded CVEs from cve_check file {cve_file}")
+
+            patched_vulns = []
+
             if data and 'package' in data:
-                patched_vulns = []
                 # Parse each JSON object separately
                 for obj in data['package']:
                     if 'issue' in obj:
                         issues = obj['issue']
                         for issue in issues:
                             if issue.get("status") == "Patched":
-                                if reclist.check_recipe_exists(obj['name']):
-                                    patched_vulns.append(issue['id'])
+                                id = issue['id']
+                                if reclist.check_recipe_exists(obj['name']) and id not in patched_vulns:
+                                    patched_vulns.append(id)
                 self.CVEPatchedVulnList = patched_vulns
-                if len(patched_vulns) > 0:
-                    return True
+            logging.info(f"      {len(patched_vulns)} total patched CVEs loaded from cve_check file "
+                         f"(CVEs not identified in project yet")
+            if len(patched_vulns) > 0:
+                return True
 
         except Exception as e:
             logging.error(f"Unable to process CVE file {cve_file}: {e}")

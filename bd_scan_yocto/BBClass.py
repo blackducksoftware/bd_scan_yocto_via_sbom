@@ -245,7 +245,7 @@ class BB:
                             expression = expression.replace(' | ', ' OR ')
 
                             rec_obj = Recipe(recipe_name, ver, licstring=expression)
-                            rec_obj.custom_component = True
+                            # rec_obj.custom_component = True
                         else:
                             rec_obj = Recipe(recipe_name, ver)
 
