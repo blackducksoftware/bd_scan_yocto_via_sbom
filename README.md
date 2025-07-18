@@ -30,16 +30,16 @@ While [Black Duck Detect](https://detect.blackduck.com/doc) is the default scan 
 
 This utility addresses these gaps by creating a comprehensive Black Duck SCA project from your Yocto build. It achieves this by:
 
-  * Scanning Yocto project artifacts to **generate an SPDX SBOM** (Software Bill of Materials), which is then uploaded to your Black Duck server to create a project version (mode=OE_RECIPES)
+  * Scanning Yocto project artifacts to **generate an SPDX SBOM** (Software Bill of Materials), which is then uploaded to your Black Duck server to create a project version (`--modes OE_RECIPES`)
   * **Filtering and "fixing-up" recipes** using data from the OpenEmbedded (OE) APIs to correctly identify local recipes moved to new layers or with different local versions/revisions.
-  * **Signature scanning** packages and downloaded archives for recipes not matched by OE data (with the option to scan all packages - mode=SIG_SCAN or SIG_SCAN_ALL)
-  * **Optionally adding unmatched components** via CPE lookup or by creating custom components through a second SBOM upload (mode=CPE_COMPS and/or CUSTOM_COMPS)
-  * **Applying patches for locally patched CVEs** identified from `cve_check` data (if available - mode=CVE_PATCHES)
-  * **Optionally processing the Linux Kernel** to filter out vulnerabilities not within the sources compiled into your specific kernel build (mode=IMAGE_MANIFEST and KERNEL_VULNS)
+  * **Signature scanning** packages and downloaded archives for recipes not matched by OE data (with the option to scan all packages - `--modes SIG_SCAN` or `--modes SIG_SCAN_ALL`)
+  * **Optionally adding unmatched components** via CPE lookup or by creating custom components through a second SBOM upload (`--modes CPE_COMPS` and/or `--modes CUSTOM_COMPS`)
+  * **Applying patches for locally patched CVEs** identified from `cve_check` data (if available - `--modes CVE_PATCHES`)
+  * **Optionally processing the Linux Kernel** to filter out vulnerabilities not within the sources compiled into your specific kernel build (`--modes IMAGE_MANIFEST,KERNEL_VULNS`)
 
 For guidance on optimizing Yocto project scans with this utility, refer to the **Best Practice Recommendations** section below.
 
-Note the addition of new `--modes` parameter in v1.2.0 to control scans to be performed (legacy scan parameters still supported) - see Scan Mode Configuration below.
+Note the addition of new `--modes` parameter in v1.2.0 to control scans to be performed (legacy scan parameters still supported) - see Scan Mode section below.
 
 ### Understanding Yocto and Why This Script is Needed
 
@@ -147,18 +147,50 @@ Before running the script, ensure you meet the following requirements:
 
 For optimal Yocto scan results, consider the following:
 
-1.  **Check required scan modes specified using `--modes AAA,BBB,CCC`:** - default set is `OE_RECIPES,SIG_SCAN,CVE_PATCHES` - see Scan Mode Configuration below.
-2.  **Override Bitbake Environment Values:** By default, the utility calls Bitbake to extract environment and layer information. You can override values including `license.manifest`, `machine`, `target`, `download_dir`, `package_dir`, and `image_package_type` using command-line parameters. Use `-l PATH/license.manifest` to specify a different `license.manifest` file (latest build will be used by default).
-3.  **Generate a Recipe Report:** Use the `--recipe_report REPFILE` parameter to create a report of matched and unmatched recipes in the BOM, which is useful for analysis and debugging.
+1.  **Check required scan modes using `--modes`:** - the default scans (if --modes not specified) are `OE_RECIPES,SIG_SCAN,CVE_PATCHES` (same as `--modes DEFAULT`) - see Scan Modes below.
+2.  **Optionally override Bitbake Environment Values:** By default, the utility calls Bitbake to extract environment and layer information, and will refer to the latest Yocto build. You can override values including `license.manifest`, `machine`, `target`, `download_dir`, `package_dir`, and `image_package_type` using command-line parameters.
+3.  **Generate a Recipe Report:** Use the `--recipe_report REPFILE` parameter to create a report of matched and unmatched recipes in the BOM, required for analysis and debugging.
 4. **Cache OE Data:** The `--oe_data_folder FOLDER` parameter allows you to cache downloaded OE data (approx. 300MB) and reuse it in subsequent runs, saving download time. OE data doesn't change frequently.
 5. **Identify Patched CVEs:** Add the `cve_check` class to your Bitbake `local.conf` to identify patched CVEs. Ensure **PHASE 6** picks up the `cve-check` file. Optionally, specify the output CVE check file using `--cve_check_file FILE` if an alternative location is needed.
-6. **Fuzzy Match Modified Recipes:** For recipes modified from standard OE versions, use `--max_oe_version_distance X.X.X` (e.g., `0.0.1` to `0.0.10`) for fuzzy matching against OE recipes. Be cautious, as this can sometimes disable correct matches. It's recommended to create two projects and compare results with and without this parameter.
-7. **Process Image Manifest:** To include the Linux kernel and other packages specified in the image manifest, consider adding `IMAGE_MANIFEST` mode. Optionally, specify the `image_license.manifest` file path (`--image_license_manifest FILEPATH`) if the latest build is not required.
-8. **Add Components by CPE:** Add `CPE_COMPS` mode to create packages not matched by other methods through CPE lookup. Note that not all packages have published CPEs.
+6. **Fuzzy Match Modified Recipes:** For recipes modified from standard OE versions, optionally use `--max_oe_version_distance X.X.X` (e.g., `0.0.1` to `0.0.10`) for fuzzy matching against OE recipes. Be cautious, as this can sometimes disable correct matches. It's recommended to create two projects and compare results with and without this parameter.
+7. **Process Image Manifest:** To include the Linux kernel and other packages specified in the image manifest, consider adding `--modes IMAGE_MANIFEST`. Optionally, specify the `image_license.manifest` file path (`--image_license_manifest FILEPATH`) if the latest build is not desired.
+8. **Add Components by CPE:** Add `--modes CPE_COMPS` to create packages not matched by other methods through CPE lookup. Note that not all packages have published CPEs.
 9. **Process Kernel Vulnerabilities:** To ignore kernel vulnerabilities not within compiled kernel sources, add `KERNEL_VULNS` mode (assumes `IMAGE_MANIFEST` mode).
-10. **Add Custom Components for Unmatched recipes - USE WITH CAUTION** Where OSS recipes are not matched by any other method, and for custom or commercial recipes, you can consider adding the `CUSTOM_COMPS` mode to create Custom Components for unmatched recipes to add them to the BD project as placeholders. However, note that Custom Components do not have any vulnerabilities mapped, will use the license specified in the license.manifest and cannot be easily deleted once added
-without deleting the project itself. Also note that all future scans for the same recipe will map to the created Custom Components even when KB updates add new recipes (unless
+10. **Add Custom Components for Unmatched recipes - USE WITH CAUTION** Where OSS recipes are not matched by any other method, and for custom or commercial recipes, you can consider adding `--modes CUSTOM_COMPS` to create Custom Components for unmatched recipes and add them to the BD project as placeholders. However, note that Custom Components do not have any vulnerabilities mapped, will use the license specified in the license.manifest and cannot be easily deleted once added without deleting the project itself. Also note that all future scans for the same recipe will map to the created Custom Components even when KB updates add new recipes (unless
 the associated PURL is deleted under 'Management-->Unmatched Components').
+
+-----
+
+## Scan Modes
+
+The new `--modes` option is a comma-delimited list of modes, used to control the multiple types of scan supported in the script.
+It can be used to replace the existing scan control parameters and simplify the command line.
+
+Explanation of modes:
+  - `DEFAULT`        - Includes OE_RECIPES,SIG,CVE_PATCHES
+  - `OE_RECIPES`     - Map components by OE recipe lookup (set by DEFAULT)
+  - `IMAGE_MANIFEST` - Process image manifest in addition to standard manifest (usually to add linux kernel)
+  - `SIG_SCAN`       - Scan unmatched recipes/packages using Signature scan (set by DEFAULT)
+  - `SIG_SCAN_ALL`   - Scan all recipes/packages using Signature scan
+  - `CPE_COMPS`      - Add unmatched recipes as packages by looking by CPE lookup (where CPEs available)
+  - `CUSTOM_COMPS`   - Create custom components for unmatched recipes
+  - `CVE_PATCHES`    - Process locally patched CVEs from cve_check (set by DEFAULT)
+  - `KERNEL_VULNS`   - Process kernel modules and mark vulns as unaffected where modules
+  - `ALL`            - Includes OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS (but not SIG_SCAN_ALL)
+
+Notes:
+  - DEFAULT is assumed if --modes not specified.
+  - To add scan modes to the default set use `--modes DEFAULT,IMAGE_MANIFEST,KERNEL_VULNS`.
+  - To add SIG_SCAN_ALL to ALL use `--modes ALL,SIG_SCAN_ALL`.
+
+Mapping of existing scan control parameters to scan modes: 
+   * --process_image_manifest = IMAGE_MANIFEST
+   * --scan_all_packages = SIG_SCAN_ALL
+   * --add_comps_by_cpe = CPE_COMPS
+   * --process_kernel_vulns = KERNEL_VULNS
+   * --sbom_create_custom_components = CUSTOM_COMPS
+
+Specifying legacy parameters in addition to `--modes` will override the scan modes defined in the modes list (including DEFAULT).
 
 -----
 
@@ -189,33 +221,8 @@ Create BD-SCA project version from Yocto project
   * `--blackduck_trust_cert`: Trust Black Duck server certificate (also uses `BLACKDUCK_TRUST_CERT` environment variable) - OPTIONAL.
 
 ### Scan Mode Configuration Parameter:
+
   * `--modes MODES`: A comma-delimited list of scan modes (no spaces) selected from [ALL,DEFAULT,OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,SIG_SCAN_ALL,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS]
-
-Explanation of modes:
-  - `DEFAULT`        - Includes OE_RECIPES,SIG,CVE_PATCHES
-  - `OE_RECIPES`     - Map components by OE recipe lookup (set by DEFAULT)
-  - `IMAGE_MANIFEST` - Process image manifest in addition to standard manifest (usually to add linux kernel)
-  - `SIG_SCAN`       - Scan unmatched recipes/packages using Signature scan (set by DEFAULT)
-  - `SIG_SCAN_ALL`   - Scan all recipes/packages using Signature scan
-  - `CPE_COMPS`      - Add unmatched recipes as packages by looking by CPE lookup (where CPEs available)
-  - `CUSTOM_COMPS`   - Create custom components for unmatched recipes
-  - `CVE_PATCHES`    - Process locally patched CVEs from cve_check (set by DEFAULT)
-  - `KERNEL_VULNS`   - Process kernel modules and mark vulns as unaffected where modules
-  - `ALL`            - Includes OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS (but not SIG_SCAN_ALL)
-
-Notes:
-  - DEFAULT is assumed if --modes not specified.
-  - Example adding scan modes to the default set - `DEFAULT,IMAGE_MANIFEST,KERNEL_VULNS`.
-  - Example adding SIG_SCAN_ALL to ALL - `ALL,SIG_SCAN_ALL`.
-  - Scan modes can be skipped by removing from the list (for example OE_RECIPES).
-
-Mapping of existing parameters to scan modes: 
-   * --process_image_manifest = IMAGE_MANIFEST
-   * --scan_all_packages = SIG_SCAN_ALL
-   * --add_comps_by_cpe = CPE_COMPS
-   * --process_kernel_vulns = KERNEL_VULNS
-   * --sbom_create_custom_components = CUSTOM_COMPS
-Specifying legacy parameters will override defined scan modes (including DEFAULT)
 
 ### Yocto Project Configuration Parameters OPTIONAL:
 
