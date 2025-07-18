@@ -301,8 +301,8 @@ class RecipeList:
                                     add_sbom.add_component(recipe.name, o_vername, orig['_meta']['href'])
                                     recipe.cpe_comp_href = orig['_meta']['href']
                                     comps_added = True
-                                    recipe.matched_in_bom = True
-                                    logging.info(f"Added component {recipe.name}/{recipe.version} to SBOM using CPE")
+                                    recipe.cpe_component = True
+                                    logging.info(f"- Added component {recipe.name}/{recipe.version} to SBOM using CPE")
                                     break
 
                         if recipe.matched_in_bom:
@@ -311,7 +311,8 @@ class RecipeList:
                 if conf.sbom_custom_components and not recipe.matched_in_bom:
                     # v1.1.2 - add component to sbom for custom component creation
                     add_sbom.add_recipe(recipe, clean_version=True)
-                    logging.info(f"Added component {recipe.name}/{recipe.version} to SBOM as custom component")
+                    recipe.custom_component = True
+                    logging.info(f"- Added component {recipe.name}/{recipe.version} to SBOM as custom component")
 
                     comps_added = True
 

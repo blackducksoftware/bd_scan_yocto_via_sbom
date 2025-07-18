@@ -160,6 +160,39 @@ the PURL associated is deleted under 'Management-->Unmatched Components'.
 
 -----
 
+## Scan Modes
+
+The new `--modes` option is a comma-delimited list of modes, used to control the multiple types of scan supported in the script.
+It can be used to replace the existing scan control parameters and simplify the command line.
+
+Explanation of modes:
+  - `DEFAULT`        - Includes OE_RECIPES,SIG,CVE_PATCHES
+  - `OE_RECIPES`     - Map components by OE recipe lookup (set by DEFAULT)
+  - `IMAGE_MANIFEST` - Process image manifest in addition to standard manifest (usually to add linux kernel)
+  - `SIG_SCAN`       - Scan unmatched recipes/packages using Signature scan (set by DEFAULT)
+  - `SIG_SCAN_ALL`   - Scan all recipes/packages using Signature scan
+  - `CPE_COMPS`      - Add unmatched recipes as packages by looking by CPE lookup (where CPEs available)
+  - `CUSTOM_COMPS`   - Create custom components for unmatched recipes
+  - `CVE_PATCHES`    - Process locally patched CVEs from cve_check (set by DEFAULT)
+  - `KERNEL_VULNS`   - Process kernel modules and mark vulns as unaffected where modules
+  - `ALL`            - Includes OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS (but not SIG_SCAN_ALL)
+
+Notes:
+  - DEFAULT is assumed if --modes not specified.
+  - How to add scan modes to the default set - `DEFAULT,IMAGE_MANIFEST,KERNEL_VULNS`.
+  - How to add SIG_SCAN_ALL to ALL - `ALL,SIG_SCAN_ALL`.
+
+Mapping of existing parameters to scan modes: 
+   * --process_image_manifest = IMAGE_MANIFEST
+   * --scan_all_packages = SIG_SCAN_ALL
+   * --add_comps_by_cpe = CPE_COMPS
+   * --process_kernel_vulns = KERNEL_VULNS
+   * --sbom_create_custom_components = CUSTOM_COMPS
+
+Specifying legacy parameters will override defined scan modes (including DEFAULT)
+
+-----
+
 ## Other Scan Options
 
 Several other options are available to modify the script's behavior:
@@ -189,15 +222,15 @@ Create BD Yocto project from license.manifest
   * `--blackduck_api_token BLACKDUCK_API_TOKEN`: Black Duck API token (also uses `BLACKDUCK_API_TOKEN` environment variable).
   * `-p PROJECT, --project PROJECT`: Black Duck project to create or update.
   * `-v VERSION, --version VERSION`: Black Duck project version to create or update.
-  * `-t TARGET, --target TARGET`: Yocto target (e.g., 'core-image-sato' - single target configuration only supported).
+  * `-t TARGET, --target TARGET`: Yocto target (e.g., 'core-image-sato' - single target configuration only supported).  * `--blackduck_trust_cert`: Trust Black Duck server certificate (also uses `BLACKDUCK_TRUST_CERT` environment variable) - OPTIONAL.
 
-### Optional:
+### Scan Mode Configuration Parameter:
 
-  * `--blackduck_trust_cert`: Trust Black Duck server certificate (also uses `BLACKDUCK_TRUST_CERT` environment variable).
+  * `--modes MODES`: A comma-delimited list of scan modes (no spaces) selected from [ALL,DEFAULT,OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,SIG_SCAN_ALL,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS]
 
-### Yocto Project Configuration Optional:
+### Yocto Project Configuration Parameters OPTIONAL:
 
-  * `-l LICENSE_MANIFEST, --license_manifest LICENSE_MANIFEST`: Path to `license.manifest` file. If not specified, the latest file in the standard location will be used.
+  * `-l LICENSE_MANIFEST, --license_manifest LICENSE_MANIFEST`: Optionally specify the Yocto `license.manifest` file created by Bitbake. Usually located in `tmp/deploy/licenses/<yocto-image>-<yocto-machine>/license.manifest`. The last build location should be determined from the Bitbake environment by default (unless `--skip_bitbake` is used).
   * `--process_image_manifest`: Process the `image_license.manifest` file (default location) to include recipes from the core image.
   * `-i IMAGE_LICENSE_MANIFEST, --image_license_manifest IMAGE_LICENSE_MANIFEST`: Specify the path to `image_license.manifest` to process recipes from the core image (usually including the kernel).
   * `--task_depends_dot_file`: Process the `task-depends.dot` file created by `bitbake -g`. If `license.manifest` is *not* also specified, all recipes, including dev dependencies, will be processed.

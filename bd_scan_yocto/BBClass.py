@@ -246,8 +246,8 @@ class BB:
                             # expression = re.sub(r'\b([\w.-]+)\b\s*\|\s*\b([\w.-]+)\b', r'(\1 OR \2)', expression)
                             expression = re.sub(' \| ', ' OR ', expression)
 
-                            rec_obj = Recipe(recipe_name, ver, license=expression)
-                            rec_obj.custom_component = True
+                            rec_obj = Recipe(recipe_name, ver, licstring=expression)
+                            # rec_obj.custom_component = True
                         else:
                             rec_obj = Recipe(recipe_name, ver)
 
