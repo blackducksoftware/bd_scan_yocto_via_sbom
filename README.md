@@ -179,24 +179,24 @@ Explanation of modes:
   - `ALL`            - Includes OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS (but not SIG_SCAN_ALL)
 
 Notes:
-  - DEFAULT is assumed if `--modes` not specified.
+  - `DEFAULT` is assumed if `--modes` not specified.
   - To add scan modes to the default set use, for example `--modes DEFAULT,IMAGE_MANIFEST,KERNEL_VULNS`.
-  - To add SIG_SCAN_ALL mode (scanning all packages) to ALL mode use `--modes ALL,SIG_SCAN_ALL`.
+  - To add `SIG_SCAN_ALL` mode (scanning all packages) to `ALL` scan mode use `--modes ALL,SIG_SCAN_ALL`.
 
 Mapping of existing scan control parameters to scan modes: 
-   * --process_image_manifest = mode IMAGE_MANIFEST
-   * --scan_all_packages = mode SIG_SCAN_ALL
-   * --add_comps_by_cpe = mode CPE_COMPS
-   * --process_kernel_vulns = mode KERNEL_VULNS
-   * --sbom_create_custom_components = mode CUSTOM_COMPS
+   * `--process_image_manifest` = mode `IMAGE_MANIFEST`
+   * `--scan_all_packages` = mode `SIG_SCAN_ALL`
+   * `--add_comps_by_cpe` = mode `CPE_COMPS`
+   * `--process_kernel_vulns` = mode `KERNEL_VULNS`
+   * `--sbom_create_custom_components` = mode `CUSTOM_COMPS`
 
-Specifying legacy parameters in addition to `--modes` will override scan modes defined in the modes list (including DEFAULT).
+Specifying legacy parameters in addition to `--modes` will override scan modes defined in the modes list (including `DEFAULT`).
 
 -----
 
 ## Other Scan Options
 
-  * **Improve Recipe Release Identification:** Optionally run `bitbake -g` to create a `task-depends.dot` file which is specified in `--task_depends_dot_file FILE` along with `-l license.manifest`. If `-l license.manifest` is *not* also specified, it will scan all development dependencies (not just those in the built image).
+  * **Improve Recipe Release Identification:** Optionally run `bitbake -g` to create a `task-depends.dot` file which is specified in `--task_depends_dot_file FILE` along with `-l license.manifest`. If `-l license.manifest` is *not* also specified, all development dependencies will be processed (not just those within the license manifest).
   * **Signature scan ALL packages (as opposed to only unmatched packages):** Add `--modes SIG_SCAN_ALL` to scan all packages.
 
 -----
@@ -220,16 +220,16 @@ Create BD-SCA project version from Yocto project
   * `-t TARGET, --target TARGET`: Yocto target (e.g., 'core-image-sato' - single target configuration only supported).
   * `--blackduck_trust_cert`: Trust Black Duck server certificate (also uses `BLACKDUCK_TRUST_CERT` environment variable) - OPTIONAL.
 
-### Scan Mode Configuration Parameter:
+### Scan Mode Configuration Parameter - OPTIONAL:
 
   * `--modes MODES`: A comma-delimited list of scan modes (no spaces) selected from [ALL,DEFAULT,OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,SIG_SCAN_ALL,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS]
 
-### Yocto Project Configuration Parameters OPTIONAL:
+### Yocto Project Configuration Parameters - OPTIONAL:
 
-  * `-l LICENSE_MANIFEST, --license_manifest LICENSE_MANIFEST`: Optionally specify the Yocto `license.manifest` file created by Bitbake. Usually located in `tmp/deploy/licenses/<yocto-image>-<yocto-machine>/license.manifest`. The last build location should be determined from the Bitbake environment by default (unless `--skip_bitbake` is used).
-  * `-i IMAGE_LICENSE_MANIFEST, --image_license_manifest IMAGE_LICENSE_MANIFEST`: Specify the path to `image_license.manifest` to process recipes from the core image (usually including the kernel).
-  * `--task_depends_dot_file`: Process the `task-depends.dot` file created by `bitbake -g`. If `license.manifest` is *not* also specified, all recipes, including dev dependencies, will be processed. `--target` is also required.
-  * `-b BITBAKE_LAYERS, --bitbake_layers_file BITBAKE_LAYERS`: Optionally specify the output of the command `bitbake-layers show-recipes` stored in a file. Should be used with `--skip_bitbake`, but will prevent many other script features from operating, so it's **not recommended**.
+  * `-l LICENSE_MANIFEST, --license_manifest LICENSE_MANIFEST`: The most recent Yocto `license.manifest` file is located by default, usually located in `tmp/deploy/licenses/<yocto-image>-<yocto-machine>/license.manifest`. Use this option to specify a different build or if the file is in a non-standard location (or if `--skip_bitbake` is used).
+  * `-i IMAGE_LICENSE_MANIFEST, --image_license_manifest IMAGE_LICENSE_MANIFEST`: If `--modes IMAGE_MANIFEST` specified, the latest image manifest will be identified by default from the environment. Specify the path to an alternate `image_license.manifest` file if the latest build is not desired or the file exists in another location.  
+  * `--task_depends_dot_file FILE`: Specify the path to the `task-depends.dot` file created by `bitbake -g` for processing. If `-l license.manifest` is *not* also specified, all recipes, including dev dependencies, will be processed (`--target` is also required).
+  * `-b BITBAKE_LAYERS, --bitbake_layers_file BITBAKE_LAYERS`: Optionally specify the output of the command `bitbake-layers show-recipes` stored in a file. Should be used with `--skip_bitbake` (although it will prevent many other script modes from operating, so it's **not recommended**).
   * `-c CVE_CHECK_FILE, --cve_check_file CVE_CHECK_FILE`: CVE check output file (in `.cve` or `.json` format) to mark locally patched CVEs. The most recent file will be located by default; use this parameter to specify an alternate file. Usually located in `build/tmp/deploy/images/XXX`. Should be determined from the Bitbake environment by default (unless `--skip_bitbake` is used).
   * `--build_dir BUILD_DIR`: Alternate Yocto build folder (defaults to `poky/build`).
   * `--download_dir DOWNLOAD_DIR`: Alternate directory where original OSS source is downloaded (defaults to `poky/build/downloads`).
@@ -237,14 +237,14 @@ Create BD-SCA project version from Yocto project
   * `--image_package_type IMAGE_PACKAGE_TYPE`: Package type used for installing packages (specify one of `rpm`, `deb`, or `ipx` - default `rpm`).
   * `--kernel_recipe`: Define a non-standard kernel recipe name (defaults to 'linux-yocto').
 
-### Script Behavior Parameters:
+### Script Behavior Parameters - OPTIONAL:
 
   * `--skip_oe_data`: Do not download layers/recipes/layers from `layers.openembedded.org` APIs. These are used to review origin layers and revisions within recipes to ensure more components are matched against the Black Duck KnowledgeBase (KB). Useful where recipes have been moved to new layers against the template recipes provided by OE - (equivalent to removing OE_RECIPES from --modes).
   * `--oe_data_folder OE_DATA_FOLDER`: Folder to contain OE data files. If files don't exist, they will be downloaded; if they exist, they will be used without re-downloading. Creates OE data files in the specified folder if they don't already exist. If files exist, they are used without re-downloading. This allows offline usage of OE data or reduces large data transfers if the script is run frequently. **RECOMMENDED.**
   * `--max_oe_version_distance MAX_OE_VERSION_DISTANCE`: When no exact match, use the closest previous recipe version up to the specified distance against OE data. Setting this value allows close (previous) recipe version matching. The value must be in `MAJOR.MINOR.PATCH` format (e.g., `0.10.0`). **CAUTION**: Setting this value too high may cause components to be matched against older recipes in the OE data, potentially leading to different vulnerability reports. It's generally better to maintain a close relationship between matched versions and project versions. Consider values in the range `0.0.1` to `0.0.10`.
   * `--skip_sig_scan`: Do not signature scan downloads and packages. By default, only recipes not matched from OE data are scanned (equivalent to removing SIG_SCAN from --modes)
 
-### Connection & Detect Configuration Parameters:
+### Connection & Detect Configuration Parameters - OPTIONAL:
 
   * `--detect_jar_path DETECT_JAR_PATH`: Path to the Detect JAR file.
   * `--detect_opts DETECT_OPTS`: Additional Detect options, comma separated list (remove leading `--` from Detect options).
@@ -379,9 +379,10 @@ For custom C/C++ recipes or recipes built with other languages and package manag
     The licenses reported by Bitbake come directly from the recipe files. However, the true applicable license for each package is the one declared in its origin repository, which may differ. Furthermore, most open-source licenses require the full license text and copyrights in the distribution. Many OSS packages also embed other OSS with different licenses, sometimes with re-licensing restrictions. Black Duck uses licenses from the origin packages, supports full license text and copyrights, and offers optional deep license analysis to identify embedded licenses within packages. Licenses from recipes are used when Custom Components are created using `--modes CUSTOM_COMPS`.
 
 2.  **Can this utility be used on a Yocto image without access to the build environment?**
-    Yes, potentially. Use the parameters `--skip_bitbake -l LIC_MANIFEST_FILE --bitbake_layers_file LAYERS_FILE`, where `LIC_MANIFEST_FILE` is the path to your `license.manifest` file and `LAYERS_FILE` contains the output of `bitbake-layers show-recipes`.
+    Yes, potentially. Use the parameters `--skip_bitbake -l LIC_MANIFEST_FILE --bitbake_layers_file LAYERS_FILE`, where `LIC_MANIFEST_FILE` is the path to your `license.manifest` file and `LAYERS_FILE` contains the output of `bitbake-layers show-recipes`. However, several scan modes will be disabled due to the lack of build artefacts (including Signature scanning
+of packages `--modes SIG_SCAN`, CVE patching `--modes CVE_PATCHES` and kernel vulnerability applicability `--modes KERNEL_VULNS`).
 
-3.  **Why can't I simply use the `cve-check` class provided by Yocto to determine unpatched vulnerabilities?**
+4.  **Why can't I simply use the `cve-check` class provided by Yocto to determine unpatched vulnerabilities?**
     The `cve-check` class processes all recipes in the build and attempts to associate CVEs from the NVD using CPEs. This often leads to a large number of false positive CVEs, as it reports all packages (including build dependencies) rather than just those in the distributed image and the CPE is a wildcard often associating many vulnerabilities which are false
 positive. Furthermore, the CPE association data from the NVD is frequently inaccurate with no earliest affected version meaning that newer vulnerabilities are shown for all previous
 verisons of packages. Black Duck Security Advistories are expert-curated to reduce false positives including marking CVEs as ignored where they should not apply.
