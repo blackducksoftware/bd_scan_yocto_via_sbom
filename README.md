@@ -151,11 +151,11 @@ For optimal Yocto scan results, consider the following:
 2.  **Optionally override Bitbake Environment Values:** By default, the utility calls Bitbake to extract environment and layer information, and will refer to the latest Yocto build. You can override values including `license.manifest`, `machine`, `target`, `download_dir`, `package_dir`, and `image_package_type` using command-line parameters.
 3.  **Generate a Recipe Report:** Use the `--recipe_report REPFILE` parameter to create a report of matched and unmatched recipes in the BOM, required for analysis and debugging.
 4. **Cache OE Data:** The `--oe_data_folder FOLDER` parameter allows you to cache downloaded OE data (approx. 300MB) and reuse it in subsequent runs, saving download time. OE data doesn't change frequently.
-5. **Identify Patched CVEs:** Add the `cve_check` class to your Bitbake `local.conf` to identify patched CVEs. Ensure **PHASE 6** picks up the `cve-check` file. Optionally, specify the output CVE check file using `--cve_check_file FILE` if an alternative location is needed.
+5. **Identify Patched CVEs:** Add the `cve_check` class to your Bitbake `local.conf` to identify patched CVEs. Ensure **PHASE 7** picks up the `cve-check` file. Optionally, specify the output CVE check file using `--cve_check_file FILE` if an alternative location is needed.
 6. **Fuzzy Match Modified Recipes:** For recipes modified from standard OE versions, optionally use `--max_oe_version_distance X.X.X` (e.g., `0.0.1` to `0.0.10`) for fuzzy matching against OE recipes. Be cautious, as this can sometimes disable correct matches. It's recommended to create two projects and compare results with and without this parameter.
 7. **Process Image Manifest:** To include the Linux kernel and other packages specified in the image manifest, consider adding `--modes IMAGE_MANIFEST`. Optionally, specify the `image_license.manifest` file path (`--image_license_manifest FILEPATH`) if the latest build is not desired.
 8. **Add Components by CPE:** Add `--modes CPE_COMPS` to create packages not matched by other methods through CPE lookup. Note that not all packages have published CPEs.
-9. **Process Kernel Vulnerabilities:** To ignore kernel vulnerabilities not within compiled kernel sources, add `KERNEL_VULNS` mode (assumes `IMAGE_MANIFEST` mode).
+9. **Process Kernel Vulnerabilities:** To ignore kernel vulnerabilities not within compiled kernel sources, add `--modes KERNEL_VULNS` (assumes `IMAGE_MANIFEST` mode).
 10. **Add Custom Components for Unmatched recipes - USE WITH CAUTION** Where OSS recipes are not matched by any other method, and for custom or commercial recipes, you can consider adding `--modes CUSTOM_COMPS` to create Custom Components for unmatched recipes and add them to the BD project as placeholders. However, note that Custom Components do not have any vulnerabilities mapped, will use the license specified in the license.manifest and cannot be easily deleted once added without deleting the project itself. Also note that all future scans for the same recipe will map to the created Custom Components even when KB updates add new recipes (unless
 the associated PURL is deleted under 'Management-->Unmatched Components').
 
@@ -167,7 +167,7 @@ The new `--modes` option is a comma-delimited list of modes, used to control the
 It can be used to replace the existing scan control parameters and simplify the command line.
 
 Explanation of modes:
-  - `DEFAULT`        - Includes OE_RECIPES,SIG,CVE_PATCHES
+  - `DEFAULT`        - Includes OE_RECIPES,SIG_SCAN,CVE_PATCHES
   - `OE_RECIPES`     - Map components by OE recipe lookup (set by DEFAULT)
   - `IMAGE_MANIFEST` - Process image manifest in addition to standard manifest (usually to add linux kernel)
   - `SIG_SCAN`       - Scan unmatched recipes/packages using Signature scan (set by DEFAULT)
@@ -179,25 +179,25 @@ Explanation of modes:
   - `ALL`            - Includes OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS (but not SIG_SCAN_ALL)
 
 Notes:
-  - DEFAULT is assumed if --modes not specified.
-  - To add scan modes to the default set use `--modes DEFAULT,IMAGE_MANIFEST,KERNEL_VULNS`.
-  - To add SIG_SCAN_ALL to ALL use `--modes ALL,SIG_SCAN_ALL`.
+  - DEFAULT is assumed if `--modes` not specified.
+  - To add scan modes to the default set use, for example `--modes DEFAULT,IMAGE_MANIFEST,KERNEL_VULNS`.
+  - To add SIG_SCAN_ALL mode (scanning all packages) to ALL mode use `--modes ALL,SIG_SCAN_ALL`.
 
 Mapping of existing scan control parameters to scan modes: 
-   * --process_image_manifest = IMAGE_MANIFEST
-   * --scan_all_packages = SIG_SCAN_ALL
-   * --add_comps_by_cpe = CPE_COMPS
-   * --process_kernel_vulns = KERNEL_VULNS
-   * --sbom_create_custom_components = CUSTOM_COMPS
+   * --process_image_manifest = mode IMAGE_MANIFEST
+   * --scan_all_packages = mode SIG_SCAN_ALL
+   * --add_comps_by_cpe = mode CPE_COMPS
+   * --process_kernel_vulns = mode KERNEL_VULNS
+   * --sbom_create_custom_components = mode CUSTOM_COMPS
 
-Specifying legacy parameters in addition to `--modes` will override the scan modes defined in the modes list (including DEFAULT).
+Specifying legacy parameters in addition to `--modes` will override scan modes defined in the modes list (including DEFAULT).
 
 -----
 
 ## Other Scan Options
 
   * **Improve Recipe Release Identification:** Optionally run `bitbake -g` to create a `task-depends.dot` file which is specified in `--task_depends_dot_file FILE` along with `-l license.manifest`. If `-l license.manifest` is *not* also specified, it will scan all development dependencies (not just those in the built image).
-  * **Signature scan ALL packages (as opposed to only unmatched packages):** Add `SIG_SCAN_ALL` mode to scan all packages.
+  * **Signature scan ALL packages (as opposed to only unmatched packages):** Add `--modes SIG_SCAN_ALL` to scan all packages.
 
 -----
 
@@ -252,19 +252,19 @@ Create BD-SCA project version from Yocto project
   * `--no_unmap`: Do not unmap previous code locations (scans) when running the initial scan (default is to unmap).
 
 ### Legacy Scan Mode Parameters (replaced by --modes):
-  * 
-  * `--process_image_manifest`: Process the `image_license.manifest` file (default location) to include recipes from the core image - equivalent to mode `IMAGE_MANIFEST`.
-  * `--add_comps_by_cpe`: Look up CPEs for packages not mapped in the BOM or discovered by signature scan and add missing packages. Note: not all packages have published CPEs - equivalent to mode `CPE_COMPS`.
-  * `--process_kernel_vulns`: Process compiled kernel sources to ignore vulnerabilities affecting modules not compiled into the custom kernel. Requires `--process_image_manifest` - equivalent to mode `KERNEL_VULNS`.
-  * `--scan_all_packages`: Signature scan all packages (default: only recipes not matched from OE data are scanned) - equivalent to mode `SIG_SCAN_ALL`.
-  * `--sbom_create_custom_components`: Create Custom Components when *all other* scan techniques do not match recipes. The license reported in `license.manifest` will be used. Custom Components are designed for unknown components but lack associated vulnerabilities, deep license data, or copyrights. **Caution**: This parameter creates new, permanent custom components mapped to PURLs. These PURLs will be matched in all future scans, even if new data is added to the KB for the recipe. Use the **Manage --\> Unmatched Origins** view to disassociate PURLs from custom components if you don't want them matched in future scans. Deleting custom components once created and referenced in projects is not possible unless the projects themselves are removed. Do not use this parameter until you fully understand its implications - equivalent to mode `CUSTOM_COMPS`.
+
+  * `--process_image_manifest`: Process the `image_license.manifest` file (default location) to include recipes from the core image - equivalent to `--modes IMAGE_MANIFEST`.
+  * `--add_comps_by_cpe`: Look up CPEs for packages not mapped in the BOM or discovered by signature scan and add missing packages. Note: not all packages have published CPEs - equivalent to `--modes CPE_COMPS`.
+  * `--process_kernel_vulns`: Process compiled kernel sources to ignore vulnerabilities affecting modules not compiled into the custom kernel. Requires `--process_image_manifest` - equivalent to `--modes KERNEL_VULNS`.
+  * `--scan_all_packages`: Signature scan all packages (default: only recipes not matched from OE data are scanned) - equivalent to `--modes SIG_SCAN_ALL`.
+  * `--sbom_create_custom_components`: Create Custom Components when *all other* scan techniques do not match recipes. The license reported in `license.manifest` will be used. Custom Components are designed for unknown components but lack associated vulnerabilities, deep license data, or copyrights. **Caution**: This parameter creates new, permanent custom components mapped to PURLs. These PURLs will be matched in all future scans, even if new data is added to the KB for the recipe. Use the **Manage --\> Unmatched Origins** view to disassociate PURLs from custom components if you don't want them matched in future scans. Deleting custom components once created and referenced in projects is not possible unless the projects themselves are removed. Do not use this parameter until you fully understand its implications - equivalent to `--modes CUSTOM_COMPS`.
 
 ### General Parameters:
 
   * `--recipe_report REPFILE`: Create a report file with a list of recipes, including those not matched in the BOM.
-  * `-o OUTPUT, --output OUTPUT`: Specify output SPDX SBOM file for manual upload. If specified, the Black Duck project will not be created automatically, and CVE patching is not supported.
+  * `-o OUTPUT, --output OUTPUT`: Specify output SPDX SBOM file. If specified, only the initial SBOM will be created and all other script features will be skipped (use for debug purposes only).
   * `--debug`: Enable debug logging mode.
-  * `--logfile LOGFILE`: Output logging to a specified file.
+  * `--logfile LOGFILE`: Output logging messages to a specified file.
 
 -----
 
@@ -306,6 +306,8 @@ Then, **rebuild your project** (e.g., using `bitbake core-image-sato`) to run th
 
 The script should automatically locate the `cve-check` output file (usually under `poky/tmp/deploy/images/licenses`), but you can also specify the file using the `--cve_check_file CVE_CHECK_FILE` parameter.
 
+The `CVE_PATCHES` mode enables this feature which is included in the `DEFAULT` mode. Remove `CVE_PATCHES` from the list of modes to disable.
+
 -----
 
 ## Troubleshooting
@@ -313,10 +315,12 @@ The script should automatically locate the `cve-check` output file (usually unde
   * **Ensure required parameters are specified**: Double-check that you've provided all minimum required parameters, including the Yocto target (`-t`).
   * **Verify prerequisites and build status**: Confirm all prerequisites are met and that you have a built Yocto project with a generated `license.manifest` file.
   * **Enable debug logging**: Use the `--debug` parameter to turn on detailed logging.
-  * **Check code locations in Black Duck**: After the scan, verify that your Black Duck project's **Source** tab shows 2 or 3 separate code locations: one for the initial SBOM import, one for Signature Scan, and optionally one for CPE matching/custom components.
-  * **Review Phase 6 information**: If Phase 6 runs, check the `total components in BOM` against `total recipes in Yocto project`. The `Recipes matched in OE data but not in BOM` count indicates recipes found in OE data but not matched against the Black Duck KB. Review these (also listed in Phase 5) to see if they were identified by subsequent Signature Scan, and consider manually adding the origin OSS components to the Project Version if needed.
-  * **Missing packages**: If a specific package appears missing from the project, confirm you are looking for the **recipe name**, not the package name. (See FAQs for an explanation of Yocto recipes vs. packages.) Also, check that the package file was included in the Signature Scan within the **Source** tab.
-  * **Linux kernel missing**: Consider using the `--process_image_manifest` or `--image_license_manifest PATH` parameters to include packages in the image manifest, which usually includes the Linux kernel. If the kernel still isn't identified due to a custom name format, consider adding the required kernel version manually to the project.
+  * **Check code locations in Black Duck**: After the scan, verify that your Black Duck project's **Source** tab shows 2 or 3 separate code locations: one for the initial SBOM import, one for Signature Scan, and optionally one for the second SBOM used to create CPE matching/custom components.
+  * **Review Phase 6 information**: Phase 6 of the console output lists counts of recipes; check the `total components in BOM` against `total recipes in Yocto project`. The `Recipes NOT in BOM` count indicates missing recipes (specify `--recipe_report FILE` to create a full list of recipes and examine missing recipes); consider adding `--modes CPE_COMPS,CUSTOM_COMPS` or
+`--modes ALL` to process missing recipes using additional techniques.
+  * **Missing packages**: If a specific package appears missing from the project, confirm you are looking for the **recipe name**, not the package name (See FAQs for an explanation of Yocto recipes vs. packages). The modes `SIG_SCAN`, `CPE_COMPS` and `CUSTOM_COMPS` can be used in `--modes` to process missing recipes using various techniques.
+  * **Linux kernel missing**: Consider adding the `--modes IMAGE_MANIFEST` mode to include packages in the image manifest, which usually includes the Linux kernel. If the kernel still isn't identified due to a custom name format, consider adding the required kernel version manually to the project. Use `--image_license_manifest PATH` to specify a different path to the
+`image_license.manifest` file if in a non-standard location or the latest build is not desired.
 
 -----
 
@@ -327,8 +331,8 @@ If you encounter issues, please **create an issue in GitHub** and include the fo
   * Your Organization name (to validate your Black Duck license).
   * A clear description of the issue.
   * Yocto version in use (obtain with `bitbake -e | grep DISTRO_CODENAME`).
-  * The `license.manifest` file for your build.
-  * The output of the command `bitbake-layers show-recipes`.
+  * The `license.manifest` file for your build (and optionally `image_license.manifest` is mode `IMAGE_MANIFEST` is used.
+  * The output of the command `bitbake-layers show-recipes` in a file.
   * The log output from this script with `--debug` enabled (use `--logfile LOGFILE` to save to a file).
   * The recipe report file (use `--recipe_report REPFILE`).
 
