@@ -163,20 +163,20 @@ the associated PURL is deleted under 'Management-->Unmatched Components').
 
 ## Scan Modes
 
-The new `--modes` option is a comma-delimited list of modes, used to control the multiple types of scan supported in the script.
-It can be used to replace the existing scan control parameters and simplify the command line.
+The new `--modes` option is a comma-delimited list of modes (no spaces), used to control the multiple types of scan supported in the script.
+It can be used to replace existing scan control parameters and simplify the command line.
 
 Explanation of modes:
-  - `DEFAULT`        - Includes OE_RECIPES,SIG_SCAN,CVE_PATCHES
-  - `OE_RECIPES`     - Map components by OE recipe lookup (set by DEFAULT)
+  - `DEFAULT`        - Includes `OE_RECIPES,SIG_SCAN,CVE_PATCHES`
+  - `OE_RECIPES`     - Map components by OE recipe lookup (set by `DEFAULT`)
   - `IMAGE_MANIFEST` - Process image manifest in addition to standard manifest (usually to add linux kernel)
-  - `SIG_SCAN`       - Scan unmatched recipes/packages using Signature scan (set by DEFAULT)
+  - `SIG_SCAN`       - Scan unmatched recipes/packages using Signature scan (set in `DEFAULT` mode)
   - `SIG_SCAN_ALL`   - Scan all recipes/packages using Signature scan
-  - `CPE_COMPS`      - Add unmatched recipes as packages by looking by CPE lookup (where CPEs available)
-  - `CUSTOM_COMPS`   - Create custom components for unmatched recipes
-  - `CVE_PATCHES`    - Process locally patched CVEs from cve_check (set by DEFAULT)
-  - `KERNEL_VULNS`   - Process kernel modules and mark vulns as unaffected where modules
-  - `ALL`            - Includes OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS (but not SIG_SCAN_ALL)
+  - `CPE_COMPS`      - Add unmatched recipes as packages by CPE lookup (where CPEs available)
+  - `CUSTOM_COMPS`   - Create Custom Components for unmatched recipes (note Custom Components are only placeholders for SBOM export - no vulnerability or other data is provided)
+  - `CVE_PATCHES`    - Process locally patched CVEs from `cve_check` class (set in `DEFAULT` mode)
+  - `KERNEL_VULNS`   - Process kernel modules and mark vulns as unaffected where associated modules do not exist in the kernel
+  - `ALL`            - Includes `OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS` (but not `SIG_SCAN_ALL`)
 
 Notes:
   - `DEFAULT` is assumed if `--modes` not specified.
@@ -190,7 +190,7 @@ Mapping of existing scan control parameters to scan modes:
    * `--process_kernel_vulns` = mode `KERNEL_VULNS`
    * `--sbom_create_custom_components` = mode `CUSTOM_COMPS`
 
-Specifying legacy parameters in addition to `--modes` will override scan modes defined in the modes list (including `DEFAULT`).
+Specifying legacy parameters in addition to `--modes` will override scan modes defined in the modes list (including modes in `DEFAULT`).
 
 -----
 
@@ -198,6 +198,7 @@ Specifying legacy parameters in addition to `--modes` will override scan modes d
 
   * **Improve Recipe Release Identification:** Optionally run `bitbake -g` to create a `task-depends.dot` file which is specified in `--task_depends_dot_file FILE` along with `-l license.manifest`. If `-l license.manifest` is *not* also specified, all development dependencies will be processed (not just those within the license manifest).
   * **Signature scan ALL packages (as opposed to only unmatched packages):** Add `--modes SIG_SCAN_ALL` to scan all packages.
+  * **Turn on Snippet scanning within Signature scanned packages:** Requires `--modes SIG_SCAN` or `--modes SIG_SCAN_ALL` - add the parameter `--detect_opts detect.blackduck.signature.scanner.snippet.matching=SNIPPET_MATCHING` to enable snippet scanning of sources within scanned packages.
 
 -----
 
