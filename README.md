@@ -376,25 +376,29 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 ## FAQs
 
 1.  **Why can't I rely on the license data provided by Yocto in the `license.manifest` file?**
-    The licenses reported by Bitbake come directly from the recipe files. However, the true applicable license for each package is the one declared in its origin repository, which may differ. Furthermore, most open-source licenses require the full license text and copyrights in the distribution. Many OSS packages also embed other OSS with different licenses, sometimes with re-licensing restrictions. Black Duck uses licenses from the origin packages, supports full license text and copyrights, and offers optional deep license analysis to identify embedded licenses within packages.
+    The licenses reported by Bitbake come directly from the recipe files. However, the true applicable license for each package is the one declared in its origin repository, which may differ. Furthermore, most open-source licenses require the full license text and copyrights in the distribution. Many OSS packages also embed other OSS with different licenses, sometimes with re-licensing restrictions. Black Duck uses licenses from the origin packages, supports full license text and copyrights, and offers optional deep license analysis to identify embedded licenses within packages. Licenses from recipes are used when Custom Components are created using `--modes CUSTOM_COMPS`.
 
 2.  **Can this utility be used on a Yocto image without access to the build environment?**
     Yes, potentially. Use the parameters `--skip_bitbake -l LIC_MANIFEST_FILE --bitbake_layers_file LAYERS_FILE`, where `LIC_MANIFEST_FILE` is the path to your `license.manifest` file and `LAYERS_FILE` contains the output of `bitbake-layers show-recipes`.
 
 3.  **Why can't I simply use the `cve-check` class provided by Yocto to determine unpatched vulnerabilities?**
-    The `cve-check` class processes all recipes in the build and attempts to associate CVEs from the NVD using CPEs. This often leads to a large number of false positive CVEs, as it reports all packages (including build dependencies) rather than just those in the distributed image. For example, a sample Yocto 4.1 minimal build might report 160 unpatched CVEs, with 14 for zlib, while Black Duck might show only 3 patched and 0 unpatched for the zlib version in the build.
+    The `cve-check` class processes all recipes in the build and attempts to associate CVEs from the NVD using CPEs. This often leads to a large number of false positive CVEs, as it reports all packages (including build dependencies) rather than just those in the distributed image and the CPE is a wildcard often associating many vulnerabilities which are false
+positive. Furthermore, the CPE association data from the NVD is frequently inaccurate with no earliest affected version meaning that newer vulnerabilities are shown for all previous
+verisons of packages. Black Duck Security Advistories are expert-curated to reduce false positives including marking CVEs as ignored where they should not apply.
 
-4.  **Why couldn't I just use the `create-spdx` class provided by Yocto to export a full SBOM?**
-    The Yocto `create-spdx` class generates SPDX JSON files for packages, including useful data like file lists and hashes. However, many SPDX fields (e.g., license text, copyrights) are often blank (`NO-ASSERTION`), and packages are not identified by PURL, making effective import into other tools (including Black Duck) difficult.
+5.  **Why couldn't I just use the `create-spdx` class provided by Yocto to export a full SBOM?**
+    The Yocto `create-spdx` class generates SPDX JSON files for packages, including data like file lists and hashes. However, many SPDX fields (e.g., license text, copyrights) are often blank (`NO-ASSERTION`), and packages are not identified by PURL, stopping import into other tools (including Black Duck).
 
-5.  **I cannot see a specific package in the Black Duck project.**
-    Use the `--recipe_report FILE` parameter to list matched and missing recipes. Black Duck reports recipes in the Yocto project, not individual packages. Multiple packages can be combined into a single recipe and are generally considered part of that recipe's main component. Check if the package file was included in the Signature Scan (within the Source tab).
+6.  **I cannot see a specific package in the Black Duck project.**
+    Black Duck reports **recipes** in the Yocto project, not individual **packages**. Multiple packages can be combined into a single recipe and are generally considered part of that recipe's main component. Use the `--recipe_report FILE` parameter to list matched and missing recipes, and conider using other scan modes (`--modes ALL` or
+`--modes CPE_COMPS,CUSTOM_COMPS`) to add missing recipes. Note also that Signature scan (`--modes SIG_SCAN` or `--modes SIG_SCAN_ALL`) can identify missing recipes as well as
+embedded OSS within recipes.
 
-6.  **I cannot see the Linux kernel in the Black Duck project.**
-    Consider using the `--process_image_manifest` or `--image_license_manifest PATH` parameters to process packages in the image manifest, which usually includes the Linux kernel. If the kernel still cannot be identified due to a custom name format, consider adding the required kernel version manually to the project.
+7.  **I cannot see the Linux kernel in the Black Duck project.**
+    Consider using the `--modes IMAGE_MANIFEST` (optionally with `--image_license_manifest PATH`) to process packages in the image manifest, which usually includes the Linux kernel. If the kernel still cannot be identified due to a custom name format, consider adding the required kernel version manually to the project.
 
-7.  **I am using another Yocto wrapper like KAS ([https://kas.readthedocs.io/](https://kas.readthedocs.io/)) and cannot run Bitbake, or the script fails for some other reason.**
+8.  **I am using another Yocto wrapper like KAS ([https://kas.readthedocs.io/](https://kas.readthedocs.io/)) and cannot run Bitbake, or the script fails for some other reason.**
     Use the parameters `--skip_bitbake -l LIC_MANIFEST_FILE --bitbake_layers_file LAYERS_FILE`, where `LIC_MANIFEST_FILE` is the path to your `license.manifest` file and `LAYERS_FILE` contains the output of `bitbake-layers show-recipes`. Note that this will disable several features, including CVE patching, kernel vulnerability identification, and package scanning.
 
-8.  **I want to scan all recipes, including development dependencies, as opposed to only those in the delivered image.**
+9.  **I want to scan all recipes, including development dependencies, as opposed to only those in the delivered image.**
     Run the command `bitbake -g` to create a `task-depends.dot` file, then use the parameter `--task_depends_dot_file FILE`, where `FILE` is the path to the generated file.
