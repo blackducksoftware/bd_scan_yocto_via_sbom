@@ -12,6 +12,8 @@ It does not extend the licensed functionality of Black Duck Software. It is prov
 
 For comments or issues, please **raise a GitHub issue in this repository**. Black Duck Support cannot respond to support tickets for this open-source utility. Users are encouraged to engage with the authors to address any identified issues.
 
+Refer to [How to Report Issues ](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#how-to-report-issues-with-this-script) below for the minimum required information to report issues with this script.
+
 -----
 
 ## Introduction
@@ -147,12 +149,12 @@ Before running the script, ensure you meet the following requirements:
 
 For optimal Yocto scan results, consider the following:
 
-1.  **Check required scan modes using `--modes`:** - the default scans (if --modes not specified) are `OE_RECIPES,SIG_SCAN,CVE_PATCHES` (same as `--modes DEFAULT`) - see Scan Modes below.
+1.  **Check required scan modes using `--modes`:** - the default scans (if --modes not specified) are `OE_RECIPES,SIG_SCAN,CVE_PATCHES` (same as `--modes DEFAULT`) - see [Scan Modes](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#scan-modes) below.
 2.  **Optionally override Bitbake Environment Values:** By default, the utility calls Bitbake to extract environment and layer information, and will refer to the latest Yocto build. You can override values including `license.manifest`, `machine`, `target`, `download_dir`, `package_dir`, and `image_package_type` using command-line parameters.
 3.  **Generate a Recipe Report:** Use the `--recipe_report REPFILE` parameter to create a report of matched and unmatched recipes in the BOM, required for analysis and debugging.
 4. **Cache OE Data:** The `--oe_data_folder FOLDER` parameter allows you to cache downloaded OE data (approx. 300MB) and reuse it in subsequent runs, saving download time. OE data doesn't change frequently.
-5. **Identify Patched CVEs:** Add the `cve_check` class to your Bitbake `local.conf` to identify patched CVEs. Ensure **PHASE 7** picks up the `cve-check` file. Optionally, specify the output CVE check file using `--cve_check_file FILE` if an alternative location is needed.
-6. **Fuzzy Match Modified Recipes:** For recipes modified from standard OE versions, optionally use `--max_oe_version_distance X.X.X` (e.g., `0.0.1` to `0.0.10`) for fuzzy matching against OE recipes. Be cautious, as this can sometimes disable correct matches. It's recommended to create two projects and compare results with and without this parameter.
+5. **Identify Patched CVEs:** Add the `cve_check` class to your Bitbake `local.conf` to identify patched CVEs. Ensure **PHASE 7** picks up the `cve-check` file. Optionally, specify the output CVE check file using `--cve_check_file FILE` if an alternative location is needed. See [CVE Patching](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#cve-patching) for more information.
+6. **Fuzzy Match Modified Recipes:** For recipes modified from standard OE versions, optionally use `--max_oe_version_distance X.X.X` (e.g., `0.0.1` to `0.0.10`) for fuzzy matching against OE recipes. Be cautious, as this can sometimes disable correct matches. It's recommended to create two projects and compare results with and without this parameter. See [OE Difference Calculations](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#example-distance-calculations-for---max_oe_version_difference) for more information.
 7. **Process Image Manifest:** To include the Linux kernel and other packages specified in the image manifest, consider adding `--modes IMAGE_MANIFEST`. Optionally, specify the `image_license.manifest` file path (`--image_license_manifest FILEPATH`) if the latest build is not desired.
 8. **Add Components by CPE:** Add `--modes CPE_COMPS` to create packages not matched by other methods through CPE lookup. Note that not all packages have published CPEs.
 9. **Process Kernel Vulnerabilities:** To ignore kernel vulnerabilities not within compiled kernel sources, add `--modes KERNEL_VULNS` (assumes `IMAGE_MANIFEST` mode).
@@ -174,7 +176,7 @@ Explanation of modes:
   - `SIG_SCAN_ALL`   - Scan all recipes/packages using Signature scan
   - `CPE_COMPS`      - Add unmatched recipes as packages by CPE lookup (where CPEs available)
   - `CUSTOM_COMPS`   - Create Custom Components for unmatched recipes (note Custom Components are only placeholders for SBOM export - no vulnerability or other data is provided)
-  - `CVE_PATCHES`    - Process locally patched CVEs from `cve_check` class (set in `DEFAULT` mode)
+  - `CVE_PATCHES`    - Process locally patched CVEs from `cve_check` class (set in `DEFAULT` mode) - See [CVE Patching](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#cve-patching)
   - `KERNEL_VULNS`   - Process kernel modules and mark vulns as unaffected where associated modules do not exist in the kernel
   - `ALL`            - Includes `OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS` (but not `SIG_SCAN_ALL`)
 
@@ -223,7 +225,7 @@ Create BD-SCA project version from Yocto project
 
 ### Scan Mode Configuration Parameter - OPTIONAL:
 
-  * `--modes MODES`: A comma-delimited list of scan modes (no spaces) selected from [ALL,DEFAULT,OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,SIG_SCAN_ALL,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS]
+  * `--modes MODES`: A comma-delimited list of scan modes (no spaces) selected from [ALL,DEFAULT,OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,SIG_SCAN_ALL,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS] - see [Scan Modes](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#scan-modes).
 
 ### Yocto Project Configuration Parameters - OPTIONAL:
 
@@ -236,13 +238,13 @@ Create BD-SCA project version from Yocto project
   * `--download_dir DOWNLOAD_DIR`: Alternate directory where original OSS source is downloaded (defaults to `poky/build/downloads`).
   * `--package_dir PACKAGE_DIR`: Alternate directory where package files are downloaded (e.g., `poky/build/tmp/deploy/rpm/<ARCH>`).
   * `--image_package_type IMAGE_PACKAGE_TYPE`: Package type used for installing packages (specify one of `rpm`, `deb`, or `ipx` - default `rpm`).
-  * `--kernel_recipe`: Define a non-standard kernel recipe name (defaults to 'linux-yocto').
+  * `--kernel_recipe RECIPE_NAME`: Define a non-standard kernel recipe name (defaults to 'linux-yocto').
 
 ### Script Behavior Parameters - OPTIONAL:
 
   * `--skip_oe_data`: Do not download layers/recipes/layers from `layers.openembedded.org` APIs. These are used to review origin layers and revisions within recipes to ensure more components are matched against the Black Duck KnowledgeBase (KB). Useful where recipes have been moved to new layers against the template recipes provided by OE - (equivalent to removing OE_RECIPES from --modes).
   * `--oe_data_folder OE_DATA_FOLDER`: Folder to contain OE data files. If files don't exist, they will be downloaded; if they exist, they will be used without re-downloading. Creates OE data files in the specified folder if they don't already exist. If files exist, they are used without re-downloading. This allows offline usage of OE data or reduces large data transfers if the script is run frequently. **RECOMMENDED.**
-  * `--max_oe_version_distance MAX_OE_VERSION_DISTANCE`: When no exact match, use the closest previous recipe version up to the specified distance against OE data. Setting this value allows close (previous) recipe version matching. The value must be in `MAJOR.MINOR.PATCH` format (e.g., `0.10.0`). **CAUTION**: Setting this value too high may cause components to be matched against older recipes in the OE data, potentially leading to different vulnerability reports. It's generally better to maintain a close relationship between matched versions and project versions. Consider values in the range `0.0.1` to `0.0.10`.
+  * `--max_oe_version_distance MAX_OE_VERSION_DISTANCE`: When no exact match, use the closest previous recipe version up to the specified distance against OE data. Setting this value allows close (previous) recipe version matching. The value must be in `MAJOR.MINOR.PATCH` format (e.g., `0.10.0`). **CAUTION**: Setting this value too high may cause components to be matched against older recipes in the OE data, potentially leading to different vulnerability reports. It's generally better to maintain a close relationship between matched versions and project versions. Consider values in the range `0.0.1` to `0.0.10`. See [OE Difference Calculations](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#example-distance-calculations-for---max_oe_version_difference).
   * `--skip_sig_scan`: Do not signature scan downloads and packages. By default, only recipes not matched from OE data are scanned (equivalent to removing SIG_SCAN from --modes)
 
 ### Connection & Detect Configuration Parameters - OPTIONAL:
@@ -314,14 +316,12 @@ The `CVE_PATCHES` mode enables this feature which is included in the `DEFAULT` m
 ## Troubleshooting
 
   * **Ensure required parameters are specified**: Double-check that you've provided all minimum required parameters, including the Yocto target (`-t`).
-  * **Verify prerequisites and build status**: Confirm all prerequisites are met and that you have a built Yocto project with a generated `license.manifest` file.
+  * **Verify prerequisites and build status**: Confirm all prerequisites are met and that you have a built Yocto project with a generated `license.manifest` file - see [Prerequisites](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#prerequisites)
   * **Enable debug logging**: Use the `--debug` parameter to turn on detailed logging.
   * **Check code locations in Black Duck**: After the scan, verify that your Black Duck project's **Source** tab shows 2 or 3 separate code locations: one for the initial SBOM import, one for Signature Scan, and optionally one for the second SBOM used to create CPE matching/custom components.
-  * **Review Phase 6 information**: Phase 6 of the console output lists counts of recipes; check the `total components in BOM` against `total recipes in Yocto project`. The `Recipes NOT in BOM` count indicates missing recipes (specify `--recipe_report FILE` to create a full list of recipes and examine missing recipes); consider adding `--modes CPE_COMPS,CUSTOM_COMPS` or
-`--modes ALL` to process missing recipes using additional techniques.
-  * **Missing packages**: If a specific package appears missing from the project, confirm you are looking for the **recipe name**, not the package name (See FAQs for an explanation of Yocto recipes vs. packages). The modes `SIG_SCAN`, `CPE_COMPS` and `CUSTOM_COMPS` can be used in `--modes` to process missing recipes using various techniques.
-  * **Linux kernel missing**: Consider adding the `--modes IMAGE_MANIFEST` mode to include packages in the image manifest, which usually includes the Linux kernel. If the kernel still isn't identified due to a custom name format, consider adding the required kernel version manually to the project. Use `--image_license_manifest PATH` to specify a different path to the
-`image_license.manifest` file if in a non-standard location or the latest build is not desired.
+  * **Review Recipe matching information**: Specify `--recipe_report FILE` to create a full list of recipes and examine missing recipes; consider using `--max_oe_version_difference X.X.X` to enable fuzzy matching of OE recipes, or adding additional scan modes to add missing recipes.
+  * **Missing packages**: If a specific package appears missing from the project, confirm you are looking for the **recipe name**, not the package name (See [FAQs](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#faqs) for an explanation of Yocto recipes vs. packages). The scan modes `SIG_SCAN`, `CPE_COMPS` and `CUSTOM_COMPS` can be specified in `--modes` to process missing recipes using various techniques (alternatively use `--modes ALL`).
+  * **Linux kernel missing**: Consider adding the `--modes IMAGE_MANIFEST` mode to include packages in the image manifest, which usually includes the Linux kernel. Use `--image_license_manifest PATH` to specify a different path to the `image_license.manifest` file if in a non-standard location or the latest build is not desired. Check the Linux Kernel recipe name ('linux-yocto' is expected - use parameter `--kernel_recipe mylinux` to specify a non-standard recipe name for the kernel). If the kernel still isn't identified due to a custom name format, consider adding the required kernel version manually to the project. 
 
 -----
 
