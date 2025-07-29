@@ -62,7 +62,8 @@ class Recipe:
 
     def cpe_string(self, conf):
         # cpe:2.3:a:*:glibc:2.40:*:*:*:*:*:*:*
-        ver = self.version.split('+')[0]
+        # ver = self.version.split('+')[0]
+        ver = self.clean_version_string()
         name = self.name
         if conf.kernel_recipe in self.name:
             name = 'linux_kernel'

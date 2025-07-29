@@ -1,6 +1,6 @@
 -----
 
-# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.2.0
+# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.2.1
 
 -----
 
@@ -352,6 +352,8 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 ## Release Notes
 
+* **v1.2.1**
+   * Minor fix for CPE lookup version strings
 * **v1.2.0**
    * Addition of --modes option to simplify multiple scan mode options:
    * Modes string can contain comma separated list (no spaces) from [ALL, OE_RECIPES*, IMAGE_MANIFEST, SIG_SCAN*, SIG_SCAN_ALL, CVE_PATCHES*, CPE_COMPS, CUSTOM_COMPS, KERNEL_VULNS] (modes marked with * run by default)
