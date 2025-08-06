@@ -306,7 +306,7 @@ class BOM:
 
         detect_cmd = cmd
         detect_cmd += f" --detect.source.path='{tdir}' --detect.project.name='{conf.bd_project}' " + \
-                      f"--detect.project.version.name='{conf.bd_version}' "
+                      f"--detect.project.version.name='{conf.bd_version}' --detect.project.group.name='{conf.bd_group}' "
         detect_cmd += f"--blackduck.url={conf.bd_url} "
         detect_cmd += f"--blackduck.api.token={conf.bd_api} "
         if conf.bd_trustcert:

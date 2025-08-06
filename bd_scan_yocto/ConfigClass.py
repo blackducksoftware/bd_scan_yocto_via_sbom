@@ -22,6 +22,9 @@ class Config:
         parser.add_argument("--blackduck_trust_cert",
                             help="Black Duck trust server cert (can use $BLACKDUCK_TRUST_CERT env var)",
                             action='store_true')
+        parser.add_argument("-g", "--group_name", type=str,
+                            help="Black Duck project group name",
+                            default="")
         parser.add_argument("-p", "--project", type=str,
                             help="Black Duck project to create (REQUIRED)",
                             default="")
@@ -153,6 +156,7 @@ class Config:
 
         self.output_file = ''
         self.bd_url = ''
+        self.bd_group = ''
         self.bd_project = ''
         self.bd_version = ''
         self.bd_api = ''
@@ -296,6 +300,9 @@ class Config:
             terminate = True
         if self.bd_url and self.bd_url[-1] == '/':
             self.bd_url = self.bd_url[:-1]
+
+        if args.group_name:
+            self.bd_group = args.group_name
 
         if args.project and args.version:
             self.bd_project = args.project
