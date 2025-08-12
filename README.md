@@ -59,6 +59,22 @@ The script can also **identify and process the Linux kernel**, determining its c
 
 -----
 
+## Prerequisites
+
+Before running the script, ensure you meet the following requirements:
+
+1.  **Yocto v2.1 or newer**
+2.  **Python 3.10 or newer**
+3.  **Black Duck SCA server 2024.7 or newer**
+4.  **Black Duck SCA API Token** with either:
+      * **Global Code Scanner** and **Global Project Manager** roles, OR
+      * **Project Code Scanner** and **BOM Manager** roles for an existing project.
+      * (Also **Global Component Manager** needed to create custom components if `--mode CUSTOM_COMPS` specified)
+5.  **Single-target Bitbake configurations only** are supported. Run this utility on one target at a time.
+6.  A **built Yocto project** with access to the build platform. Alternatively, specific outputs from the build can be used, though many script features may be limited so not recommended.
+
+-----
+
 ## Installation
 
 You have a few options for installing this utility:
@@ -105,21 +121,9 @@ You have a few options for installing this utility:
     cd bd_scan_yocto_via_sbom
     ```
 2.  Ensure prerequisite packages are installed (see the `pyproject.toml` file for a list).
-
------
-
-## Prerequisites
-
-Before running the script, ensure you meet the following requirements:
-
-1.  **Yocto v2.1 or newer**
-2.  **Black Duck SCA server 2024.1 or newer**
-3.  **Black Duck SCA API Token** with either:
-      * **Global Code Scanner** and **Global Project Manager** roles, OR
-      * **Project Code Scanner** and **BOM Manager** roles for an existing project.
-4.  **Single-target Bitbake configurations only** are supported. Run this utility on one target at a time.
-5.  A **built Yocto project** with access to the build platform. Alternatively, specific outputs from the build can be used, though some script features may be limited.
-6.  **Python 3.10 or newer**
+    ```bash
+    pip install .
+    ```
 
 -----
 
