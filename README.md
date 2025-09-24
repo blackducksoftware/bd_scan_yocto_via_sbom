@@ -72,6 +72,7 @@ Before running the script, ensure you meet the following requirements:
       * (Also **Global Component Manager** needed to create custom components if `--mode CUSTOM_COMPS` specified)
 5.  **Single-target Bitbake configurations only** are supported. Run this utility on one target at a time.
 6.  A **built Yocto project** with access to the build platform. Alternatively, specific outputs from the build can be used, though many script features may be limited so not recommended.
+7.  Ensure **license text entries in manifest files are SPDX compliant** to support SBOM upload. Custom licenses are not supported.
 
 -----
 
