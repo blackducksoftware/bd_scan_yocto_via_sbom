@@ -24,6 +24,7 @@ class BOM:
         self.complist = ComponentList()
         self.vulnlist = VulnList()
         self.CVEPatchedVulnList = []
+        self.CVEIgnoredVulnList = []
         self.bdver_dict = None
         self.projver = None
 
@@ -147,8 +148,10 @@ class BOM:
         # patched, skipped = self.vulnlist.process_patched(self.CVEPatchedVulnList, self.bd)
         # logging.info(f"- {patched} CVEs marked as patched in BD project ({skipped} already patched)")
 
-        patched = self.ignore_vulns_async(conf, self.CVEPatchedVulnList)
+        patched = self.patch_vulns_async(conf, self.CVEPatchedVulnList)
+        ignored = self.ignore_vulns_async(conf, self.CVEIgnoredVulnList)
         logging.info(f"- {patched} CVEs marked as patched in BD project")
+        logging.info(f"- {ignored} CVEs marked as ignored in BD project")
         return
 
     def wait_for_bom_completion(self):
@@ -242,6 +245,7 @@ class BOM:
             return False
 
         patched_vulns = []
+        ignored_vuls = []
         pkgvuln = {}
         for line in cvelines:
             arr = line.split(":")
@@ -260,12 +264,17 @@ class BOM:
                         cve = pkgvuln['CVE']
                         if reclist.check_recipe_exists(pkgvuln['package']) and cve not in patched_vulns:
                             patched_vulns.append(cve)
+                    elif pkgvuln['status'] == "Ignored":
+                        cve = pkgvuln['CVE']
+                        if reclist.check_recipe_exists(pkgvuln['package']) and cve not in ignored_vuls:
+                            ignored_vuls.append(cve)
                     pkgvuln = {}
 
-        logging.info(f"      {len(patched_vulns)} total patched CVEs loaded from cve_check file "
-                     f"(CVEs not identified in project yet")
+        logging.info(f"      {len(patched_vulns) + len(ignored_vuls)} total patched and ignored CVEs loaded from cve_check file "
+                     f"(CVEs not identified in project yet)")
         self.CVEPatchedVulnList = patched_vulns
-        if len(patched_vulns) > 0:
+        self.CVEIgnoredVulnList = ignored_vuls
+        if len(patched_vulns) > 0 or len(ignored_vuls) > 0:
             return True
         return False
 
@@ -278,7 +287,7 @@ class BOM:
             logging.info(f"- loaded CVEs from cve_check file {cve_file}")
 
             patched_vulns = []
-
+            ignored_vuls = []
             if data and 'package' in data:
                 # Parse each JSON object separately
                 for obj in data['package']:
@@ -289,10 +298,15 @@ class BOM:
                                 id = issue['id']
                                 if reclist.check_recipe_exists(obj['name']) and id not in patched_vulns:
                                     patched_vulns.append(id)
+                            elif issue.get("status") == "Ignored":
+                                id = issue['id']
+                                if reclist.check_recipe_exists(obj['name']) and id not in ignored_vuls:
+                                    ignored_vuls.append(id)
                 self.CVEPatchedVulnList = patched_vulns
-            logging.info(f"      {len(patched_vulns)} total patched CVEs loaded from cve_check file "
-                         f"(CVEs not identified in project yet")
-            if len(patched_vulns) > 0:
+                self.CVEIgnoredVulnList = ignored_vuls
+            logging.info(f"      {len(patched_vulns) + len(ignored_vuls)} total patched and ignored CVEs loaded from cve_check file "
+                     f"(CVEs not identified in project yet)")
+            if len(patched_vulns) > 0 or len(ignored_vuls) > 0:
                 return True
 
         except Exception as e:
@@ -401,6 +415,13 @@ class BOM:
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
         count = asyncio.run(self.vulnlist.async_ignore_vulns(conf, self.bd, cve_list))
+        return count
+
+    def patch_vulns_async(self, conf: "Config", cve_list):
+        if platform.system() == "Windows":
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+        count = asyncio.run(self.vulnlist.async_patch_vulns(conf, self.bd, cve_list))
         return count
 
     def process(self, reclist: "RecipeListClass"):
