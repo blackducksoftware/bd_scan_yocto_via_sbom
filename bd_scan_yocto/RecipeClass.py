@@ -1,7 +1,7 @@
 import re
 import logging
 
-from .BOMClass import BOM
+# from .BOMClass import BOM
 
 
 class Recipe:
@@ -40,7 +40,7 @@ class Recipe:
         # Remove +git*
         # Remove -snapshot*
         # ret_version = re.sub(r"\+git.*", r"+gitX", version, flags=re.IGNORECASE)
-        varr = re.split("[+_-]", self.version)
+        varr = re.split("[+_~-]", self.version)
         ret_version = varr[0]
         return ret_version
 

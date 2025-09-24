@@ -270,8 +270,8 @@ class BOM:
                             ignored_vuls.append(cve)
                     pkgvuln = {}
 
-        logging.info(f"      {len(patched_vulns) + len(ignored_vuls)} total patched and ignored CVEs loaded from cve_check file "
-                     f"(CVEs not identified in project yet)")
+        logging.info(f"      {len(patched_vulns) + len(ignored_vuls)} total patched and ignored CVEs loaded from "
+                     f"cve_check file (CVEs not identified in project yet)")
         self.CVEPatchedVulnList = patched_vulns
         self.CVEIgnoredVulnList = ignored_vuls
         if len(patched_vulns) > 0 or len(ignored_vuls) > 0:
@@ -304,8 +304,8 @@ class BOM:
                                     ignored_vuls.append(id)
                 self.CVEPatchedVulnList = patched_vulns
                 self.CVEIgnoredVulnList = ignored_vuls
-            logging.info(f"      {len(patched_vulns) + len(ignored_vuls)} total patched and ignored CVEs loaded from cve_check file "
-                     f"(CVEs not identified in project yet)")
+            logging.info(f"      {len(patched_vulns) + len(ignored_vuls)} total patched and ignored CVEs loaded from "
+                         f"cve_check file (CVEs not identified in project yet)")
             if len(patched_vulns) > 0 or len(ignored_vuls) > 0:
                 return True
 

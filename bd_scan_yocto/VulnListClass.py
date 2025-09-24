@@ -47,7 +47,8 @@ class VulnList:
                 cve = vuln.related_vuln()
                 if cve not in cve_list or vuln.is_remediated(vuln.RemediationStatus.IGNORED):
                     continue
-                vuln_task = asyncio.ensure_future(vuln.async_remediate_vuln(conf, session, token, vuln.RemediationStatus.IGNORED))
+                vuln_task = asyncio.ensure_future(vuln.async_remediate_vuln(conf, session, token,
+                                                                            vuln.RemediationStatus.IGNORED))
                 vuln_tasks.append(vuln_task)
 
             vuln_data = dict(await asyncio.gather(*vuln_tasks))
@@ -65,7 +66,8 @@ class VulnList:
                 cve = vuln.related_vuln()
                 if cve not in cve_list or vuln.is_remediated(vuln.RemediationStatus.PATCHED):
                     continue
-                vuln_task = asyncio.ensure_future(vuln.async_remediate_vuln(conf, session, token, vuln.RemediationStatus.PATCHED))
+                vuln_task = asyncio.ensure_future(vuln.async_remediate_vuln(conf, session, token,
+                                                                            vuln.RemediationStatus.PATCHED))
                 vuln_tasks.append(vuln_task)
 
             vuln_data = dict(await asyncio.gather(*vuln_tasks))

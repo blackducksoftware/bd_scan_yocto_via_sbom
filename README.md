@@ -41,7 +41,7 @@ This utility addresses these gaps by creating a comprehensive Black Duck SCA pro
 
 For guidance on optimizing Yocto project scans with this utility, refer to the **Best Practice Recommendations** section below.
 
-Note the addition of new `--modes` parameter in v1.2.0 to control scans to be performed (legacy scan parameters still supported) - see Scan Mode section below.
+Note the addition of new `--modes` parameter in v1.2.0+ to control scans to be performed (legacy scan parameters still supported) - see Scan Mode section below.
 
 ### Understanding Yocto and Why This Script is Needed
 
@@ -412,5 +412,5 @@ embedded OSS within recipes.
 9.  **I want to scan all recipes, including development dependencies, as opposed to only those in the delivered image.**
     Run the command `bitbake -g` to create a `task-depends.dot` file, then use the parameter `--task_depends_dot_file FILE`, where `FILE` is the path to the generated file.
 
-10. **Unable to upload SPDX file during script run in phases 3 and 5**: All licenses in the license.manifest must be valid SPDX licenses for the SBOM to be importable. Check licenses at https://spdx.org/licenses/ (suggest checking compliance via an LLM) and modify any non-compliant license text. Note that license text in the license.manifest is only used to define the licenses for components added as Custom Components (CUSTOM_COMPS), but is not referenced for components added by the OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CPE_COMPS options which use the licenses from the KB instead. Resolved licenses can be modified within the project version or globally once components have been added to the BOM.
+10. **Unable to upload SPDX file during script run in phases 3 and 5**: All licenses in the license.manifest must be valid SPDX licenses for the SBOM to be importable. Check licenses at https://spdx.org/licenses/ (suggest checking compliance via an LLM) and modify any non-compliant license text in recipes or manifest files. Note that license text in the manifest files is only used to define the licenses for components added as Custom Components (CUSTOM_COMPS), but is not used for components added by the OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CPE_COMPS options which will reference the licenses from the KB instead. Resolved licenses can be modified within the project version or globally once components have been added to the BOM.
 

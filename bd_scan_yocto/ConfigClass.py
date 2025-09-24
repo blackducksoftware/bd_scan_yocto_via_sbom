@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.2.1"
+script_version = "v1.2.2"
 
 
 class Config:
@@ -59,9 +59,9 @@ class Config:
                                  "determined from Bitbake command)",
                             default="")
         parser.add_argument("--task_depends_dot_file", type=str,
-                            help="OPTIONAL Process task-depends.dot file created by 'bitbake -g' command "
-                                 "(if 'license.manifest' is not also specified, will process ALL recipes including dev "
-                                 "dependencies, --target is also required)",
+                            help="OPTIONAL Specify the path to the task-depends.dot file created by 'bitbake -g' "
+                                 "command (if 'license.manifest' is not also specified, will process ALL recipes "
+                                 "including dev dependencies, --target is also required)",
                             default="")
         parser.add_argument("-c", "--cve_check_file", type=str,
                             help="OPTIONAL CVE check output file to mark locally patched CVEs as patched in project",

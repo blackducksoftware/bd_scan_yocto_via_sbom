@@ -2,6 +2,7 @@ import logging
 import datetime
 from enum import Enum
 
+
 class Vuln:
     class RemediationStatus(str, Enum):
         PATCHED = 'PATCHED'
