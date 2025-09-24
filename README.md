@@ -1,6 +1,6 @@
 -----
 
-# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.2.1
+# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.2.2
 
 -----
 
@@ -325,7 +325,8 @@ The `CVE_PATCHES` mode enables this feature which is included in the `DEFAULT` m
   * **Check code locations in Black Duck**: After the scan, verify that your Black Duck project's **Source** tab shows 2 or 3 separate code locations: one for the initial SBOM import, one for Signature Scan, and optionally one for the second SBOM used to create CPE matching/custom components.
   * **Review Recipe matching information**: Specify `--recipe_report FILE` to create a full list of recipes and examine missing recipes; consider using `--max_oe_version_difference X.X.X` to enable fuzzy matching of OE recipes, or adding additional scan modes to add missing recipes.
   * **Missing packages**: If a specific package appears missing from the project, confirm you are looking for the **recipe name**, not the package name (See [FAQs](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#faqs) for an explanation of Yocto recipes vs. packages). The scan modes `SIG_SCAN`, `CPE_COMPS` and `CUSTOM_COMPS` can be specified in `--modes` to process missing recipes using various techniques (alternatively use `--modes ALL`).
-  * **Linux kernel missing**: Consider adding the `--modes IMAGE_MANIFEST` mode to include packages in the image manifest, which usually includes the Linux kernel. Use `--image_license_manifest PATH` to specify a different path to the `image_license.manifest` file if in a non-standard location or the latest build is not desired. Check the Linux Kernel recipe name ('linux-yocto' is expected - use parameter `--kernel_recipe mylinux` to specify a non-standard recipe name for the kernel). If the kernel still isn't identified due to a custom name format, consider adding the required kernel version manually to the project. 
+  * **Linux kernel missing**: Consider adding the `--modes IMAGE_MANIFEST` mode to include packages in the image manifest, which usually includes the Linux kernel. Use `--image_license_manifest PATH` to specify a different path to the `image_license.manifest` file if in a non-standard location or the latest build is not desired. Check the Linux Kernel recipe name ('linux-yocto' is expected - use parameter `--kernel_recipe mylinux` to specify a non-standard recipe name for the kernel). If the kernel still isn't identified due to a custom name format, consider adding the required kernel version manually to the project.
+  * **Unable to upload SPDX file during script run**: All licenses in the license.manifest must be valid SPDX licenses for the SBOM to be importable. Check licenses at https://spdx.org/licenses/. Note that license text in the license.manifest is only used for components added as Custom Components (CUSTOM_COMPS), and is not referenced for components added by the OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CPE_COMPS options as the licenses from the KB will be used instead, but the license entries must be SPDX compliant to be uploadable.
 
 -----
 
@@ -410,3 +411,6 @@ embedded OSS within recipes.
 
 9.  **I want to scan all recipes, including development dependencies, as opposed to only those in the delivered image.**
     Run the command `bitbake -g` to create a `task-depends.dot` file, then use the parameter `--task_depends_dot_file FILE`, where `FILE` is the path to the generated file.
+
+10. **Unable to upload SPDX file during script run in phases 3 and 5**: All licenses in the license.manifest must be valid SPDX licenses for the SBOM to be importable. Check licenses at https://spdx.org/licenses/ (suggest checking compliance via an LLM) and modify any non-compliant license text. Note that license text in the license.manifest is only used to define the licenses for components added as Custom Components (CUSTOM_COMPS), but is not referenced for components added by the OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CPE_COMPS options which use the licenses from the KB instead. Resolved licenses can be modified within the project version or globally once components have been added to the BOM.
+
