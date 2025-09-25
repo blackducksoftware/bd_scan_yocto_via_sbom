@@ -330,7 +330,7 @@ class RecipeList:
 
                 if conf.run_custom_components and not recipe.cpe_component:
                     # v1.1.2 - add component to sbom for custom component creation
-                    add_sbom.add_recipe(recipe, clean_version=True)
+                    add_sbom.add_recipe(recipe, clean_version=True, output_license=True)
                     recipe.custom_component = True
                     logging.info(f"- Added component {recipe.name}/{recipe.version} to SBOM as custom component")
 
