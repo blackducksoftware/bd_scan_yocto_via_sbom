@@ -326,7 +326,7 @@ class BB:
                 cfile = f"{conf.log_dir}/cve/cve-summary.json"
                 if os.path.isfile(cfile):
                     cvefile = cfile
-            if cvefile != '':
+            if cvefile == '':
                 # imgdir = os.path.join(conf.deploy_dir, "images", machine)
                 # if os.path.isdir(imgdir):
                 #     for file in sorted(os.listdir(imgdir)):
