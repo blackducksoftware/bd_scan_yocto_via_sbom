@@ -1,6 +1,6 @@
 -----
 
-# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.2.2
+# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.2.3
 
 -----
 
@@ -358,6 +358,10 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 ## Release Notes
 
+* **v1.2.3**
+   * Removed license entries from SBOM in phase 3 to support non-compliant license types.
+* **v1.2.2**
+   * Merged PR to support IGNORED vulnerability types (in addition to PATCHED) and 
 * **v1.2.1**
    * Minor fix for CPE lookup version strings
 * **v1.2.0**

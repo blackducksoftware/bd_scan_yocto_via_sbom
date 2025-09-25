@@ -80,7 +80,7 @@ class SBOM:
         rand_hex_str = f"{hex1}-{hex2}-{hex3}-{hex4}-{hex5}"
         return rand_hex_str
 
-    def add_recipe(self, recipe: "Recipe", clean_version=False):
+    def add_recipe(self, recipe: "Recipe", clean_version=False, output_license=False):
         spdxid = self.create_spdx_ident()
         if recipe.oe_recipe == {}:
             if recipe.layer:
@@ -136,9 +136,12 @@ class SBOM:
             "name": self.quote(recipe_name),
             "versionInfo": self.quote(f"{recipe_version}")
         }
-        if recipe.license:
+        if recipe.license and output_license:
             package_json["licenseConcluded"] = recipe.license
             package_json["licenseDeclared"] = recipe.license
+        else:
+            package_json["licenseConcluded"] = "NOASSERTION"
+            package_json["licenseDeclared"] = "NOASSERTION"
 
         self.json['packages'].append(package_json)
         rel_json = {
