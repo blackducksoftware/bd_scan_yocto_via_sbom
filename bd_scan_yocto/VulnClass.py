@@ -77,6 +77,43 @@ class Vuln:
 
         return ''
 
+    async def async_get_cve(self, session, bd_base_url, token):
+        """Async version to get CVE, fetching linked vulnerability if needed"""
+        try:
+            if self.data['vulnerabilityWithRemediation']['source'] == 'NVD':
+                return self.id()
+            elif self.data['vulnerabilityWithRemediation']['source'] == 'BDSA':
+                # Try related_vuln first (no API call needed)
+                rel_vuln = self.related_vuln()
+                if rel_vuln:
+                    return rel_vuln
+
+                # Need to fetch linked vulnerability
+                vuln_url = f"{bd_base_url}/api/vulnerabilities/{self.id()}"
+                headers = {
+                    'accept': 'application/vnd.blackducksoftware.vulnerability-4+json',
+                    'Authorization': f'Bearer {token}'
+                }
+
+                async with session.get(vuln_url, headers=headers) as response:
+                    if response.status == 200:
+                        vuln_data = await response.json()
+                        if vuln_data.get('source') == 'BDSA':
+                            for link in vuln_data.get('_meta', {}).get('links', []):
+                                if link.get('rel') == 'related-vulnerability' and link.get('label') == 'NVD':
+                                    return link['href'].split("/")[-1]
+                        return self.id()
+            return ''
+        except Exception as e:
+            logging.warning(f"Error fetching CVE for {self.id()}: {e}")
+            return self.related_vuln()  # Fallback to related_vuln
+
+    def get_cached_cve(self):
+        """Get CVE from cache (set by async_prefetch_cves) or fallback to related_vuln"""
+        if hasattr(self, '_cached_cve'):
+            return self._cached_cve
+        return self.related_vuln()  # Fallback for backwards compatibility
+
     def patch(self, bd):
         status = "PATCHED"
         comment = "Patched by bitbake recipe"

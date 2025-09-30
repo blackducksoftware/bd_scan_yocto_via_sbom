@@ -142,11 +142,11 @@ class BOM:
     #     print(tabulate(table, headers=header, tablefmt="tsv"))
     #
 
-    def process_patched_cves(self, conf: "Config"):
+    async def process_patched_cves(self, conf: "Config"):
         self.get_vulns()
 
-        # patched, skipped = self.vulnlist.process_patched(self.CVEPatchedVulnList, self.bd)
-        # logging.info(f"- {patched} CVEs marked as patched in BD project ({skipped} already patched)")
+        # Pre-fetch all CVE data asynchronously upfront
+        await self.vulnlist.async_prefetch_cves(self.bd)
 
         patched = self.patch_vulns_async(conf, self.CVEPatchedVulnList)
         ignored = self.ignore_vulns_async(conf, self.CVEIgnoredVulnList)

@@ -6,6 +6,7 @@ from .BBClass import BB
 from .ConfigClass import Config
 import logging
 import sys
+import asyncio
 
 import tempfile
 from bd_kernel_vulns import main as bdkv_main
@@ -127,7 +128,7 @@ def main():
     if conf.process_cves and conf.cve_check_file:
         # bom.get_proj()
         if bom.process_cve_file(conf.cve_check_file, reclist):
-            bom.process_patched_cves(conf)
+            asyncio.run(bom.process_patched_cves(conf))
     else:
         logging.info("Skipped - mode CVE_PATCHES not specified or no cve_check output file identified")
 
