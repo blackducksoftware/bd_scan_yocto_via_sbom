@@ -44,7 +44,7 @@ class VulnList:
         async with aiohttp.ClientSession(trust_env=True) as session:
             vuln_tasks = []
             for vuln in self.vulns:
-                cve = vuln.related_vuln()
+                cve = vuln.get_cve(bd)
                 if cve not in cve_list or vuln.is_remediated(vuln.RemediationStatus.IGNORED):
                     continue
                 vuln_task = asyncio.ensure_future(vuln.async_remediate_vuln(conf, session, token,
@@ -63,7 +63,7 @@ class VulnList:
         async with aiohttp.ClientSession(trust_env=True) as session:
             vuln_tasks = []
             for vuln in self.vulns:
-                cve = vuln.related_vuln()
+                cve = vuln.get_cve(bd)
                 if cve not in cve_list or vuln.is_remediated(vuln.RemediationStatus.PATCHED):
                     continue
                 vuln_task = asyncio.ensure_future(vuln.async_remediate_vuln(conf, session, token,
