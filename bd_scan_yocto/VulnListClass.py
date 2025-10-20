@@ -44,8 +44,7 @@ class VulnList:
         async with aiohttp.ClientSession(trust_env=True) as session:
             vuln_tasks = []
             for vuln in self.vulns:
-                cve = vuln.related_vuln()
-                if cve not in cve_list or vuln.is_remediated(vuln.RemediationStatus.IGNORED):
+                if vuln.cve not in cve_list or vuln.is_remediated(vuln.RemediationStatus.IGNORED):
                     continue
                 vuln_task = asyncio.ensure_future(vuln.async_remediate_vuln(conf, session, token,
                                                                             vuln.RemediationStatus.IGNORED))
@@ -53,7 +52,6 @@ class VulnList:
 
             vuln_data = dict(await asyncio.gather(*vuln_tasks))
             await asyncio.sleep(0.250)
-
         return len(vuln_data)
 
     async def async_patch_vulns(self, conf, bd, cve_list):
@@ -63,8 +61,7 @@ class VulnList:
         async with aiohttp.ClientSession(trust_env=True) as session:
             vuln_tasks = []
             for vuln in self.vulns:
-                cve = vuln.related_vuln()
-                if cve not in cve_list or vuln.is_remediated(vuln.RemediationStatus.PATCHED):
+                if vuln.cve not in cve_list or vuln.is_remediated(vuln.RemediationStatus.PATCHED):
                     continue
                 vuln_task = asyncio.ensure_future(vuln.async_remediate_vuln(conf, session, token,
                                                                             vuln.RemediationStatus.PATCHED))
@@ -72,5 +69,19 @@ class VulnList:
 
             vuln_data = dict(await asyncio.gather(*vuln_tasks))
             await asyncio.sleep(0.250)
-
         return len(vuln_data)
+
+    async def async_link_cve_to_bdsa(self, conf, bd):
+        token = bd.session.auth.bearer_token
+        logging.info("- linking bdsa to cves ...")
+
+        async with aiohttp.ClientSession(trust_env=True) as session:
+            cve_tasks = []
+            
+            for vuln in self.vulns:
+                cve_task = asyncio.create_task(vuln.async_set_cve(conf, session, token))
+                
+                cve_tasks.append(cve_task)
+
+            await asyncio.gather(*cve_tasks)
+            await asyncio.sleep(0.250)

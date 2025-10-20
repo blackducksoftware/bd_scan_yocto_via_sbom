@@ -148,6 +148,7 @@ class BOM:
         # patched, skipped = self.vulnlist.process_patched(self.CVEPatchedVulnList, self.bd)
         # logging.info(f"- {patched} CVEs marked as patched in BD project ({skipped} already patched)")
 
+        self.link_cve_to_bdsa(conf)
         patched = self.patch_vulns_async(conf, self.CVEPatchedVulnList)
         ignored = self.ignore_vulns_async(conf, self.CVEIgnoredVulnList)
         logging.info(f"- {patched} CVEs marked as patched in BD project")
@@ -423,6 +424,12 @@ class BOM:
 
         count = asyncio.run(self.vulnlist.async_patch_vulns(conf, self.bd, cve_list))
         return count
+    
+    def link_cve_to_bdsa(self, conf: "Config"):
+        if platform.system() == "Windows":
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+        asyncio.run(self.vulnlist.async_link_cve_to_bdsa(conf, self.bd))
 
     def process(self, reclist: "RecipeListClass"):
         self.wait_for_bom_completion()

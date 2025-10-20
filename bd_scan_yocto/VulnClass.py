@@ -10,6 +10,7 @@ class Vuln:
 
     def __init__(self, data):
         self.data = data
+        self.cve = ''
 
     def id(self):
         try:
@@ -119,6 +120,42 @@ class Vuln:
             return self.data['_meta']['href']
         except KeyError:
             return ''
+    
+    async def async_set_cve(self, conf, session, token):
+        self.cve = ''
+        if self.data['vulnerabilityWithRemediation']['source'] == 'NVD':
+            self.cve = self.id()
+        elif self.data['vulnerabilityWithRemediation']['source'] == 'BDSA':
+            rel_vuln = self.related_vuln()
+            if not rel_vuln:
+                if conf.bd_trustcert:
+                    ssl = False
+                else:
+                    ssl = None
+
+                headers = {
+                    'accept': "application/vnd.blackducksoftware.bill-of-materials-6+json",
+                    'Authorization': f'Bearer {token}',
+                }
+                
+                async with session.get(self.url(), headers=headers, ssl=ssl) as response:
+                    vuln_data = await response.json()
+                    
+                try:
+                    if vuln_data['source'] == 'BDSA':
+                        for x in vuln_data['_meta']['links']:
+                            if x['rel'] == 'related-vulnerability':
+                                if x['label'] == 'NVD':
+                                    cve = x['href'].split("/")[-1]
+                                    self.cve = cve
+                                break
+                    else:
+                        self.cve = self.id()
+                except KeyError:
+                    return
+            self.cve = rel_vuln
+        logging.debug("CVE of " + self.id() + " set to: " + self.cve)
+
 
     async def async_remediate_vuln(self, conf, session, token, remediationStatus):
         if conf.bd_trustcert:
