@@ -145,6 +145,9 @@ class BOM:
     def process_patched_cves(self, conf: "Config"):
         self.get_vulns()
 
+        conf.logger.info("- Getting detailed data for associated vulnerabilities ...")
+        self.process_associatedvulns_async(conf)
+
         # patched, skipped = self.vulnlist.process_patched(self.CVEPatchedVulnList, self.bd)
         # logging.info(f"- {patched} CVEs marked as patched in BD project ({skipped} already patched)")
 
