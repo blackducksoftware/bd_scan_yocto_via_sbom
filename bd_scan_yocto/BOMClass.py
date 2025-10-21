@@ -428,3 +428,10 @@ class BOM:
         self.wait_for_bom_completion()
         self.get_comps()
         reclist.mark_recipes_in_bom(self)
+
+    def process_associatedvulns_async(self, conf):
+        if platform.system() == "Windows":
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+        self.vulnlist.add_associatedvuln_data(asyncio.run(self.vulnlist.async_get_associatedvuln_data(self.bd, conf)), conf)
+

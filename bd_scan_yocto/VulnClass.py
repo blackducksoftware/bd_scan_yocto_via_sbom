@@ -10,6 +10,7 @@ class Vuln:
 
     def __init__(self, data):
         self.data = data
+        self.linked_cve = ''
 
     def id(self):
         try:
@@ -144,3 +145,24 @@ class Vuln:
             res = response.status
 
         return self.id(), res
+
+    def get_associated_vuln_url(self, bd):
+        return f"{bd.base_url}/api/vulnerabilities/{self.id()}"
+
+    async def async_get_associatedvuln_data(self, bd, conf, session, token):
+        if conf.bd_trustcert:
+            ssl = False
+        else:
+            ssl = None
+
+        headers = {
+            # 'accept': "application/vnd.blackducksoftware.bill-of-materials-6+json",
+            'Authorization': f'Bearer {token}',
+        }
+        # resp = globals.bd.get_json(thishref, headers=headers)
+        async with session.get(self.get_associated_vuln_url(bd), headers=headers, ssl=ssl) as resp:
+            result_data = await resp.json()
+            if resp.status != 200:
+                print(result_data)
+
+        return self.id(), result_data

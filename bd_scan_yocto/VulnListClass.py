@@ -74,3 +74,47 @@ class VulnList:
             await asyncio.sleep(0.250)
 
         return len(vuln_data)
+
+    async def async_get_associatedvuln_data(self, bd, conf):
+        token = bd.session.auth.bearer_token
+
+        async with aiohttp.ClientSession(trust_env=True) as session:
+            vuln_tasks = []
+            count = 0
+            processed_cves = []
+            for vuln in self.vulns:
+                # vuln_task = asyncio.ensure_future(vuln.async_get_vuln_data(bd, conf, session, token))
+                # vuln_tasks.append(vuln_task)
+
+                if vuln.get_vuln_origin() == 'BDSA':
+                    linked_vuln = vuln.get_linked_cve()
+                    if linked_vuln != '':
+                        if linked_vuln in processed_cves:
+                            conf.logger.debug(f"Skipping {linked_vuln} as already processed")
+                            continue
+                        lvuln = Vuln({}, conf, id=linked_vuln)
+                        # self.associated_vulns.append(lvuln)
+                        vuln_task = asyncio.ensure_future(lvuln.async_get_associatedvuln_data(bd, conf, session, token))
+                        vuln_tasks.append(vuln_task)
+                        processed_cves.append(linked_vuln)
+                        count += 1
+
+            conf.logger.debug(f"Getting data for {count} associated vulns ...")
+            vuln_data = dict(await asyncio.gather(*vuln_tasks))
+            await asyncio.sleep(0.250)
+
+        return vuln_data
+
+    def add_associatedvuln_data(self, data, conf):
+        try:
+            conf.logger.debug(f"Vulnlist: adding {len(data)} vulns from associated asyncdata")
+            for id, entry in data.items():
+                # id = BDSA
+                for vuln in self.vulns:
+                    if vuln.id == id:
+                        vuln.linked_cve = entry
+                        break
+        except Exception as e:
+            conf.logger.error(f"Error processing linked CVE: {e}")
+
+        return
