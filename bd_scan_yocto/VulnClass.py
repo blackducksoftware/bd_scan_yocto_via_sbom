@@ -18,11 +18,11 @@ class Vuln:
         except KeyError:
             return ''
 
-    def status(self):
-        try:
-            return self.data['vulnerabilityWithRemediation']['remediationStatus']
-        except KeyError:
-            return ''
+    # def status(self):
+    #     try:
+    #         return self.data['vulnerabilityWithRemediation']['remediationStatus']
+    #     except KeyError:
+    #         return ''
 
     def severity(self):
         try:
@@ -30,34 +30,34 @@ class Vuln:
         except KeyError:
             return ''
 
-    def related_vuln(self):
+    def related_vuln_from_data(self):
         try:
             return self.data['vulnerabilityWithRemediation']['relatedVulnerability'].split('/')[-1]
         except KeyError:
             return ''
 
-    def component(self):
-        try:
-            return f"{self.data['componentName']}/{self.data['componentVersionName']}"
-        except KeyError:
-            return ''
+    # def component(self):
+    #     try:
+    #         return f"{self.data['componentName']}/{self.data['componentVersionName']}"
+    #     except KeyError:
+    #         return ''
 
-    def get_linked_vuln(self, bd):
-        vuln_url = f"{bd.base_url}/api/vulnerabilities/{self.id()}"
-        vuln_data = self.get_data(bd, vuln_url, "application/vnd.blackducksoftware.vulnerability-4+json")
-
-        try:
-            if vuln_data['source'] == 'BDSA':
-                for x in vuln_data['_meta']['links']:
-                    if x['rel'] == 'related-vulnerability':
-                        if x['label'] == 'NVD':
-                            cve = x['href'].split("/")[-1]
-                            return cve
-                        break
-            else:
-                return self.id()
-        except KeyError:
-            return ''
+    # def get_linked_vuln(self, bd):
+    #     vuln_url = f"{bd.base_url}/api/vulnerabilities/{self.id()}"
+    #     vuln_data = self.get_data(bd, vuln_url, "application/vnd.blackducksoftware.vulnerability-4+json")
+    #
+    #     try:
+    #         if vuln_data['source'] == 'BDSA':
+    #             for x in vuln_data['_meta']['links']:
+    #                 if x['rel'] == 'related-vulnerability':
+    #                     if x['label'] == 'NVD':
+    #                         cve = x['href'].split("/")[-1]
+    #                         return cve
+    #                     break
+    #         else:
+    #             return self.id()
+    #     except KeyError:
+    #         return ''
 
     @staticmethod
     def get_data(bd, url, accept_hdr):
@@ -67,16 +67,16 @@ class Vuln:
         res = bd.get_json(url, headers=headers)
         return res
 
-    def get_cve(self, bd):
-        if self.data['vulnerabilityWithRemediation']['source'] == 'NVD':
-            return self.id()
-        elif self.data['vulnerabilityWithRemediation']['source'] == 'BDSA':
-            rel_vuln = self.related_vuln()
-            if not rel_vuln:
-                rel_vuln = self.get_linked_vuln(bd)
-            return rel_vuln
-
-        return ''
+    # def get_cve(self, bd):
+    #     if self.data['vulnerabilityWithRemediation']['source'] == 'NVD':
+    #         return self.id()
+    #     elif self.data['vulnerabilityWithRemediation']['source'] == 'BDSA':
+    #         rel_vuln = self.related_vuln()
+    #         if not rel_vuln:
+    #             rel_vuln = self.get_linked_vuln(bd)
+    #         return rel_vuln
+    #
+    #     return ''
 
     def patch(self, bd):
         status = "PATCHED"
@@ -146,10 +146,10 @@ class Vuln:
 
         return self.id(), res
 
-    def get_associated_vuln_url(self, bd):
-        return f"{bd.base_url}/api/vulnerabilities/{self.id()}"
+    # def get_associated_vuln_url(self, bd):
+    #     return f"{bd.base_url}/api/vulnerabilities/{self.id()}"
 
-    async def async_get_associatedvuln_data(self, bd, conf, session, token):
+    async def async_get_relatedvuln(self, bd, conf, session, token):
         if conf.bd_trustcert:
             ssl = False
         else:
@@ -160,9 +160,38 @@ class Vuln:
             'Authorization': f'Bearer {token}',
         }
         # resp = globals.bd.get_json(thishref, headers=headers)
-        async with session.get(self.get_associated_vuln_url(bd), headers=headers, ssl=ssl) as resp:
+        async with session.get(f"{bd.base_url}/api/vulnerabilities/{self.id()}",
+                               headers=headers, ssl=ssl) as resp:
             result_data = await resp.json()
-            if resp.status != 200:
-                print(result_data)
 
-        return self.id(), result_data
+        return self.id(), self.get_related_cve_from_meta(result_data)
+
+    def get_vuln_origin(self):
+        try:
+            if ('vulnerabilityWithRemediation' in self.data and
+                    'source' in self.data['vulnerabilityWithRemediation'] and
+                    self.data['vulnerabilityWithRemediation']['source'] != ''):
+                return self.data['vulnerabilityWithRemediation']['source']
+            elif self.id().startswith('BDSA-'):
+                return 'BDSA'
+            elif self.id().startswith('CVE-'):
+                return 'NVD'
+            else:
+                return ''
+
+        except KeyError:
+            return ''
+
+    @staticmethod
+    def get_related_cve_from_meta(vuln_data):
+        try:
+            for x in vuln_data['_meta']['links']:
+                if x['rel'] == 'related-vulnerability':
+                    if x['label'] == 'NVD':
+                        cve = x['href'].split("/")[-1]
+                        return cve
+                    break
+            return ''
+        except Exception as e:
+            logging.error(f"Key error processing related vulnerability: {e}")
+        return ''

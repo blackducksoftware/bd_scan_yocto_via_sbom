@@ -13,29 +13,29 @@ class VulnList:
             vuln = Vuln(vulndata)
             self.vulns.append(vuln)
 
-    def process_patched(self, cve_list, bd):
-        patched = 0
-        skipped = 0
-        for vuln in self.vulns:
-            cve = vuln.get_cve(bd)
-            if cve and cve in cve_list:
-                if vuln.is_remediated(vuln.RemediationStatus.PATCHED):
-                    skipped += 1
-                    continue
-                if vuln.patch(bd):
-                    patched += 1
-        return patched, skipped
+    # def process_patched(self, cve_list, bd):
+    #     patched = 0
+    #     skipped = 0
+    #     for vuln in self.vulns:
+    #         cve = vuln.get_cve(bd)
+    #         if cve and cve in cve_list:
+    #             if vuln.is_remediated(vuln.RemediationStatus.PATCHED):
+    #                 skipped += 1
+    #                 continue
+    #             if vuln.patch(bd):
+    #                 patched += 1
+    #     return patched, skipped
 
-    def print(self, bd):
-        table = []
-        vulnid_list = []
-        for vuln in self.vulns:
-            if vuln.id() in vulnid_list:
-                continue
-            vulnid_list.append(vuln.id())
-            table.append([vuln.id(), vuln.status(), vuln.severity(), vuln.component(), vuln.get_linked_vuln(bd)])
-
-        return table, ["ID", "Status", "Severity", "Component", "Linked Vuln"]
+    # def print(self, bd):
+    #     table = []
+    #     vulnid_list = []
+    #     for vuln in self.vulns:
+    #         if vuln.id() in vulnid_list:
+    #             continue
+    #         vulnid_list.append(vuln.id())
+    #         table.append([vuln.id(), vuln.status(), vuln.severity(), vuln.component(), vuln.get_linked_vuln(bd)])
+    #
+    #     return table, ["ID", "Status", "Severity", "Component", "Linked Vuln"]
 
     async def async_ignore_vulns(self, conf, bd, cve_list):
         token = bd.session.auth.bearer_token
@@ -44,8 +44,11 @@ class VulnList:
         async with aiohttp.ClientSession(trust_env=True) as session:
             vuln_tasks = []
             for vuln in self.vulns:
-                cve = vuln.related_vuln()
-                if cve not in cve_list or vuln.is_remediated(vuln.RemediationStatus.IGNORED):
+                if vuln.get_vuln_origin() == 'BDSA':
+                    cve = vuln.linked_cve
+                else:
+                    cve = vuln.id()
+                if not cve or cve not in cve_list or vuln.is_remediated(vuln.RemediationStatus.IGNORED):
                     continue
                 vuln_task = asyncio.ensure_future(vuln.async_remediate_vuln(conf, session, token,
                                                                             vuln.RemediationStatus.IGNORED))
@@ -63,8 +66,12 @@ class VulnList:
         async with aiohttp.ClientSession(trust_env=True) as session:
             vuln_tasks = []
             for vuln in self.vulns:
-                cve = vuln.related_vuln()
-                if cve not in cve_list or vuln.is_remediated(vuln.RemediationStatus.PATCHED):
+                if vuln.get_vuln_origin() == 'BDSA':
+                    cve = vuln.linked_cve
+                else:
+                    cve = vuln.id()
+
+                if not cve or cve not in cve_list or vuln.is_remediated(vuln.RemediationStatus.PATCHED):
                     continue
                 vuln_task = asyncio.ensure_future(vuln.async_remediate_vuln(conf, session, token,
                                                                             vuln.RemediationStatus.PATCHED))
@@ -75,46 +82,33 @@ class VulnList:
 
         return len(vuln_data)
 
-    async def async_get_associatedvuln_data(self, bd, conf):
+    async def async_get_bdsa_data(self, bd, conf):
         token = bd.session.auth.bearer_token
 
         async with aiohttp.ClientSession(trust_env=True) as session:
             vuln_tasks = []
-            count = 0
-            processed_cves = []
             for vuln in self.vulns:
-                # vuln_task = asyncio.ensure_future(vuln.async_get_vuln_data(bd, conf, session, token))
-                # vuln_tasks.append(vuln_task)
+                if vuln.get_vuln_origin() != 'BDSA':
+                    continue
 
-                if vuln.get_vuln_origin() == 'BDSA':
-                    linked_vuln = vuln.get_linked_cve()
-                    if linked_vuln != '':
-                        if linked_vuln in processed_cves:
-                            conf.logger.debug(f"Skipping {linked_vuln} as already processed")
-                            continue
-                        lvuln = Vuln({}, conf, id=linked_vuln)
-                        # self.associated_vulns.append(lvuln)
-                        vuln_task = asyncio.ensure_future(lvuln.async_get_associatedvuln_data(bd, conf, session, token))
-                        vuln_tasks.append(vuln_task)
-                        processed_cves.append(linked_vuln)
-                        count += 1
+                vuln_task = asyncio.ensure_future(vuln.async_get_relatedvuln(bd, conf, session, token))
+                vuln_tasks.append(vuln_task)
 
-            conf.logger.debug(f"Getting data for {count} associated vulns ...")
             vuln_data = dict(await asyncio.gather(*vuln_tasks))
             await asyncio.sleep(0.250)
 
         return vuln_data
 
-    def add_associatedvuln_data(self, data, conf):
+    def add_relatedvuln_data(self, data, conf):
         try:
-            conf.logger.debug(f"Vulnlist: adding {len(data)} vulns from associated asyncdata")
-            for id, entry in data.items():
-                # id = BDSA
+            logging.debug(f"Vulnlist: adding {len(data)} vulns from related asyncdata")
+
+            for bdsa, related_cve in data.items():
                 for vuln in self.vulns:
-                    if vuln.id == id:
-                        vuln.linked_cve = entry
+                    if vuln.id() == bdsa:
+                        vuln.linked_cve = related_cve
                         break
         except Exception as e:
-            conf.logger.error(f"Error processing linked CVE: {e}")
+            logging.error(f"Error processing linked CVE: {e}")
 
         return
