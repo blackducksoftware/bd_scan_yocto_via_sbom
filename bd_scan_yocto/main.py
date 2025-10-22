@@ -123,7 +123,7 @@ def main():
     reclist.report_recipes_in_bom(conf)
 
     logging.info("")
-    logging.info("--- PHASE 7 - APPLY CVE PATCHES ------------------------------------------")
+    logging.info("--- PHASE 7 - APPLY CVE PATCHES FROM CVE_CHECK ---------------------------")
     if conf.process_cves and conf.cve_check_file:
         # bom.get_proj()
         if bom.process_cve_file(conf.cve_check_file, reclist):
