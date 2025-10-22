@@ -236,18 +236,17 @@ class BB:
                             kfiles = line.split(': ')[1]
                             conf.kernel_files = kfiles.split(' ')
 
-                    if recipe_name and ver:
+                    if recipe_name and ver and licstring:
                         packages_total += 1
-                        if licstring:
-                            # expression = re.sub(r'\b([\w.-]+)\b\s*&\s*\b([\w.-]+)\b', r'(\1 AND \2)', licstring)
-                            expression = licstring.replace(' & ', ' AND ')
-                            # expression = re.sub(r'\b([\w.-]+)\b\s*\|\s*\b([\w.-]+)\b', r'(\1 OR \2)', expression)
-                            expression = expression.replace(' | ', ' OR ')
+                        # expression = re.sub(r'\b([\w.-]+)\b\s*&\s*\b([\w.-]+)\b', r'(\1 AND \2)', licstring)
+                        expression = licstring.replace(' & ', ' AND ')
+                        # expression = re.sub(r'\b([\w.-]+)\b\s*\|\s*\b([\w.-]+)\b', r'(\1 OR \2)', expression)
+                        expression = expression.replace(' | ', ' OR ')
 
-                            rec_obj = Recipe(recipe_name, ver, licstring=expression)
-                            # rec_obj.custom_component = True
-                        else:
-                            rec_obj = Recipe(recipe_name, ver)
+                        rec_obj = Recipe(recipe_name, ver, licstring=expression)
+                        # rec_obj.custom_component = True
+                        # else:
+                        #     rec_obj = Recipe(recipe_name, ver)
 
                         if not reclist.check_recipe_exists(recipe_name):
                             reclist.recipes.append(rec_obj)
@@ -326,7 +325,7 @@ class BB:
                 cfile = f"{conf.log_dir}/cve/cve-summary.json"
                 if os.path.isfile(cfile):
                     cvefile = cfile
-            if cvefile != '':
+            if cvefile == '':
                 # imgdir = os.path.join(conf.deploy_dir, "images", machine)
                 # if os.path.isdir(imgdir):
                 #     for file in sorted(os.listdir(imgdir)):

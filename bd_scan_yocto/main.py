@@ -98,6 +98,8 @@ def main():
             if num > 0:
                 if ret:
                     logging.info("Done")
+                    bom.get_proj()
+                    bom.process(reclist)
                 else:
                     logging.error(f"Unable to run Signature scan on package and download files")
                     sys.exit(2)
@@ -110,8 +112,6 @@ def main():
 
     logging.info("")
     logging.info("--- PHASE 5 - ADDING RECIPES BY CPE OR CUSTOM COMPONENT ------------------")
-    bom.get_proj()
-    bom.process(reclist)
     if conf.run_cpe_components or conf.run_custom_components:
         if reclist.process_missing_recipes(conf, bom):
             bom.process(reclist)
@@ -123,7 +123,7 @@ def main():
     reclist.report_recipes_in_bom(conf)
 
     logging.info("")
-    logging.info("--- PHASE 7 - APPLY CVE PATCHES ------------------------------------------")
+    logging.info("--- PHASE 7 - APPLY CVE PATCHES FROM CVE_CHECK ---------------------------")
     if conf.process_cves and conf.cve_check_file:
         # bom.get_proj()
         if bom.process_cve_file(conf.cve_check_file, reclist):

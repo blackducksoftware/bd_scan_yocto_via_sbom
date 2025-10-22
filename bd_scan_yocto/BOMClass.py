@@ -136,6 +136,7 @@ class BOM:
         vuln_url = f"{self.projver}/vulnerable-bom-components"
         vuln_arr = self.get_paginated_data(vuln_url, "application/vnd.blackducksoftware.bill-of-materials-6+json")
         self.vulnlist.add_list(vuln_arr)
+        return len(vuln_arr)
 
     # def print_vulns(self):
     #     table, header = self.vulnlist.print(self.bd)
@@ -143,15 +144,21 @@ class BOM:
     #
 
     def process_patched_cves(self, conf: "Config"):
-        self.get_vulns()
+        num = self.get_vulns()
+        logging.info(f"- {num} vulns reported in BD project")
+
+        logging.info("- Getting detailed data for linked vulnerabilities ...")
+        self.process_vulns_async(conf)
 
         # patched, skipped = self.vulnlist.process_patched(self.CVEPatchedVulnList, self.bd)
         # logging.info(f"- {patched} CVEs marked as patched in BD project ({skipped} already patched)")
 
+        #DEBUG
+
         patched = self.patch_vulns_async(conf, self.CVEPatchedVulnList)
         ignored = self.ignore_vulns_async(conf, self.CVEIgnoredVulnList)
-        logging.info(f"- {patched} CVEs marked as patched in BD project")
-        logging.info(f"- {ignored} CVEs marked as ignored in BD project")
+        logging.info(f"- {patched} CVEs marked as PATCHED in BD project")
+        logging.info(f"- {ignored} CVEs marked as IGNORED in BD project")
         return
 
     def wait_for_bom_completion(self):
@@ -384,31 +391,31 @@ class BOM:
     def check_kernel_in_bom(self):
         return self.complist.check_kernel_in_bom()
 
-    def add_manual_comp(self, comp_url):
-        try:
-            posturl = self.projver + "/components"
-            custom_headers = {
-                'Content-Type': 'application/vnd.blackducksoftware.bill-of-materials-6+json'
-            }
-
-            postdata = {
-                "component": comp_url,
-                "componentPurpose": "Added by CPE (bd_scan_yocto_via_sbom)",
-                "componentModified": False,
-                "componentModification": ""
-            }
-
-            r = self.bd.session.post(posturl, data=json.dumps(postdata), headers=custom_headers)
-            # r.raise_for_status()
-            if r.status_code == 200:
-                logging.debug(f"Created manual component {comp_url}")
-                return True
-            else:
-                raise Exception(f"PUT returned {r.status_code}")
-
-        except Exception as e:
-            logging.exception(f"Error creating manual component - {e}")
-        return False
+    # def add_manual_comp(self, comp_url):
+    #     try:
+    #         posturl = self.projver + "/components"
+    #         custom_headers = {
+    #             'Content-Type': 'application/vnd.blackducksoftware.bill-of-materials-6+json'
+    #         }
+    #
+    #         postdata = {
+    #             "component": comp_url,
+    #             "componentPurpose": "Added by CPE (bd_scan_yocto_via_sbom)",
+    #             "componentModified": False,
+    #             "componentModification": ""
+    #         }
+    #
+    #         r = self.bd.session.post(posturl, data=json.dumps(postdata), headers=custom_headers)
+    #         # r.raise_for_status()
+    #         if r.status_code == 200:
+    #             logging.debug(f"Created manual component {comp_url}")
+    #             return True
+    #         else:
+    #             raise Exception(f"PUT returned {r.status_code}")
+    #
+    #     except Exception as e:
+    #         logging.exception(f"Error creating manual component - {e}")
+    #     return False
 
     def ignore_vulns_async(self, conf: "Config", cve_list):
         if platform.system() == "Windows":
@@ -428,3 +435,9 @@ class BOM:
         self.wait_for_bom_completion()
         self.get_comps()
         reclist.mark_recipes_in_bom(self)
+
+    def process_vulns_async(self, conf):
+        if platform.system() == "Windows":
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+        self.vulnlist.add_relatedvuln_data(asyncio.run(self.vulnlist.async_get_bdsa_data(self.bd, conf)), conf)
