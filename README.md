@@ -72,7 +72,7 @@ Before running the script, ensure you meet the following requirements:
       * (Also **Global Component Manager** needed to create custom components if `--mode CUSTOM_COMPS` specified)
 5.  **Single-target Bitbake configurations only** are supported. Run this utility on one target at a time.
 6.  A **built Yocto project** with access to the build platform. Alternatively, specific outputs from the build can be used, though many script features may be limited so not recommended.
-7.  Ensure **license text entries in manifest files are SPDX compliant** to support SBOM upload. Custom licenses are not supported.
+7.  Ensure **license text entries in manifest files are SPDX compliant** to support SBOM upload. Custom licenses are not supported for the creation of custom components (mode=CUSTOM_COMPS).
 
 -----
 
@@ -419,5 +419,5 @@ embedded OSS within recipes.
 9.  **I want to scan all recipes, including development dependencies, as opposed to only those in the delivered image.**
     Run the command `bitbake -g` to create a `task-depends.dot` file, then use the parameter `--task_depends_dot_file FILE`, where `FILE` is the path to the generated file.
 
-10. **Unable to upload SPDX file during script run in phases 3 and 5**: All licenses in the license.manifest must be valid SPDX licenses for the SBOM to be importable. Check licenses at https://spdx.org/licenses/ (suggest checking compliance via an LLM) and modify any non-compliant license text in recipes or manifest files. Note that license text in the manifest files is only used to define the licenses for components added as Custom Components (CUSTOM_COMPS), but is not used for components added by the OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CPE_COMPS options which will reference the licenses from the KB instead. Resolved licenses can be modified within the project version or globally once components have been added to the BOM.
+10. **Unable to upload SPDX file during script run in phase 5**: Where mode=CUSTOM_COMPS, licenses for custom compponents to be added from the license.manifest must be valid SPDX licenses for the SBOM to be importable. Check licenses at https://spdx.org/licenses/ (suggest checking compliance via an LLM) and modify any non-compliant license text in recipes or manifest files. Note that license text in the manifest files is only used to define the licenses for components added as Custom Components (CUSTOM_COMPS), but is not used for components added by the OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CPE_COMPS options which will reference the licenses from the KB instead. Resolved licenses can be modified within the project version or globally once components have been added to the BOM.
 
