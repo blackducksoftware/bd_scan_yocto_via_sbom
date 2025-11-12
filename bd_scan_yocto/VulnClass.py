@@ -121,7 +121,7 @@ class Vuln:
         except KeyError:
             return ''
 
-    async def async_remediate_vuln(self, conf, session, token, remediationStatus):
+    async def async_remediate_vuln(self, conf, session, token, remediationStatus, vulndict):
         if conf.bd_trustcert:
             ssl = False
         else:
@@ -137,7 +137,15 @@ class Vuln:
 
         payload = self.data
         # payload['remediationJustification'] = "NO_CODE"
-        payload['comment'] = f"Remediated by bd_scan_yocto_via_sbom utility {mydate} - fixed locally"
+        comment = f"Remediated by bd_scan_yocto_via_sbom utility {mydate}"
+        if 'detail' in vulndict and vulndict['detail'] != '':
+            comment += f" - {vulndict['detail']}"
+            if 'description' in vulndict and vulndict['description'] != '':
+                comment += f": {vulndict['description']}"
+        else:
+            comment += ' - remediated in build'
+        payload['comment'] = comment[:200]
+
         payload['remediationStatus'] = remediationStatus
 
         logging.debug(f"{self.id} - {self.url()}")

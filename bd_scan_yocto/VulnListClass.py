@@ -37,7 +37,7 @@ class VulnList:
     #
     #     return table, ["ID", "Status", "Severity", "Component", "Linked Vuln"]
 
-    async def async_ignore_vulns(self, conf, bd, cve_list):
+    async def async_ignore_vulns(self, conf, bd, cve_dict):
         token = bd.session.auth.bearer_token
         logging.info("- Remediate locally ignored vulnerabilities ...")
 
@@ -48,10 +48,11 @@ class VulnList:
                     cve = vuln.linked_cve
                 else:
                     cve = vuln.id()
-                if not cve or cve not in cve_list or vuln.is_remediated(vuln.RemediationStatus.IGNORED):
+                if not cve or cve not in cve_dict.keys() or vuln.is_remediated(vuln.RemediationStatus.IGNORED):
                     continue
-                vuln_task = asyncio.ensure_future(vuln.async_remediate_vuln(conf, session, token,
-                                                                            vuln.RemediationStatus.IGNORED))
+                vuln_task = asyncio.ensure_future(
+                    vuln.async_remediate_vuln(conf, session, token,vuln.RemediationStatus.IGNORED, cve_dict[cve])
+                )
                 vuln_tasks.append(vuln_task)
 
             vuln_data = dict(await asyncio.gather(*vuln_tasks))
@@ -59,7 +60,7 @@ class VulnList:
 
         return len(vuln_data)
 
-    async def async_patch_vulns(self, conf, bd, cve_list):
+    async def async_patch_vulns(self, conf, bd, cve_dict):
         token = bd.session.auth.bearer_token
         logging.info("- Remediate locally patched vulnerabilities ...")
 
@@ -71,10 +72,11 @@ class VulnList:
                 else:
                     cve = vuln.id()
 
-                if not cve or cve not in cve_list or vuln.is_remediated(vuln.RemediationStatus.PATCHED):
+                if not cve or cve not in cve_dict.keys() or vuln.is_remediated(vuln.RemediationStatus.PATCHED):
                     continue
-                vuln_task = asyncio.ensure_future(vuln.async_remediate_vuln(conf, session, token,
-                                                                            vuln.RemediationStatus.PATCHED))
+                vuln_task = asyncio.ensure_future(
+                    vuln.async_remediate_vuln(conf, session, token, vuln.RemediationStatus.PATCHED, cve_dict[cve])
+                )
                 vuln_tasks.append(vuln_task)
 
             vuln_data = dict(await asyncio.gather(*vuln_tasks))
@@ -99,7 +101,7 @@ class VulnList:
 
         return vuln_data
 
-    def add_relatedvuln_data(self, data, conf):
+    def add_relatedvuln_data(self, data):
         try:
             logging.debug(f"Vulnlist: adding {len(data)} vulns from related asyncdata")
 
