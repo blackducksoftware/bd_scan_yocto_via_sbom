@@ -107,7 +107,7 @@ class VulnList:
 
             for bdsa, related_cve in data.items():
                 for vuln in self.vulns:
-                    if vuln.id() == bdsa:
+                    if vuln.id() == bdsa and related_cve != '':
                         vuln.linked_cve = related_cve
                         break
         except Exception as e:

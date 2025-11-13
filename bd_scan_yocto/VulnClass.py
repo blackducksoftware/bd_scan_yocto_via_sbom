@@ -167,12 +167,16 @@ class Vuln:
             # 'accept': "application/vnd.blackducksoftware.bill-of-materials-6+json",
             'Authorization': f'Bearer {token}',
         }
-        # resp = globals.bd.get_json(thishref, headers=headers)
-        async with session.get(f"{bd.base_url}/api/vulnerabilities/{self.id()}",
-                               headers=headers, ssl=ssl) as resp:
-            result_data = await resp.json()
+        try:
+            # resp = globals.bd.get_json(thishref, headers=headers)
+            async with session.get(f"{bd.base_url}/api/vulnerabilities/{self.id()}",
+                                   headers=headers, ssl=ssl) as resp:
+                result_data = await resp.json()
+            return self.id(), self.get_related_cve_from_meta(result_data)
 
-        return self.id(), self.get_related_cve_from_meta(result_data)
+        except Exception as e:
+            logging.warning(f"Unable to get relatedvuln from BDSA - {e}")
+            return self.id(), ''
 
     def get_vuln_origin(self):
         try:
