@@ -1,6 +1,6 @@
 -----
 
-# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.2.4
+# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.2.5
 
 -----
 
@@ -358,6 +358,8 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 ## Release Notes
 
+* **v1.2.5**
+   * Added extra comments in remediated vulns
 * **v1.2.4**
    * Updated CVE patching using linked vulns from BDSAs using async calls - should mark vulns in BD project as patched/ignored
 * **v1.2.3**

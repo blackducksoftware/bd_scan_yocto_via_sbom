@@ -121,7 +121,7 @@ class Vuln:
         except KeyError:
             return ''
 
-    async def async_remediate_vuln(self, conf, session, token, remediationStatus):
+    async def async_remediate_vuln(self, conf, session, token, remediationStatus, vulndict):
         if conf.bd_trustcert:
             ssl = False
         else:
@@ -137,7 +137,15 @@ class Vuln:
 
         payload = self.data
         # payload['remediationJustification'] = "NO_CODE"
-        payload['comment'] = f"Remediated by bd_scan_yocto_via_sbom utility {mydate} - fixed locally"
+        comment = f"Remediated by bd_scan_yocto_via_sbom utility {mydate}"
+        if 'detail' in vulndict and vulndict['detail'] != '':
+            comment += f" - {vulndict['detail']}"
+            if 'description' in vulndict and vulndict['description'] != '':
+                comment += f": {vulndict['description']}"
+        else:
+            comment += ' - remediated in build'
+        payload['comment'] = comment[:200]
+
         payload['remediationStatus'] = remediationStatus
 
         logging.debug(f"{self.id} - {self.url()}")
@@ -159,12 +167,16 @@ class Vuln:
             # 'accept': "application/vnd.blackducksoftware.bill-of-materials-6+json",
             'Authorization': f'Bearer {token}',
         }
-        # resp = globals.bd.get_json(thishref, headers=headers)
-        async with session.get(f"{bd.base_url}/api/vulnerabilities/{self.id()}",
-                               headers=headers, ssl=ssl) as resp:
-            result_data = await resp.json()
+        try:
+            # resp = globals.bd.get_json(thishref, headers=headers)
+            async with session.get(f"{bd.base_url}/api/vulnerabilities/{self.id()}",
+                                   headers=headers, ssl=ssl) as resp:
+                result_data = await resp.json()
+            return self.id(), self.get_related_cve_from_meta(result_data)
 
-        return self.id(), self.get_related_cve_from_meta(result_data)
+        except Exception as e:
+            logging.warning(f"Unable to get relatedvuln from BDSA - {e}")
+            return self.id(), ''
 
     def get_vuln_origin(self):
         try:

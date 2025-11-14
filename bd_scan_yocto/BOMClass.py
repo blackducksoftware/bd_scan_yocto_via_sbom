@@ -23,8 +23,8 @@ class BOM:
         self.bdvername = conf.bd_version
         self.complist = ComponentList()
         self.vulnlist = VulnList()
-        self.CVEPatchedVulnList = []
-        self.CVEIgnoredVulnList = []
+        self.CVEPatchedVulnDict = {}
+        self.CVEIgnoredVulnDict = {}
         self.bdver_dict = None
         self.projver = None
 
@@ -155,8 +155,8 @@ class BOM:
 
         #DEBUG
 
-        patched = self.patch_vulns_async(conf, self.CVEPatchedVulnList)
-        ignored = self.ignore_vulns_async(conf, self.CVEIgnoredVulnList)
+        patched = self.patch_vulns_async(conf, self.CVEPatchedVulnDict)
+        ignored = self.ignore_vulns_async(conf, self.CVEIgnoredVulnDict)
         logging.info(f"- {patched} CVEs marked as PATCHED in BD project")
         logging.info(f"- {ignored} CVEs marked as IGNORED in BD project")
         return
@@ -251,37 +251,63 @@ class BOM:
             logging.error("Unable to open CVE check output file\n" + str(e))
             return False
 
-        patched_vulns = []
-        ignored_vuls = []
+        lookup_dict = {
+            'PACKAGE NAME': 'package',
+            'PACKAGE VERSION': 'version',
+            'CVE': 'CVE',
+            'CVE STATUS': 'status',
+            'CVE DETAIL': 'detail',
+            'CVE DESCRIPTION': 'description'
+        }
+        patched_vulns = {}
+        ignored_vulns = {}
         pkgvuln = {}
         for line in cvelines:
             arr = line.split(":")
             if len(arr) > 1:
-                key = arr[0]
+                field = arr[0]
                 value = arr[1].strip()
-                if key == "PACKAGE NAME":
-                    pkgvuln['package'] = value
-                elif key == "PACKAGE VERSION":
-                    pkgvuln['version'] = value
-                elif key == "CVE":
-                    pkgvuln['CVE'] = value
-                elif key == "CVE STATUS":
-                    pkgvuln['status'] = value
-                    if pkgvuln['status'] == "Patched":
-                        cve = pkgvuln['CVE']
-                        if reclist.check_recipe_exists(pkgvuln['package']) and cve not in patched_vulns:
-                            patched_vulns.append(cve)
-                    elif pkgvuln['status'] == "Ignored":
-                        cve = pkgvuln['CVE']
-                        if reclist.check_recipe_exists(pkgvuln['package']) and cve not in ignored_vuls:
-                            ignored_vuls.append(cve)
-                    pkgvuln = {}
 
-        logging.info(f"      {len(patched_vulns) + len(ignored_vuls)} total patched and ignored CVEs loaded from "
+                if field in lookup_dict:
+                    # check if key seen before
+                    pkgvuln_key = lookup_dict[field]
+                    if 'CVE' in pkgvuln and pkgvuln_key in pkgvuln:
+                        # Duplicate entry - indicates New record
+                        if reclist.check_recipe_exists(pkgvuln.get('package', '')):
+                            if pkgvuln.get('status') == 'Patched':
+                                patched_vulns[pkgvuln['CVE']] = pkgvuln
+                            elif pkgvuln.get('status') == 'Ignored':
+                                ignored_vulns[pkgvuln['CVE']] = pkgvuln
+                        pkgvuln = {}
+                    pkgvuln[pkgvuln_key] = value
+
+                # if key == "PACKAGE NAME":
+                #     pkgvuln['package'] = value
+                # elif key == "PACKAGE VERSION":
+                #     pkgvuln['version'] = value
+                # elif key == "CVE":
+                #     pkgvuln['CVE'] = value
+                # elif key == "CVE STATUS":
+                #     pkgvuln['status'] = value
+                #     if pkgvuln['status'] == "Patched":
+                #         cve = pkgvuln['CVE']
+                #         if reclist.check_recipe_exists(pkgvuln['package']) and cve not in patched_vulns:
+                #             patched_vulns.append(cve)
+                #     elif pkgvuln['status'] == "Ignored":
+                #         cve = pkgvuln['CVE']
+                #         if reclist.check_recipe_exists(pkgvuln['package']) and cve not in ignored_vulns:
+                #             ignored_vulns.append(cve)
+                #     pkgvuln = {}
+                # elif key == "CVE DETAIL":
+                #     pkgvuln['detail'] = value
+                # elif key == "CVE DESCRIPTION":
+                #     pkgvuln['description'] = value
+
+        logging.info(f"      {len(patched_vulns) + len(ignored_vulns)} total patched and ignored CVEs loaded from "
                      f"cve_check file (CVEs not identified in project yet)")
-        self.CVEPatchedVulnList = patched_vulns
-        self.CVEIgnoredVulnList = ignored_vuls
-        if len(patched_vulns) > 0 or len(ignored_vuls) > 0:
+        self.CVEPatchedVulnDict = patched_vulns
+        self.CVEIgnoredVulnDict = ignored_vulns
+        if len(patched_vulns) > 0 or len(ignored_vulns) > 0:
             return True
         return False
 
@@ -293,27 +319,38 @@ class BOM:
 
             logging.info(f"- loaded CVEs from cve_check file {cve_file}")
 
-            patched_vulns = []
-            ignored_vuls = []
+            patched_vulns = {}
+            ignored_vulns = {}
+
             if data and 'package' in data:
                 # Parse each JSON object separately
                 for obj in data['package']:
                     if 'issue' in obj:
                         issues = obj['issue']
                         for issue in issues:
-                            if issue.get("status") == "Patched":
-                                id = issue['id']
-                                if reclist.check_recipe_exists(obj['name']) and id not in patched_vulns:
-                                    patched_vulns.append(id)
-                            elif issue.get("status") == "Ignored":
-                                id = issue['id']
-                                if reclist.check_recipe_exists(obj['name']) and id not in ignored_vuls:
-                                    ignored_vuls.append(id)
-                self.CVEPatchedVulnList = patched_vulns
-                self.CVEIgnoredVulnList = ignored_vuls
-            logging.info(f"      {len(patched_vulns) + len(ignored_vuls)} total patched and ignored CVEs loaded from "
+                            if 'id' not in issue:
+                                continue
+                            pkgvuln = {
+                                'CVE': issue.get('id'),
+                                'detail': issue.get('detail', ''),
+                                'description': issue.get('description', ''),
+                                'package': obj.get('name', ''),
+                                'status': issue.get('status', '')
+                            }
+
+                            if pkgvuln["status"] == "Patched":
+                                if reclist.check_recipe_exists(pkgvuln['package']) and pkgvuln['CVE'] not in patched_vulns:
+                                    patched_vulns[pkgvuln['CVE']] = pkgvuln
+                            elif pkgvuln["status"] == "Ignored":
+                                if reclist.check_recipe_exists(pkgvuln['package']) and pkgvuln['CVE'] not in ignored_vulns:
+                                    ignored_vulns[pkgvuln['CVE']] = pkgvuln
+
+                self.CVEPatchedVulnDict = patched_vulns
+                self.CVEIgnoredVulnDict = ignored_vulns
+
+            logging.info(f"      {len(patched_vulns) + len(ignored_vulns)} total patched and ignored CVEs loaded from "
                          f"cve_check file (CVEs not identified in project yet)")
-            if len(patched_vulns) > 0 or len(ignored_vuls) > 0:
+            if len(patched_vulns) > 0 or len(ignored_vulns) > 0:
                 return True
 
         except Exception as e:
@@ -417,18 +454,18 @@ class BOM:
     #         logging.exception(f"Error creating manual component - {e}")
     #     return False
 
-    def ignore_vulns_async(self, conf: "Config", cve_list):
+    def ignore_vulns_async(self, conf: "Config", cve_dict):
         if platform.system() == "Windows":
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-        count = asyncio.run(self.vulnlist.async_ignore_vulns(conf, self.bd, cve_list))
+        count = asyncio.run(self.vulnlist.async_ignore_vulns(conf, self.bd, cve_dict))
         return count
 
-    def patch_vulns_async(self, conf: "Config", cve_list):
+    def patch_vulns_async(self, conf: "Config", cve_dict):
         if platform.system() == "Windows":
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-        count = asyncio.run(self.vulnlist.async_patch_vulns(conf, self.bd, cve_list))
+        count = asyncio.run(self.vulnlist.async_patch_vulns(conf, self.bd, cve_dict))
         return count
 
     def process(self, reclist: "RecipeListClass"):
@@ -440,4 +477,4 @@ class BOM:
         if platform.system() == "Windows":
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-        self.vulnlist.add_relatedvuln_data(asyncio.run(self.vulnlist.async_get_bdsa_data(self.bd, conf)), conf)
+        self.vulnlist.add_relatedvuln_data(asyncio.run(self.vulnlist.async_get_bdsa_data(self.bd, conf)))
