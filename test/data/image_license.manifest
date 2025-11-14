@@ -1,0 +1,5 @@
+RECIPE NAME: linux-yocto
+VERSION: 6.10.14+git
+LICENSE: GPL-2.0-only
+FILES: bzImage--6.10.14+git0+83eed9befe_bbe3d1be4e-r0-qemux86-64-20250610090225.bin modules--6.10.14+git0+83eed9befe_bbe3d1be4e-r0-qemux86-64-20250610090225.tgz
+
