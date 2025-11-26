@@ -353,8 +353,31 @@ class OE:
 
             recipename_in_oe = False
             if recipe.name in self.recipename_dict.keys():
+                if recipe.epoch:
+                    recipe_ver = f"{recipe.epoch}:{recipe.version}"
+                else:
+                    recipe_ver = recipe.version
+
                 for oe_recipe in self.recipename_dict[recipe.name]:
-                    # print(f"{oe_recipe['pn']} - {oe_recipe['pv']}")
+
+                    if oe_recipe['pe']:
+                        oe_ver = f"{oe_recipe['pe']}:{oe_recipe['pv']}"
+                    else:
+                        oe_ver = oe_recipe['pv']
+
+                    # Need to check for exact match
+                    if recipe_ver == oe_ver:
+                        recipe.matched_oe = True
+                        recipe.matched_oe_exact = True
+                        best_recipe = oe_recipe
+                        break
+
+                    # If max_version_distance set to 0 then do not search further
+                    if conf.max_oe_version_distance[0] == conf.max_oe_version_distance[1] == \
+                            conf.max_oe_version_distance[2] == 0:
+                        continue
+
+                    # Check version distance
                     match, exact_ver_temp = self.compare_recipes(conf, recipe, oe_recipe, best_recipe)
                     if match:
                         best_recipe = oe_recipe
@@ -368,11 +391,6 @@ class OE:
 
             if not recipe.matched_oe and recipename_in_oe:
                 recipe.recipename_in_oe = True
-
-            if recipe.epoch:
-                recipe_ver = f"{recipe.epoch}:{recipe.orig_version}"
-            else:
-                recipe_ver = recipe.orig_version
 
             if best_recipe != {}:
                 if best_recipe['pe']:
@@ -388,7 +406,8 @@ class OE:
 
             logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - OE near match "
                           f"{best_layer['name']}/{best_recipe['pn']}/{best_ver}-{best_recipe['pr']}")
-            if recipe.layer == best_layer['name'] or (recipe.layer == 'meta' and best_layer['name'] == 'openembedded-core'):
+            if recipe.layer == best_layer['name'] or (recipe.layer == 'meta' and best_layer['name'] ==
+                                                      'openembedded-core'):
                 exact_layer = True
             return best_recipe, best_layer, exact_ver, exact_layer
 
