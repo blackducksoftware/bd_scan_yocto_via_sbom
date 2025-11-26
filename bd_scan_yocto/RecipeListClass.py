@@ -198,8 +198,22 @@ class RecipeList:
             else:
             #
             # if not recipe.matched_in_bom:
-                not_in_bom.append(fullid)
-                logging.info(f"- Recipe {fullid}: NOT found in BOM")
+            #     not_in_bom.append(fullid)
+                desc = fullid + ': '
+                if recipe.matched_oe_exact:
+                    desc += 'Recipe/Version matched in OE Data - not in BD KB'
+                elif recipe.recipename_in_oe:
+                    desc += 'Recipe matched in OE Data - no version match'
+                else:
+                    desc += 'Recipe not matched in OE Data'
+                if conf.run_sig_scan:
+                    desc += ', Not found by Signature scan'
+                if conf.run_cpe_components:
+                    desc += ', Not found by CPE lookup'
+                if conf.run_custom_components:
+                    desc += ', Not created as Custom Component'
+                logging.info(f"- Recipe {desc}")
+                not_in_bom.append(desc)
                 # if recipe.matched_oe:
                 #     matched_oe_not_in_bom.append(fullid)
                 #     logging.info(f"- Recipe {fullid}: Matched in OE data but NOT found in BOM")
