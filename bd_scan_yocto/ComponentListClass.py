@@ -50,6 +50,9 @@ class ComponentList:
                 recver = rec.version.split('+')[0]
                 if recver in comp.version or comp.version in recver:  # ToDo - logic needs checking
                     return True
+                elif rec.oe_recipe != {}:
+                    if recver == rec.oe_recipe['pv']:
+                        return True
             else:
                 # Component name not in list
                 logging.debug(f'check_recipe_in_list: Component name {rec.name} missing from complist')

@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.2.5"
+script_version = "v1.2.6"
 
 
 class Config:
@@ -167,7 +167,7 @@ class Config:
         self.bitbake_layers_file = ''
         self.cve_check_file = ''
         self.skip_oe_data = args.skip_oe_data
-        self.max_oe_version_distance = ''
+        self.max_oe_version_distance = []
         self.oe_data_folder = args.oe_data_folder
         self.package_dir = ''
         self.download_dir = ''
