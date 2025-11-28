@@ -194,8 +194,6 @@ class RecipeList:
                 elif recipe.matched_oe:
                     fullid += f" (OE Closest version {recipe.oe_recipe['pv']}-{recipe.oe_recipe['pr']})"
                     matched_oe.append(fullid)
-                else:
-                    fullid += "(Other match)"
                 in_bom.append(fullid)
             else:
             #
