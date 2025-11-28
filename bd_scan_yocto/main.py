@@ -151,7 +151,7 @@ def main():
         else:
             logging.info("Kernel component not found in project - skipping")
     else:
-        logging.info(f"Skipped - mode CVE_PATCHES not specified")
+        logging.info(f"Skipped - mode KERNEL_VULNS not specified")
 
     logging.info("")
     logging.info("bd_scan_yocto_via_sbom DONE")

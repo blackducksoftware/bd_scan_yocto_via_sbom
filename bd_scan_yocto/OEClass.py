@@ -358,24 +358,37 @@ class OE:
                 else:
                     recipe_ver = recipe.version
 
+                oe_ver_array = []
                 for oe_recipe in self.recipename_dict[recipe.name]:
-
                     if oe_recipe['pe']:
                         oe_ver = f"{oe_recipe['pe']}:{oe_recipe['pv']}"
                     else:
                         oe_ver = oe_recipe['pv']
 
-                    # Need to check for exact match
                     if recipe_ver == oe_ver:
+                        #Exact match
                         recipe.matched_oe = True
                         recipe.matched_oe_exact = True
                         best_recipe = oe_recipe
-                        break
+                        exact_ver = True
+                        exact_layer = True
+                        best_layer = self.get_layer_by_layerbranchid(best_recipe['layerbranch'])
 
-                    # If max_version_distance set to 0 then do not search further
-                    if conf.max_oe_version_distance[0] == conf.max_oe_version_distance[1] == \
-                            conf.max_oe_version_distance[2] == 0:
-                        continue
+                        logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - OE exact match "
+                                      f"{best_layer['name']}/{best_recipe['pn']}/{exact_ver}-{best_recipe['pr']}")
+                        return best_recipe, best_layer, exact_ver, exact_layer
+
+                if conf.max_oe_version_distance[0] == conf.max_oe_version_distance[1] == \
+                                conf.max_oe_version_distance[2] == 0:
+                    # Do not search further if max_version_distance is 0.0.0
+                    logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - No OE exact match")
+                    return {}, {}, False, False
+
+                for oe_recipe in self.recipename_dict[recipe.name]:
+                    if oe_recipe['pe']:
+                        oe_ver = f"{oe_recipe['pe']}:{oe_recipe['pv']}"
+                    else:
+                        oe_ver = oe_recipe['pv']
 
                     # Check version distance
                     match, exact_ver_temp = self.compare_recipes(conf, recipe, oe_recipe, best_recipe)
@@ -389,27 +402,27 @@ class OE:
                     else:
                         recipename_in_oe = True
 
-            if not recipe.matched_oe and recipename_in_oe:
-                recipe.recipename_in_oe = True
+                if not recipe.matched_oe and recipename_in_oe:
+                    recipe.recipename_in_oe = True
 
-            if best_recipe != {}:
-                if best_recipe['pe']:
-                    best_ver = f"{best_recipe['pe']}:{best_recipe['pv']}"
+                if best_recipe != {}:
+                    if best_recipe['pe']:
+                        best_ver = f"{best_recipe['pe']}:{best_recipe['pv']}"
+                    else:
+                        best_ver = best_recipe['pv']
                 else:
-                    best_ver = best_recipe['pv']
-            else:
-                logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - "
-                              f"No close (previous) OE version match found")
-                return {}, {}, False, False
+                    logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - "
+                                  f"No close (previous) OE version match found")
+                    return {}, {}, False, False
 
-            best_layer = self.get_layer_by_layerbranchid(best_recipe['layerbranch'])
+                best_layer = self.get_layer_by_layerbranchid(best_recipe['layerbranch'])
 
-            logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - OE near match "
-                          f"{best_layer['name']}/{best_recipe['pn']}/{best_ver}-{best_recipe['pr']}")
-            if recipe.layer == best_layer['name'] or (recipe.layer == 'meta' and best_layer['name'] ==
-                                                      'openembedded-core'):
-                exact_layer = True
-            return best_recipe, best_layer, exact_ver, exact_layer
+                logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - OE near match "
+                              f"{best_layer['name']}/{best_recipe['pn']}/{best_ver}-{best_recipe['pr']}")
+                if recipe.layer == best_layer['name'] or (recipe.layer == 'meta' and best_layer['name'] ==
+                                                          'openembedded-core'):
+                    exact_layer = True
+                return best_recipe, best_layer, exact_ver, exact_layer
 
         except KeyError as e:
             logging.warning(f"Error getting nearest OE recipe - {e}")
