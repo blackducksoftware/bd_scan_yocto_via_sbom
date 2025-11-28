@@ -1,6 +1,6 @@
 -----
 
-# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.2.6
+# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.3.0
 
 -----
 
@@ -358,7 +358,7 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 ## Release Notes
 
-* **v1.2.6**
+* **v1.3.0**
    * Fix for max_oe_version_distance and exact matches
 * **v1.2.5**
    * Added extra comments in remediated vulns
