@@ -38,7 +38,7 @@ class BB:
         if conf.task_depends_dot_file:
             self.process_task_depends_dot(conf, reclist)
 
-        if not self.process_showlayers(layers_file, reclist):
+        if not self.process_showlayers(conf, layers_file, reclist):
             return False
         return True
 
@@ -176,7 +176,7 @@ class BB:
         # return proc_stdout
 
     @staticmethod
-    def process_showlayers(showlayers_file: str, reclist: "RecipeList"):
+    def process_showlayers(conf: "Config", showlayers_file: str, reclist: "RecipeList"):
         try:
             with open(showlayers_file, "r") as bfile:
                 lines = bfile.readlines()
@@ -193,7 +193,10 @@ class BB:
                         if len(arr) > 1:
                             layer = arr[0]
                             ver = arr[1]
-                            reclist.add_layer_to_recipe(rec, layer, ver)
+                            if layer in conf.exclude_layers:
+                                reclist.remove_recipe(rec)
+                            else:
+                                reclist.add_layer_to_recipe(rec, layer, ver)
                         rec = ""
                 elif rline.endswith(": ==="):
                     bstart = True
@@ -248,7 +251,7 @@ class BB:
                         # else:
                         #     rec_obj = Recipe(recipe_name, ver)
 
-                        if not reclist.check_recipe_exists(recipe_name):
+                        if not reclist.check_recipe_exists(recipe_name) and recipe_name not in conf.exclude_recipes:
                             reclist.recipes.append(rec_obj)
                             recipes_total += 1
                         ver = ''
@@ -472,7 +475,7 @@ class BB:
                 if recipe in recipe_dict.keys():
                     if create_reclist:
                         rec_obj = Recipe(recipe, recipe_dict[recipe]['ver'], recipe_dict[recipe]['rel'])
-                        if not reclist.check_recipe_exists(recipe):
+                        if not reclist.check_recipe_exists(recipe) and recipe.name not in conf.exclude_recipes:
                             reclist.recipes.append(rec_obj)
                             recipes_total += 1
                     else:
