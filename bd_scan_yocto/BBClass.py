@@ -195,6 +195,7 @@ class BB:
                             ver = arr[1]
                             if layer in conf.exclude_layers:
                                 reclist.remove_recipe(rec)
+                                logging.info(f"Excluding recipe {layer}/{rec} due to --exclude_layers list")
                             else:
                                 reclist.add_layer_to_recipe(rec, layer, ver)
                         rec = ""
@@ -251,7 +252,9 @@ class BB:
                         # else:
                         #     rec_obj = Recipe(recipe_name, ver)
 
-                        if not reclist.check_recipe_exists(recipe_name) and recipe_name not in conf.exclude_recipes:
+                        if recipe_name in conf.exclude_recipes:
+                            logging.info(f"Excluding recipe {recipe_name} due to --exclude_recipes list")
+                        elif not reclist.check_recipe_exists(recipe_name):
                             reclist.recipes.append(rec_obj)
                             recipes_total += 1
                         ver = ''
@@ -475,7 +478,9 @@ class BB:
                 if recipe in recipe_dict.keys():
                     if create_reclist:
                         rec_obj = Recipe(recipe, recipe_dict[recipe]['ver'], recipe_dict[recipe]['rel'])
-                        if not reclist.check_recipe_exists(recipe) and recipe.name not in conf.exclude_recipes:
+                        if recipe.name not in conf.exclude_recipes:
+                            logging.info(f"Excluding recipe {recipe.name} due to --exclude_recipes list")
+                        elif not reclist.check_recipe_exists(recipe):
                             reclist.recipes.append(rec_obj)
                             recipes_total += 1
                     else:
