@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.3.0"
+script_version = "v1.3.1"
 
 
 class Config:
@@ -45,6 +45,12 @@ class Config:
         parser.add_argument("-l", "--license_manifest", type=str,
                             help="OPTIONAL license.manifest file path (usually determined from Bitbake env - default "
                                  "'license.manifest')",
+                            default="")
+        parser.add_argument("--exclude_recipes", type=str,
+                            help="OPTIONAL Specify list of recipes to exclude from the scan (comma delimited)",
+                            default="")
+        parser.add_argument("--exclude_layers", type=str,
+                            help="OPTIONAL Specify list of layers to exclude from the scan (comma delimited)",
                             default="")
         parser.add_argument("--process_image_manifest",
                             help="LEGACY PARAMETER - Process image_license.manifest file - replace with "
@@ -191,6 +197,8 @@ class Config:
         self.kernel_files = []
         self.process_oe_recipes = True
         self.process_cves = True
+        self.exclude_recipes = []
+        self.exclude_layers = []
 
         terminate = False
         if args.debug:
@@ -426,6 +434,12 @@ class Config:
 
         if args.detect_opts != '':
             self.detect_opts = args.detect_opts.replace('detect', '--detect')
+
+        if args.exclude_recipes != '':
+            self.exclude_recipes = args.exclude_recipes.split(',')
+
+        if args.exclude_layers != '':
+            self.exclude_layers = args.exclude_layers.split(',')
 
         if terminate:
             sys.exit(2)

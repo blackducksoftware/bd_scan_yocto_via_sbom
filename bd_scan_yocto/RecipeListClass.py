@@ -363,3 +363,10 @@ class RecipeList:
         except Exception as e:
             logging.exception(f"Error processing missing recipes - {e}")
         return comps_added
+
+    def remove_recipe(self, rec_name):
+        index = 0
+        for rec in self.recipes:
+            if rec.name == rec_name:
+                self.recipes.pop(index)
+            index += 1
