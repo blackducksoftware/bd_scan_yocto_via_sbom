@@ -421,13 +421,14 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 3.  **Why can I see `unmatched IDs` in the project view?**<br>
     Unmatched IDs are shown from the first SBOM upload performed by the script in mode OE_RECIPES.
     This is a list of recipes which could not be matched because they are not listed at layers.openembedded.org (because they have been modified, they come from
-    another non-OE source or are your own custom recipes containing your code). If you have used other can modes (SIG_SCAN, CPE_COMPS or CUSTOM_COMPS) then these
-    unmatched recipes may have been matched by the Signature scan or the 2nd SBOM upload. If you use all scan modes (and your custom recipes use valid SPDX license
-    definitions; see FAQ 11 and you have a recent BD server version) then you should have a full SBOM containing all recipes. 
+    another non-OE source or are your own custom recipes containing your code).<br> If you have used other scan modes (SIG_SCAN, CPE_COMPS or CUSTOM_COMPS) then these
+    unmatched recipes may have been matched by the Signature scan or CPE_COMPS and CUSTOM_COMPS modes. If you use all scan modes (and your custom recipes use valid SPDX license
+    definitions; see FAQ 11 AND you have a recent BD server version) then you should have a full SBOM containing all recipes - custom/commercial/unknown recipes will be added as custom
+    components.<br>
     The only valid way to see the list matched and matched recipes is to view the console output or use the `--recipe_report` option - do *not* refer to the
     `Unmatched IDs` in the BOM view.
     
-4.  **Why can't I rely on the license data provided by Yocto in the `license.manifest` file?**<br>
+5.  **Why can't I rely on the license data provided by Yocto in the `license.manifest` file?**<br>
     The licenses reported by Bitbake come directly from the recipe files. However, the true applicable license for 
     each package is the one declared in its origin repository, which may differ. Furthermore, most open-source licenses 
     require the full license text and copyrights in the distribution.<br> Many OSS packages also embed other OSS with different 
@@ -435,33 +436,33 @@ For custom C/C++ recipes or recipes built with other languages and package manag
     license text and copyrights, and offers optional deep license analysis to identify embedded licenses within packages. 
     Licenses from recipes are used when Custom Components are created using `--modes CUSTOM_COMPS`.<br><br>
 
-5.  **Can this utility be used on a Yocto image without access to the build environment?**<br>
+6.  **Can this utility be used on a Yocto image without access to the build environment?**<br>
     Yes, potentially. Use the parameters `--skip_bitbake -l LIC_MANIFEST_FILE --bitbake_layers_file LAYERS_FILE`, where `LIC_MANIFEST_FILE` 
     is the path to your `license.manifest` file and `LAYERS_FILE` contains the output of `bitbake-layers show-recipes`.<br>
     However, several scan modes will be disabled due to the lack of build artefacts (including Signature scanning
 of packages `--modes SIG_SCAN`, CVE patching `--modes CVE_PATCHES` and kernel vulnerability applicability `--modes KERNEL_VULNS`).<br><br>
 
-6.  **Why can't I simply use the `cve-check` class provided by Yocto to determine unpatched vulnerabilities?**<br>
+7.  **Why can't I simply use the `cve-check` class provided by Yocto to determine unpatched vulnerabilities?**<br>
     The `cve-check` class processes all recipes in the build and attempts to associate CVEs from the NVD using CPEs. This often leads to a large number of false positive CVEs, as it reports all packages (including build dependencies) rather than just those in the distributed image and the CPE is a wildcard often associating many vulnerabilities which are false
 positive. Furthermore, the CPE association data from the NVD is frequently inaccurate with no earliest affected version meaning that newer vulnerabilities are shown for all previous
 verisons of packages. Black Duck Security Advistories are expert-curated to reduce false positives including marking CVEs as ignored where they should not apply.<br><br>
 
-7.  **Why couldn't I just use the `create-spdx` class provided by Yocto to export a full SBOM?**<br>
+8.  **Why couldn't I just use the `create-spdx` class provided by Yocto to export a full SBOM?**<br>
     The Yocto `create-spdx` class generates SPDX JSON files for packages, including data like file lists and hashes. However, many SPDX fields (e.g., license text, copyrights) are often blank (`NO-ASSERTION`), and packages are not identified by PURL, stopping import into other tools (including Black Duck).<br><br>
 
-8.  **I cannot see the Linux kernel in the Black Duck project.**<br>
+9.  **I cannot see the Linux kernel in the Black Duck project.**<br>
     Consider using the `--modes IMAGE_MANIFEST` (optionally with `--image_license_manifest PATH`) to process packages in the image manifest, which usually includes the Linux kernel. You may also need to add the CPE_COMPS mode to add the kernel. If the kernel still cannot be identified due to a custom name format, consider adding the required kernel version manually to the project.<br><br>
 
-9.  **I am using another Yocto wrapper like KAS ([https://kas.readthedocs.io/](https://kas.readthedocs.io/)) and cannot run Bitbake, or the script fails for some other reason.**<br>
+10.  **I am using another Yocto wrapper like KAS ([https://kas.readthedocs.io/](https://kas.readthedocs.io/)) and cannot run Bitbake, or the script fails for some other reason.**<br>
     Use the parameters `--skip_bitbake -l LIC_MANIFEST_FILE --bitbake_layers_file LAYERS_FILE`, where `LIC_MANIFEST_FILE` is the path to your `license.manifest` file and `LAYERS_FILE` contains the output of `bitbake-layers show-recipes`. Note that this will disable several features, including CVE patching, kernel vulnerability identification, and package scanning.<br><br>
 
-10.  **I want to scan all recipes, including development dependencies, as opposed to only those in the delivered image.**<br>
+11.  **I want to scan all recipes, including development dependencies, as opposed to only those in the delivered image.**<br>
     Run the command `bitbake -g` to create a `task-depends.dot` file, then use the parameter `--task_depends_dot_file FILE`, where `FILE` is the path to the generated file.<br><br>
 
-11. **Unable to upload SPDX file during script run in phase 5**<br>
+12. **Unable to upload SPDX file during script run in phase 5**<br>
     Where mode=CUSTOM_COMPS, licenses for custom components to be added from the license.manifest must be valid SPDX licenses for the SBOM to be importable. Check licenses at https://spdx.org/licenses/ (suggest checking compliance via an LLM) and modify any non-compliant license text in recipes or manifest files. Note that license text in the manifest files is only used to define the licenses for components added as Custom Components (CUSTOM_COMPS), but is not used for components added by the OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CPE_COMPS options which will reference the licenses from the KB instead. Resolved licenses can be modified within the project version or globally once components have been added to the BOM.<br><br>
 
-12. **Why do I see multiple extra components in the BOM when using SIG_SCAN or SIG_SCAN_ALL modes?**<br>
+13. **Why do I see multiple extra components in the BOM when using SIG_SCAN or SIG_SCAN_ALL modes?**<br>
     Signature scanning examines package archives to look for hierarchical folder matches.<br>
     If a package is an exact, unmodified copy of an original package known to the BD KB, then a component match will be shown for this component in the BOM. However,
     Signature scanning will continue to look for sub-matches within the package which can report embedded OSS components, or partial matches deeper in the hierarchy.<br>
