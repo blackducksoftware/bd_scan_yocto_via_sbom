@@ -213,6 +213,7 @@ class RecipeList:
                 if conf.run_custom_components:
                     desc += ', Not created as Custom Component'
                 logging.info(f"- Recipe {desc}")
+                count_missing += 1
                 not_in_bom.append(desc)
                 # if recipe.matched_oe:
                 #     matched_oe_not_in_bom.append(fullid)
@@ -233,7 +234,6 @@ class RecipeList:
 
         if count_missing == 0:
             logging.info(" - None")
-            logging.info("")
 
         logging.info("")
         logging.info(" Summary of Components Mapped in Black Duck BOM:")

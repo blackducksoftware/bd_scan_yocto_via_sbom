@@ -101,11 +101,11 @@ class Vuln:
         logging.info(f"Patched vulnerability {self.id()}")
         return True
 
-    def is_remediated(self, remediationStatus):
+    def is_remediated(self, remediation_status):
         try:
             if ('vulnerabilityWithRemediation' in self.data and
                     'remediationStatus' in self.data['vulnerabilityWithRemediation']):
-                if self.data['vulnerabilityWithRemediation']['remediationStatus'] == remediationStatus:
+                if self.data['vulnerabilityWithRemediation']['remediationStatus'] == remediation_status:
                     return True
                 else:
                     return False
@@ -121,7 +121,7 @@ class Vuln:
         except KeyError:
             return ''
 
-    async def async_remediate_vuln(self, conf, session, token, remediationStatus, vulndict):
+    async def async_remediate_vuln(self, conf, session, token, remediation_status, vulndict):
         if conf.bd_trustcert:
             ssl = False
         else:
@@ -146,7 +146,7 @@ class Vuln:
             comment += ' - remediated in build'
         payload['comment'] = comment[:200]
 
-        payload['remediationStatus'] = remediationStatus
+        payload['remediationStatus'] = remediation_status
 
         logging.debug(f"{self.id} - {self.url()}")
         async with session.put(self.url(), headers=headers, json=payload, ssl=ssl) as response:

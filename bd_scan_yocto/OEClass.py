@@ -236,17 +236,17 @@ class OE:
 
         return {}
 
-    def get_layer_by_layerbranchid(self, id):
+    def get_layer_by_layerbranchid(self, layerid):
         try:
-            layerid = self.layerbranchid_dict[id]['layer']
+            layerid = self.layerbranchid_dict[layerid]['layer']
             return self.layerid_dict[layerid]
         except KeyError as e:
             logging.warning(f"Cannot get layer by layerbranchid {e}")
         return {}
 
-    def get_branch_by_layerbranchid(self, id):
+    def get_branch_by_layerbranchid(self, layerbranchid):
         try:
-            branchid = self.layerbranchid_dict[id]['branch']
+            branchid = self.layerbranchid_dict[layerbranchid]['branch']
             return self.branchid_dict[branchid]
         except KeyError as e:
             logging.warning(f"Cannot get branch by layerbranchid {e}")
@@ -358,7 +358,7 @@ class OE:
                 else:
                     recipe_ver = recipe.version
 
-                oe_ver_array = []
+                # oe_ver_array = []
                 for oe_recipe in self.recipename_dict[recipe.name]:
                     if oe_recipe['pe']:
                         oe_ver = f"{oe_recipe['pe']}:{oe_recipe['pv']}"
@@ -385,10 +385,10 @@ class OE:
                     return {}, {}, False, False
 
                 for oe_recipe in self.recipename_dict[recipe.name]:
-                    if oe_recipe['pe']:
-                        oe_ver = f"{oe_recipe['pe']}:{oe_recipe['pv']}"
-                    else:
-                        oe_ver = oe_recipe['pv']
+                    # if oe_recipe['pe']:
+                    #     oe_ver = f"{oe_recipe['pe']}:{oe_recipe['pv']}"
+                    # else:
+                    #     oe_ver = oe_recipe['pv']
 
                     # Check version distance
                     match, exact_ver_temp = self.compare_recipes(conf, recipe, oe_recipe, best_recipe)

@@ -95,7 +95,9 @@ class Config:
                                  "project will not be created automatically and CVE patching not supported)",
                             default="")
         parser.add_argument("--skip_oe_data",
-                            help="OPTIONAL Download and use OE data to check layers, versions & revisions",
+                            help="OPTIONAL Do not use OE data to check layers, versions & revisions - if mode "
+                                 "OE_RECIPES is specified then recipes will be uploaded to create the project but "
+                                 "without any checking against OE data",
                             action='store_true')
         parser.add_argument("--oe_data_folder", type=str,
                             help="Folder to contain OE data files - if files do not exist they will be downloaded, "

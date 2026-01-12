@@ -157,6 +157,8 @@ class BOM:
 
         patched = self.patch_vulns_async(conf, self.CVEPatchedVulnDict)
         ignored = self.ignore_vulns_async(conf, self.CVEIgnoredVulnDict)
+        logging.info("")
+        logging.info("CVE SUMMARY:")
         logging.info(f"- {patched} CVEs marked as PATCHED in BD project")
         logging.info(f"- {ignored} CVEs marked as IGNORED in BD project")
         return
