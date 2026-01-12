@@ -53,9 +53,10 @@ class ComponentList:
                 elif rec.oe_recipe != {}:
                     if recver == rec.oe_recipe['pv']:
                         return True
+                    logging.debug(f'check_recipe_in_list: Component name {rec.name} missing from BOM')
             else:
                 # Component name not in list
-                logging.debug(f'check_recipe_in_list: Component name {rec.name} missing from complist')
+                logging.debug(f'check_recipe_in_list: Component name {rec.name} missing from BOM')
 
         except Exception as e:
             logging.error(f"Error finding recipe {rec.name} - {e}")

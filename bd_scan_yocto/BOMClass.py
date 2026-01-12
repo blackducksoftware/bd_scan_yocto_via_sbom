@@ -157,6 +157,8 @@ class BOM:
 
         patched = self.patch_vulns_async(conf, self.CVEPatchedVulnDict)
         ignored = self.ignore_vulns_async(conf, self.CVEIgnoredVulnDict)
+        logging.info("")
+        logging.info("CVE SUMMARY:")
         logging.info(f"- {patched} CVEs marked as PATCHED in BD project")
         logging.info(f"- {ignored} CVEs marked as IGNORED in BD project")
         return
@@ -406,9 +408,9 @@ class BOM:
             if not os.path.isdir(tdir):
                 logging.error("Cannot create bd-detect folder in $HOME")
                 sys.exit(2)
-            shpath = os.path.join(tdir, 'detect10.sh')
+            shpath = os.path.join(tdir, 'detect11.sh')
 
-            j = requests.get("https://detect.blackduck.com/detect10.sh")
+            j = requests.get("https://detect.blackduck.com/detect11.sh")
             if j.ok:
                 open(shpath, 'wb').write(j.content)
                 if not os.path.isfile(shpath):

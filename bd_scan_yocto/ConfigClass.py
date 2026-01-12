@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.3.1"
+script_version = "v1.3.2"
 
 
 class Config:
@@ -95,7 +95,9 @@ class Config:
                                  "project will not be created automatically and CVE patching not supported)",
                             default="")
         parser.add_argument("--skip_oe_data",
-                            help="OPTIONAL Download and use OE data to check layers, versions & revisions",
+                            help="OPTIONAL Do not use OE data to check layers, versions & revisions - if mode "
+                                 "OE_RECIPES is specified then recipes will be uploaded to create the project but "
+                                 "without any checking against OE data",
                             action='store_true')
         parser.add_argument("--oe_data_folder", type=str,
                             help="Folder to contain OE data files - if files do not exist they will be downloaded, "
@@ -148,8 +150,12 @@ class Config:
         parser.add_argument("--recipe_report", type=str,
                             help="Output recipe report to file",
                             default="")
-        parser.add_argument("--no_unmap",
-                            help="Do not unmap previous scans when running new scan",
+        parser.add_argument("--unmap",
+                            help="Unmap previous scans when running new scan (not supported with Detect11",
+                            action='store_true')
+        parser.add_argument("--ignore_licenses",
+                            help="Do not use license text from license.manifest to create Custom Components (use"
+                                 "where PHASE 5 SBOM cannot be uploaded due to invalid SPDX license definitions)",
                             action='store_true')
 
         args = parser.parse_args()
@@ -190,7 +196,7 @@ class Config:
         self.cve_check_dir = ''
         self.license_dir = ''
         self.recipe_report = ''
-        self.unmap = not args.no_unmap
+        self.unmap = args.unmap
         self.run_cpe_components = False
         self.process_kernel_vulns = False
         self.kernel_recipe = args.kernel_recipe
@@ -199,6 +205,7 @@ class Config:
         self.process_cves = True
         self.exclude_recipes = []
         self.exclude_layers = []
+        self.ignore_licenses = args.ignore_licenses
 
         terminate = False
         if args.debug:

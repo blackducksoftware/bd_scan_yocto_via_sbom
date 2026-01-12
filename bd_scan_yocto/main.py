@@ -24,7 +24,7 @@ def main():
             sys.exit(2)
 
     logging.info("")
-    logging.info("--- PHASE 1 - INITIATE PROJECT -------------------------------------------")
+    logging.info("--- PHASE 0 - INITIATE PROJECT -------------------------------------------")
     bom = BOM(conf)
 
     if bom.get_proj():
@@ -46,19 +46,25 @@ def main():
         sys.exit(2)
 
     logging.info("")
-    logging.info("--- PHASE 2 - GET OE DATA ------------------------------------------------")
+    logging.info("--- PHASE 1 - GET OE DATA ------------------------------------------------")
     if conf.process_oe_recipes:
         if not conf.oe_data_folder:
             logging.info("Not using OE data cache folder (consider using --oe_data_folder) ...")
+
         if not conf.skip_oe_data:
             oe_class = OE(conf)
+            logging.info("")
+            logging.info("--- PHASE 2 - MATCH RECIPES AGAINST OE DATA ------------------------------")
+            logging.info("Checking recipes ...")
+
             reclist.check_recipes_in_oe(conf, oe_class)
-            logging.info("Done processing OE data")
         else:
             logging.info("Skipping connection to OE APIs to verify origin layers and revisions "
                          "(remove --skip_oe_data to enable)")
+            logging.info("- PHASE 2 Skipped - --skip_oe_data specified")
+
     else:
-        logging.info("- Skipped - mode OE_RECIPES not specified")
+        logging.info("- PHASE 2 Skipped - mode OE_RECIPES not specified")
 
     logging.info("")
     logging.info("--- PHASE 3 - GENERATE & UPLOAD SBOM -------------------------------------")

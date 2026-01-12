@@ -213,6 +213,7 @@ class RecipeList:
                 if conf.run_custom_components:
                     desc += ', Not created as Custom Component'
                 logging.info(f"- Recipe {desc}")
+                count_missing += 1
                 not_in_bom.append(desc)
                 # if recipe.matched_oe:
                 #     matched_oe_not_in_bom.append(fullid)
@@ -233,7 +234,6 @@ class RecipeList:
 
         if count_missing == 0:
             logging.info(" - None")
-            logging.info("")
 
         logging.info("")
         logging.info(" Summary of Components Mapped in Black Duck BOM:")
@@ -344,7 +344,7 @@ class RecipeList:
 
                 if conf.run_custom_components and not recipe.cpe_component:
                     # v1.1.2 - add component to sbom for custom component creation
-                    add_sbom.add_recipe(recipe, clean_version=True, output_license=True)
+                    add_sbom.add_recipe(recipe, clean_version=True, output_license=(not conf.ignore_licenses))
                     recipe.custom_component = True
                     logging.info(f"- Added component {recipe.name}/{recipe.version} to SBOM as custom component")
 
@@ -353,7 +353,8 @@ class RecipeList:
             if comps_added:
                 if not add_sbom.output(conf.output_file):
                     logging.error("Unable to create SBOM file")
-                if bom.upload_sbom(conf, add_sbom, allow_create_custom_comps=True):
+                    return False
+                elif bom.upload_sbom(conf, add_sbom, allow_create_custom_comps=True):
                     logging.info(f"Uploaded add-on SBOM file '{add_sbom.file}' to modify project "
                                  f"'{conf.bd_project}' version '{conf.bd_version}'")
                 else:
@@ -362,7 +363,7 @@ class RecipeList:
 
         except Exception as e:
             logging.exception(f"Error processing missing recipes - {e}")
-        return comps_added
+            return False
 
     def remove_recipe(self, rec_name):
         index = 0
