@@ -25,12 +25,14 @@ def main():
 
     logging.info("")
     logging.info("--- PHASE 0 - INITIATE PROJECT -------------------------------------------")
-    bom = BOM(conf)
 
-    if bom.get_proj():
-        logging.info(f"Project {conf.bd_project} Version {conf.bd_version} already exists")
-
+    bom = None
     if conf.output_file == '':
+        bom = BOM(conf)
+
+        if bom.get_proj():
+            logging.info(f"Project {conf.bd_project} Version {conf.bd_version} already exists")
+
         logging.info("Running Detect to initialise project")
         extra_opt = '--detect.tools=DETECTOR'
         if conf.unmap:
@@ -39,6 +41,8 @@ def main():
                                       extra_opt=extra_opt):
             logging.error("Unable to run Detect to initialise project")
             sys.exit(2)
+    else:
+        logging.info(f"Output file specified - skipping Black Duck connection")
 
     reclist = RecipeList()
 
