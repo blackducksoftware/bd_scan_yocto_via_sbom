@@ -187,8 +187,9 @@ class BOM:
                 else:
                     logging.error('Unable to determine bom status')
                     return False
+
                 if not uptodate:
-                    time.sleep(15)
+                    time.sleep(5)
                 loop += 1
 
         except Exception as e:

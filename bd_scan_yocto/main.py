@@ -95,6 +95,7 @@ def main():
         logging.info("Skipped - mode OE_RECIPES not specified")
     bom.get_proj()
     bom.process(reclist)
+    logging.info(f"- {reclist.unmatched} Recipes not matched so far")
 
     logging.info("")
     logging.info("--- PHASE 4 - SIGNATURE SCAN PACKAGES ------------------------------------")
@@ -106,6 +107,8 @@ def main():
                     logging.info("Done")
                     bom.get_proj()
                     bom.process(reclist)
+                    logging.info(f"- {reclist.unmatched} Recipes not matched so far")
+
                 else:
                     logging.error(f"Unable to run Signature scan on package and download files")
                     sys.exit(2)
@@ -121,6 +124,7 @@ def main():
     if conf.run_cpe_components or conf.run_custom_components:
         if reclist.process_missing_recipes(conf, bom):
             bom.process(reclist)
+            logging.info(f"- {reclist.unmatched} Recipes not matched so far")
     else:
         logging.info("Skipped - mode CPE_COMPS or CUSTOM_COMPS not specified")
 

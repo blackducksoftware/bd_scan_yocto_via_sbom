@@ -14,6 +14,7 @@ from .SBOMClass import SBOM
 class RecipeList:
     def __init__(self):
         self.recipes = []
+        self.unmatched = 0
 
     def count(self):
         return len(self.recipes)
@@ -89,6 +90,7 @@ class RecipeList:
                      f"(mapped to closest version)")
         logging.info(f"    - {exact_layers} with the same layer as OE")
         logging.info(f"    - {changed_layers} exist in different OE layer (mapped to original)")
+        logging.info(f"- ({self.count() - recipes_in_oe} Other Recipes)")
 
     def scan_pkg_download_files(self, conf: "Config", bom: "BOM"):
         all_pkg_files = BB.get_pkg_files(conf)
@@ -270,12 +272,15 @@ class RecipeList:
                 logging.error(f"Unable to write recipe report file {conf.recipe_report} - {error}")
 
     def mark_recipes_in_bom(self, bom: "BOM"):
+        self.unmatched = 0
         for recipe in self.recipes:
             if not recipe.matched_in_bom:
                 # if recipe.check_in_bom(bom):
                 #     recipe.matched_in_bom = True
                 if bom.check_recipe_in_bom(recipe):
                     recipe.matched_in_bom = True
+                else:
+                    self.unmatched += 1
 
     # def get_cpes(self):
     #     cpes = []

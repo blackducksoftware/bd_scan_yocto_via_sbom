@@ -1,6 +1,6 @@
 -----
 
-# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.3.2
+# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.3.3
 
 -----
 
@@ -56,6 +56,39 @@ Yocto is a powerful, local build system for creating custom Linux images. It's *
 This script employs multiple techniques to **reverse-engineer a built Yocto project** to identify its included packages, report license information, and map vulnerabilities from the package origins.
 
 The script can also **identify and process the Linux kernel**, determining its custom configuration and modules to ignore vulnerabilities reported against excluded modules.
+
+-----
+
+## Understanding Yocto Recipes
+
+Openembedded.org (OE) provides a list of standard Yocto builds, layers and recipes for use as templates (see layers.openembedded.org).
+Most Yocto projects start using a template but can be extensively modified thereafter.
+
+Yocto recipes are essentially text config files used by Bitbake (the Yocto build tool) to download software packages or sources from external locations.
+
+The Black Duck SCA Knowledgebase has onboarded the majority of standard Yocto recipes by creating mappings to the **original component** referenced in the recipe (download location).
+The advantage of mapping recipes to the original component means that vulnerabilities are reported accurately, and the original 
+license definition will be used (as opposed to the potentially inaccurate license definition reported in the recipe file).
+
+This utility downloads the list of standard OE recipes from openembedded.org (OE data) during a scan, checking recipes from the project manifest to ensure they are
+correctly specified (this is required because Yocto layers can be renamed and recipes moved to new layers locally).
+In most cases a standard OE recipe in the manifest will result in a direct component match in the BD project (Bill of Materials or BOM).
+
+However, Yocto recipes can be modified in a project to upgrade, change the software download location and add patches, or other (non-standard) recipes can be imported or created to generate Custom Recipes.
+
+Custom (non-standard) Recipes have either been created by:
+i) Using a recipe from a non-OE source (comprising either original OSS, modified OSS or custom/commercial code from 3rd parties)
+ii) Modifying an existing standard OE recipe to use a new package version
+iii) Creating a new recipe to install different OSS
+iv) Creating a recipe for your own code
+
+This utility provides alternative scan techniques to support identification of non-OE (Custom) recipes including SIG_SCAN, CPE_COMPS and CUSTOM_COMPS modes which should
+be specified to ensure a complete bill of materials (BOM) - see [FAQ 1](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#faqs).
+
+A small number of standard OE recipes may not exist in the Black Duck KB, and will not map to a component using the OE_RECIPES mode as expected, so the SIG_SCAN, CPE_COMPS and CUSTOM_COMPS modes
+may be required to map these into the BD project.
+
+Note: For Custom Recipes of type ii), you can also consider using the ‘--max_oe_version_distance’ option to map the most recent known version from the OE data.
 
 -----
 
@@ -156,7 +189,7 @@ For optimal Yocto scan results, review the following:
 
 1.  **Check required scan modes using `--modes`:** - the default scans (if --modes not specified) are `OE_RECIPES,SIG_SCAN,CVE_PATCHES` (same as `--modes DEFAULT`) - see [Scan Modes](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#scan-modes) below.
 2.  **Optionally override Bitbake Environment Values:** By default, the utility calls `Bitbake -e` to extract environment and layer information, and will refer to the latest Yocto build. You can override values including `license.manifest`, `machine`, `target`, `download_dir`, `package_dir`, and `image_package_type` using command-line parameters.
-3.  **Generate a Recipe Report:** Use the `--recipe_report REPFILE` parameter to create a report of matched and unmatched recipes in the BOM, required for analysis and debugging. **IMPORTANT** Unmatched IDs shown the BD project version are only from the 1st scan stage and should not be used to determine missing recipes if you use scan modes in addition to OE_RECIPES - see [FAQs](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#faqs).
+3.  **Generate a Recipe Report:** Use the `--recipe_report REPFILE` parameter to create a report of matched and unmatched recipes in the Bill of Materials (BOM), required for analysis and debugging. **IMPORTANT** Unmatched IDs shown the BD project version are only from the 1st scan stage and should not be used to determine missing recipes if you use scan modes in addition to OE_RECIPES - see [FAQs](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#faqs).
 4. **Cache OE Data:** The `--oe_data_folder FOLDER` parameter allows you to cache downloaded OE data (approx. 300MB) and reuse it in subsequent runs, saving download time. OE data doesn't change very frequently.
 5. **Apply Patched CVEs to BD Project:** Add the `cve_check` class to your Bitbake `local.conf` to identify patched CVEs. Ensure **PHASE 7** picks up the `cve-check` file. Optionally, specify the output CVE check file using `--cve_check_file FILE` if an alternative location is needed. See [CVE Patching](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#cve-patching) for more information.
 6. **Fuzzy Match Modified Recipes:** For recipes modified from standard OE versions, optionally use `--max_oe_version_distance X.X.X` (e.g., `0.0.1` to `0.0.10`) for fuzzy matching against OE recipes. Be cautious, as this can sometimes disable correct matches. It's recommended to create two projects and compare results with and without this parameter. See [OE Difference Calculations](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#example-distance-calculations-for---max_oe_version_difference) for more information.
@@ -170,7 +203,7 @@ the associated PURL is deleted under 'Management-->Unmatched Components').
 
 ## Scan Modes
 
-The new `--modes` option is a comma-delimited list of modes (no spaces), used to control the multiple types of scan supported in the script.
+The `--modes` option is a comma-delimited list of modes (no spaces), used to control the multiple types of scan supported in the script.
 It can be used to replace existing scan control parameters and simplify the command line.
 
 Explanation of modes:
@@ -190,7 +223,7 @@ Notes:
   - To add scan modes to the default set use, for example `--modes DEFAULT,IMAGE_MANIFEST,KERNEL_VULNS`.
   - To add `SIG_SCAN_ALL` mode (scanning all packages) to `ALL` scan mode use `--modes ALL,SIG_SCAN_ALL`.
 
-Mapping of existing scan control parameters to scan modes: 
+Mapping of legacy (pre-v1.2.0) scan control parameters to scan modes: 
    * `--process_image_manifest` = mode `IMAGE_MANIFEST`
    * `--scan_all_packages` = mode `SIG_SCAN_ALL`
    * `--add_comps_by_cpe` = mode `CPE_COMPS`
@@ -361,6 +394,8 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 ## Release Notes
 
+* **v1.3.3**
+   * Minor fix to custom component reporting.
 * **v1.3.2**
    * Upgraded to BD Detect 11 and replaced --no_unmap with --unmap (default is not to unmap scans). Added --ignore_licenses option for custom components.
 * **v1.3.1**
@@ -403,14 +438,14 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 1. **Why is Recipe XXX missing from the Black Duck project?**<br>
     Recipes can be added to the BOM using multiple scan modes.<br>
-    Yocto recipes which are listed at layers.openembedded.org and known in the Black Duck KB can be added by the OE_RECIPES mode.<br>
+    Yocto recipes which are listed at layers.openembedded.org and known in the Black Duck KB should be added by the OE_RECIPES mode.<br>
     However, if the recipe has been modified to use a new version or does not exist
     in the OE list (or is not known to the BD KB), then the `--max_oe_version_distance` option can be used to try to find the 
-    most recent known OE recipe.<br>
-    If still no match, then the SIG_SCAN mode can be used to scan the package to look for exact or similar
+    most recent known OE recipe version.<br>
+    If still no match, then the SIG_SCAN mode can be used to scan the package to look for exact or modified
     Signature matches for known OSS - see FAQ 12 for more about Signature scanning.
-    If still no match then CPE_COMPS mode can be used to lookup OSS components by CPE (only works for those with 
-    vulnerabilities).<br>
+    If still no match then CPE_COMPS mode can be used to lookup OSS components by CPE (only works for packages with 
+    reported vulnerabilities).<br>
     Finally, the CUSTOM_COMPS mode will create placeholder custom components in the BOM for the recipe.
     If you use ANY non-OE recipes, then only if all options have been specified can all recipes be matched (see also FAQ 12
     below for the requirement to have valid license identifiers for custom recipes).<br>
@@ -433,10 +468,9 @@ For custom C/C++ recipes or recipes built with other languages and package manag
     
 4. **Why can't I rely on the license data provided by Yocto in the `license.manifest` file?**<br>
     The licenses reported by Bitbake come directly from the recipe files. However, the true applicable license for 
-    each package is the one declared in its origin repository, which may differ. Furthermore, most open-source licenses 
-    require the full license text and copyrights in the distribution.<br> Many OSS packages also embed other OSS with different 
-    licenses, sometimes with re-licensing restrictions. Black Duck uses licenses from the origin packages, supports full 
-    license text and copyrights, and offers optional deep license analysis to identify embedded licenses within packages. 
+    each package is the one declared in its origin repository, which may differ.<br> Many OSS packages also embed other OSS with different 
+    licenses, sometimes with re-licensing restrictions. Black Duck uses licenses from the origin packages, can support full 
+    license text/copyrights and optional deep license analysis to identify embedded licenses within packages (for components created by SIG_SCAN or CPE_COMPS modes). 
     Licenses from recipes are used when Custom Components are created using `--modes CUSTOM_COMPS`.<br>
 
 5. **Can this utility be used on a Yocto image without access to the build environment?**<br>
@@ -451,7 +485,8 @@ positive. Furthermore, the CPE association data from the NVD is frequently inacc
 verisons of packages. Black Duck Security Advistories are expert-curated to reduce false positives including marking CVEs as ignored where they should not apply.<br>
 
 7. **Why couldn't I just use the `create-spdx` class provided by Yocto to export a full SBOM?**<br>
-    The Yocto `create-spdx` class generates SPDX JSON files for packages, including data like file lists and hashes. However, many SPDX fields (e.g., license text, copyrights) are often blank (`NO-ASSERTION`), and packages are not identified by PURL, stopping import into other tools (including Black Duck).<br>
+    The Yocto `create-spdx` class generates SPDX JSON files for packages, including data such as file lists and hashes. However, many SPDX fields (e.g., license text, copyrights) are blank (`NO-ASSERTION`), and packages are not identified by PURL, stopping import into other tools (including Black Duck).
+The SPDX export also covers all recipes in the build environment as opposed to only those in the manifest.<br>
 
 8. **I cannot see the Linux kernel in the Black Duck project.**<br>
     Consider using the `--modes IMAGE_MANIFEST` (optionally with `--image_license_manifest PATH`) to process packages in the image manifest, which usually includes the Linux kernel. You may also need to add the CPE_COMPS mode to add the kernel. If the kernel still cannot be identified due to a custom name format, consider adding the required kernel version manually to the project.<br>

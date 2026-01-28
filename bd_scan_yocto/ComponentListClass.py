@@ -47,7 +47,8 @@ class ComponentList:
             elif rec.name in self.component_names:
                 index = self.component_names.index(rec.name)
                 comp = self.components[index]
-                recver = rec.version.split('+')[0]
+                # recver = rec.version.split('+')[0]
+                recver = rec.clean_version_string()
                 if recver in comp.version or comp.version in recver:  # ToDo - logic needs checking
                     return True
                 elif rec.oe_recipe != {}:
