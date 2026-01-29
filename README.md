@@ -43,7 +43,7 @@ For guidance on optimizing Yocto project scans with this utility, refer to the *
 
 Note the addition of new `--modes` parameter in v1.2.0+ to control scans to be performed (legacy scan parameters still supported) - see Scan Mode section below.
 
-### Understanding Yocto and Why This Script is Needed
+### Why is This Script Needed?
 
 Yocto is a powerful, local build system for creating custom Linux images. It's **not a package manager** but a highly customizable environment. Key characteristics that make comprehensive scanning challenging include:
 
@@ -57,9 +57,7 @@ This script employs multiple techniques to **reverse-engineer a built Yocto proj
 
 The script can also **identify and process the Linux kernel**, determining its custom configuration and modules to ignore vulnerabilities reported against excluded modules.
 
------
-
-## Understanding Yocto Recipes
+### Understanding Yocto Recipes
 
 Openembedded.org (OE) provides a list of standard Yocto builds, layers and recipes for use as templates (see layers.openembedded.org).
 Most Yocto projects start using a template but can be extensively modified thereafter.
@@ -74,13 +72,13 @@ This utility downloads the list of standard OE recipes from openembedded.org (OE
 correctly specified (this is required because Yocto layers can be renamed and recipes moved to new layers locally).
 In most cases a standard OE recipe in the manifest will result in a direct component match in the BD project (Bill of Materials or BOM).
 
-However, Yocto recipes can be modified in a project to upgrade, change the software download location and add patches, or other (non-standard) recipes can be imported or created to generate Custom Recipes.
+However, Yocto recipes can be modified in a project to upgrade packages and add patches, or other (non-standard) recipes can be imported or created to generate Custom Recipes.
 
 Custom (non-standard) Recipes have either been created by:
-i) Using a recipe from a non-OE source (comprising either original OSS, modified OSS or custom/commercial code from 3rd parties)
-ii) Modifying an existing standard OE recipe to use a new package version
-iii) Creating a new recipe to install different OSS
-iv) Creating a recipe for your own code
+1. Using a recipe from a non-OE source (comprising either original OSS, modified OSS or custom/commercial code from 3rd parties) 
+2. Modifying an existing standard OE recipe to use a new package version 
+3. Creating a new recipe to install different OSS 
+4. Creating a recipe for your own code
 
 This utility provides alternative scan techniques to support identification of non-OE (Custom) recipes including SIG_SCAN, CPE_COMPS and CUSTOM_COMPS modes which should
 be specified to ensure a complete bill of materials (BOM) - see [FAQ 1](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#faqs).
@@ -88,7 +86,7 @@ be specified to ensure a complete bill of materials (BOM) - see [FAQ 1](https://
 A small number of standard OE recipes may not exist in the Black Duck KB, and will not map to a component using the OE_RECIPES mode as expected, so the SIG_SCAN, CPE_COMPS and CUSTOM_COMPS modes
 may be required to map these into the BD project.
 
-Note: For Custom Recipes of type ii), you can also consider using the ‘--max_oe_version_distance’ option to map the most recent known version from the OE data.
+Note: For Custom Recipes of type 2 above, you can also consider using the ‘--max_oe_version_distance’ option to map the most recent known version from the OE data.
 
 -----
 
@@ -187,7 +185,7 @@ You have a few options for installing this utility:
 
 For optimal Yocto scan results, review the following:
 
-1.  **Check required scan modes using `--modes`:** - the default scans (if --modes not specified) are `OE_RECIPES,SIG_SCAN,CVE_PATCHES` (same as `--modes DEFAULT`) - see [Scan Modes](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#scan-modes) below.
+1.  **Check required scan modes using `--modes`:** - the default scans (if --modes not specified) are `OE_RECIPES,SIG_SCAN,CVE_PATCHES` (same as `--modes DEFAULT`) - see [Scan Modes](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#scan-modes) below.<br>
 2.  **Optionally override Bitbake Environment Values:** By default, the utility calls `Bitbake -e` to extract environment and layer information, and will refer to the latest Yocto build. You can override values including `license.manifest`, `machine`, `target`, `download_dir`, `package_dir`, and `image_package_type` using command-line parameters.
 3.  **Generate a Recipe Report:** Use the `--recipe_report REPFILE` parameter to create a report of matched and unmatched recipes in the Bill of Materials (BOM), required for analysis and debugging. **IMPORTANT** Unmatched IDs shown the BD project version are only from the 1st scan stage and should not be used to determine missing recipes if you use scan modes in addition to OE_RECIPES - see [FAQs](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#faqs).
 4. **Cache OE Data:** The `--oe_data_folder FOLDER` parameter allows you to cache downloaded OE data (approx. 300MB) and reuse it in subsequent runs, saving download time. OE data doesn't change very frequently.
@@ -440,9 +438,9 @@ For custom C/C++ recipes or recipes built with other languages and package manag
     Recipes can be added to the BOM using multiple scan modes.<br>
     Yocto recipes which are listed at layers.openembedded.org and known in the Black Duck KB should be added by the OE_RECIPES mode.<br>
     However, if the recipe has been modified to use a new version or does not exist
-    in the OE list (or is not known to the BD KB), then the `--max_oe_version_distance` option can be used to try to find the 
+    in the OE list, then the `--max_oe_version_distance` option can be used to try to find the 
     most recent known OE recipe version.<br>
-    If still no match, then the SIG_SCAN mode can be used to scan the package to look for exact or modified
+    If still no match (or if a standard OE recipe is not known to the BD KB), then the SIG_SCAN mode can be used to scan the package to look for exact or modified
     Signature matches for known OSS - see FAQ 12 for more about Signature scanning.
     If still no match then CPE_COMPS mode can be used to lookup OSS components by CPE (only works for packages with 
     reported vulnerabilities).<br>
@@ -458,8 +456,8 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 3. **Why can I see `unmatched IDs` in the project view?**<br>
     Unmatched IDs are shown from the first SBOM upload performed by the script in mode OE_RECIPES.
-    This is a list of recipes which could not be matched because they are not listed at layers.openembedded.org (because they have been modified, they come from
-    another non-OE source or are your own custom recipes containing your code).<br> If you have used other scan modes (SIG_SCAN, CPE_COMPS or CUSTOM_COMPS) then these
+    The Unmatched IDs is a list of recipes which could not be matched because they are not listed at layers.openembedded.org (because they have been modified, they come from
+    another non-OE source, are your own custom recipes containing your code or are unknown in the KB).<br> If you have used other scan modes (SIG_SCAN, CPE_COMPS or CUSTOM_COMPS) then these
     unmatched recipes may have been matched by the Signature scan or CPE_COMPS and CUSTOM_COMPS modes. If you use all scan modes (and your custom recipes use valid SPDX license
     definitions; see [FAQ](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#faqs) 11 AND you have a recent BD server version) then you should have a full SBOM containing all recipes - custom/commercial/unknown recipes will be added as custom
     components.<br>
@@ -498,11 +496,11 @@ The SPDX export also covers all recipes in the build environment as opposed to o
     Run the command `bitbake -g` to create a `task-depends.dot` file, then use the parameter `--task_depends_dot_file FILE`, where `FILE` is the path to the generated file.<br>
 
 11. **Unable to upload SPDX file during script run in phase 5**<br>
-    Where mode=CUSTOM_COMPS, licenses for custom components to be added from the license.manifest must be valid SPDX licenses for the SBOM to be importable. Use the `--ignore_licenses` option (custom components will have Unknown license) or check licenses for custom components at https://spdx.org/licenses/ (suggest checking compliance via an LLM) and modify any non-compliant license entries in the manifest files. Note that license text in the manifest files is only used to define the licenses for components added as Custom Components (CUSTOM_COMPS), but is not used for components added by the OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CPE_COMPS options which will reference the licenses from the BD KB instead. Resolved licenses can be modified within the project version or globally once components have been added to the BOM.<br>
+    Where mode=CUSTOM_COMPS, licenses for custom components to be added from the license.manifest must be valid SPDX licenses for the SBOM to be importable. Use the `--ignore_licenses` option (custom components will have 'Unknown license') or check licenses for custom components at https://spdx.org/licenses/ (suggest checking compliance via an LLM) and modify any non-compliant license entries in the manifest files. Note that license text in the manifest files is only used to define the licenses for components added as Custom Components (CUSTOM_COMPS), but is not used for components added by the OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CPE_COMPS options which will reference the licenses from the BD KB instead. Resolved licenses can be modified within the project version or globally once components have been added to the BOM.<br>
 
 12. **Why do I see multiple extra components in the BOM when using SIG_SCAN or SIG_SCAN_ALL modes?**<br>
     Signature scanning examines package archives to look for hierarchical folder matches.<br>
     If a package is an exact, unmodified copy of an original package known to the BD KB, then a component match will be shown for this component in the BOM. However,
     Signature scanning will continue to look for sub-matches within the package which can report embedded OSS components, or partial matches deeper in the hierarchy.<br>
     The additional utility https://github.com/blackducksoftware/bd_sig_filter can be used to filter Signature matches to remove obvious false positives. Consider also using
-    the `--ignore_archive_submatches` option to remove all sub-matches (leaving only those which match top-level packages).
+    the `--ignore_archive_submatches` option in `bd_sig_filter` to remove all sub-matches (leaving only those which match top-level packages).

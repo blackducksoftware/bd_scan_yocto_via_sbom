@@ -161,7 +161,7 @@ class BB:
     @staticmethod
     def run_cmd(command: list):
         try:
-            ret = subprocess.run(command, capture_output=True, text=True, timeout=60)
+            ret = subprocess.run(command, capture_output=True, text=True, timeout=120)
             if ret.returncode != 0:
                 logging.error(f"Run command '{command}' failed with error {ret.returncode} - {ret.stderr}")
                 return False, ''
