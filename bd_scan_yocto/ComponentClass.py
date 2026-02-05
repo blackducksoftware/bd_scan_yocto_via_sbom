@@ -67,7 +67,7 @@ class Component:
                         # print(origin['externalId'])
                         if len(origarr) >= 2:
                             if origin['externalNamespace'] == 'openembedded':
-                                if len(origarr > 2):
+                                if len(origarr) > 2:
                                     return origarr[1], origarr[2]
                             elif origin['externalId'].startswith('git:'):
                                 if len(origarr) > 4:
