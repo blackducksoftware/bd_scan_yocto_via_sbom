@@ -11,7 +11,7 @@ class Recipe:
         self.epoch = ''
         self.version = self.filter_version_string(version)
         self.release = rel
-        self.layer = ''
+        self.layer = 'meta'
         self.spdxid = ''
         self.oe_layer = {}
         self.oe_recipe = {}
@@ -23,6 +23,7 @@ class Recipe:
         self.custom_component = False
         self.cpe_component = False
         self.cpe_comp_href = ''
+        self.compname = ''
 
     def add_layer(self, layer):
         self.layer = layer

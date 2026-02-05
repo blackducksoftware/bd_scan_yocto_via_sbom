@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.3.3"
+script_version = "v1.4.0"
 
 
 class Config:
@@ -206,6 +206,7 @@ class Config:
         self.exclude_recipes = []
         self.exclude_layers = []
         self.ignore_licenses = args.ignore_licenses
+        self.skip_layers = False
 
         terminate = False
         if args.debug:
@@ -418,8 +419,10 @@ class Config:
 
         if self.skip_bitbake:
             if not self.bitbake_layers_file:
-                logging.error("Option --skip_bitbake set but --bitbake_layers_file not supplied")
-                terminate = True
+                logging.info("--Skip_bitbake set but --bitbake_layers_file not specified - will lookup recipes layers")
+                self.skip_layers = True
+                # logging.error("Option --skip_bitbake set but --bitbake_layers_file not supplied")
+                # terminate = True
 
         if args.recipe_report != '':
             if os.path.exists(args.recipe_report):

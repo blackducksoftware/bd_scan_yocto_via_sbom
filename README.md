@@ -1,6 +1,6 @@
 -----
 
-# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.3.3
+# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.4.0
 
 -----
 
@@ -10,17 +10,23 @@ This script is provided under the MIT license (see `LICENSE` file).
 
 It does not extend the licensed functionality of Black Duck Software. It is provided as-is, without warranty or liability.
 
+This script is for **licensed users of Black Duck Software only**. You will need a Black Duck SCA server and an API key to use it.
+
 For comments or issues, please **raise a GitHub issue in this repository**. Black Duck Support cannot respond to support tickets for this open-source utility. Users are encouraged to engage with the authors to address any identified issues.
 
 Refer to [How to Report Issues ](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#how-to-report-issues-with-this-script) below for the minimum required information to report issues with this script.
 
 -----
 
+## Quick Start
+
+See the [quick start](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#quick-start) guide.
+
+-----
+
 ## Introduction
 
 ### Overview of `bd_scan_yocto_via_sbom`
-
-This script is for **licensed users of Black Duck Software only**. You will need a Black Duck SCA server and an API key to use it.
 
 While [Black Duck Detect](https://detect.blackduck.com/doc) is the default scan utility for Black Duck SCA and supports Yocto projects, its Yocto scans have limitations. A BD Detect scan will only identify standard recipes from OpenEmbedded.org and **does not cover**:
 
@@ -70,7 +76,7 @@ license definition will be used (as opposed to the potentially inaccurate licens
 
 This utility downloads the list of standard OE recipes from openembedded.org (OE data) during a scan, checking recipes from the project manifest to ensure they are
 correctly specified (this is required because Yocto layers can be renamed and recipes moved to new layers locally).
-In most cases a standard OE recipe in the manifest will result in a direct component match in the BD project (Bill of Materials or BOM).
+In most cases a standard OE recipe in the manifest should result in a direct component match in the BD project (Bill of Materials or BOM).
 
 However, Yocto recipes can be modified in a project to upgrade packages and add patches, or other (non-standard) recipes can be imported or created to generate Custom Recipes.
 
@@ -103,7 +109,7 @@ Before running the script, ensure you meet the following requirements:
       * (Also **Global Component Manager** needed to create custom components if `--mode CUSTOM_COMPS` specified)
 5.  **Single-target Bitbake configurations only** are supported. Run this utility on one target at a time.
 6.  A **built Yocto project** with access to the build platform. Alternatively, specific outputs from the build can be used, though many script features may be limited so not recommended.
-7.  Ensure **license text entries in manifest files are SPDX compliant** to support SBOM upload. Custom licenses are not supported for the creation of custom components (mode=CUSTOM_COMPS).
+7.  Ensure **license text entries in manifest files are SPDX compliant** to support SBOM upload. Custom licenses are not supported for the creation of custom components (mode=CUSTOM_COMPS) - use `--ignore_licenses` to bypass license checks.
 
 -----
 
@@ -392,8 +398,8 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 ## Release Notes
 
-* **v1.3.3**
-   * Minor fix to custom component reporting.
+* **v1.4.0**
+   * Multiple improvements to reporting and output, other recipe reporting and 2nd origin lookup, stopped running Detect if project exists. Also implemented fall-back when show-layers data missing to use OE data lookup.
 * **v1.3.2**
    * Upgraded to BD Detect 11 and replaced --no_unmap with --unmap (default is not to unmap scans). Added --ignore_licenses option for custom components.
 * **v1.3.1**

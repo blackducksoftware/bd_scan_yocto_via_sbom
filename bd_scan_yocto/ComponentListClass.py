@@ -7,11 +7,18 @@ class ComponentList:
     def __init__(self):
         self.components = []
         self.component_names = []
-        pass
+        self.secondary_compnames = {}
 
     def add(self, comp: Component):
         self.components.append(comp)
         self.component_names.append(comp.clean_name)
+        # Check if 2 or more origins
+        if 'origins' in comp.data and len(comp.data['origins']) > 1:
+            for orig in comp.data['origins'][1:]:
+                if 'externalNamespace' in orig and orig['externalNamespace'] == 'openembedded':
+                    arr = orig['externalId'].split('/')
+                    if len(arr) >= 2:
+                        self.secondary_compnames[arr[1]] = comp.clean_name
 
     def count(self):
         return len(self.components)
@@ -43,21 +50,31 @@ class ComponentList:
                 all_hrefs = self.get_hrefs()
                 href = rec.cpe_comp_href.split('/origins/')
                 if href[0] in all_hrefs:
+                    index = all_hrefs.index(href[0])
+                    rec.compname = self.components[index].name
                     return True
-            elif rec.name in self.component_names:
-                index = self.component_names.index(rec.name)
-                comp = self.components[index]
+            else:
+                if rec.name in self.secondary_compnames.keys():
+                    index = self.component_names.index(self.secondary_compnames[rec.name])
+                    comp = self.components[index]
+                elif rec.name in self.component_names:
+                    index = self.component_names.index(rec.name)
+                    comp = self.components[index]
                 # recver = rec.version.split('+')[0]
+                else:
+                # Component name not in list
+                    logging.debug(f'check_recipe_in_list: Component name {rec.name} missing from BOM')
+                    return False
+
                 recver = rec.clean_version_string()
                 if recver in comp.version or comp.version in recver:  # ToDo - logic needs checking
+                    rec.compname = comp.name
                     return True
                 elif rec.oe_recipe != {}:
                     if recver == rec.oe_recipe['pv']:
+                        rec.compname = comp.name
                         return True
                     logging.debug(f'check_recipe_in_list: Component name {rec.name} missing from BOM')
-            else:
-                # Component name not in list
-                logging.debug(f'check_recipe_in_list: Component name {rec.name} missing from BOM')
 
         except Exception as e:
             logging.error(f"Error finding recipe {rec.name} - {e}")

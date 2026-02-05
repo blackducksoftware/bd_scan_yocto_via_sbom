@@ -174,6 +174,7 @@ class RecipeList:
         matched_cpe = []
         matched_custom = []
         matched_sig = []
+        matched_other = []
         # matched_oe_not_in_bom = []
         # not_matched_oe_not_in_bom = []
         # not_matched_oe_in_bom = []
@@ -181,21 +182,26 @@ class RecipeList:
         logging.info(f"Missing Recipes:")
         count_missing = 0
         for recipe in self.recipes:
-            fullid = recipe.full_id()
-
+            fullid = f"{recipe.full_id():<80s}"
             if recipe.matched_in_bom:
                 if recipe.custom_component:
-                    fullid += f" (CUSTOM COMPONENT CREATED)"
+                    fullid += f" (CUSTOM COMPONENT CREATED - component '{recipe.compname}')"
                     matched_custom.append(fullid)
                 elif recipe.cpe_comp_href:
-                    fullid += f" (CPE MATCHED COMPONENT)"
+                    fullid += f" (CPE MATCHED COMPONENT - component '{recipe.compname}')"
                     matched_cpe.append(fullid)
                 elif recipe.matched_oe_exact:
-                    fullid += " (OE EXACT VERSION)"
+                    fullid += f" (OE EXACT VERSION - component '{recipe.compname}')"
                     matched_oe.append(fullid)
                 elif recipe.matched_oe:
-                    fullid += f" (OE Closest version {recipe.oe_recipe['pv']}-{recipe.oe_recipe['pr']})"
+                    fullid += f" (OE Closest version {recipe.oe_recipe['pv']}-{recipe.oe_recipe['pr']} - component '{recipe.compname}')"
                     matched_oe.append(fullid)
+                else:
+                    matched_other.append(fullid)
+                    fullid += f" (Other match - component '{recipe.compname}')"
+
+                # else:
+                #     print("DEBUG - dropthrough recipe")
                 in_bom.append(fullid)
             else:
             #
@@ -245,6 +251,7 @@ class RecipeList:
         logging.info(f"    - Of which {len(matched_sig)} identified using Signature scanning")
         logging.info(f"    - Of which {len(matched_cpe)} matched via CPE lookup")
         logging.info(f"    - Of which {len(matched_custom)} matched as custom components")
+        logging.info(f"    - Of which {len(matched_other)} other matches (existing components)")
         logging.info(f"- Recipes NOT in BOM - {len(not_in_bom)}")
         # logging.info(f"    - Of which {len(matched_oe_not_in_bom)} matched in OE data")
         # logging.info(f"    - Of which {len(not_matched_oe_not_in_bom)} not matched in OE data")
