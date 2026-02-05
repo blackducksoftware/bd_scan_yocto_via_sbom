@@ -20,7 +20,7 @@ Refer to [How to Report Issues ](https://github.com/blackducksoftware/bd_scan_yo
 
 ## Quick Start
 
-See the [quick start](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom/QuickStart.md#black-duck-sca-scan-yocto-script---quick-start-guide) guide.
+See the [quick start](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom/blob/main/QuickStart.md#black-duck-sca-scan-yocto-script---quick-start-guide) guide.
 
 -----
 
