@@ -17,12 +17,13 @@ class BB:
         pass
 
     def process(self, conf: "Config", reclist: "RecipeList"):
+        layers_file = ''
         if not conf.skip_bitbake:
             self.process_bitbake_env(conf)
             layers_file = self.run_showlayers()
         elif conf.bitbake_layers_file:
             layers_file = conf.bitbake_layers_file
-        else:
+        elif not conf.skip_layers:
             logging.error(f"Error --skip_bitbake and no bitbake_layers_file specified - terminating")
             return False
 
@@ -161,7 +162,7 @@ class BB:
     @staticmethod
     def run_cmd(command: list):
         try:
-            ret = subprocess.run(command, capture_output=True, text=True, timeout=60)
+            ret = subprocess.run(command, capture_output=True, text=True, timeout=120)
             if ret.returncode != 0:
                 logging.error(f"Run command '{command}' failed with error {ret.returncode} - {ret.stderr}")
                 return False, ''
@@ -177,6 +178,8 @@ class BB:
 
     @staticmethod
     def process_showlayers(conf: "Config", showlayers_file: str, reclist: "RecipeList"):
+        if conf.skip_layers:
+            return True
         try:
             with open(showlayers_file, "r") as bfile:
                 lines = bfile.readlines()

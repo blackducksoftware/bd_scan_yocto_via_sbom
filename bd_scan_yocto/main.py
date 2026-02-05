@@ -25,12 +25,13 @@ def main():
 
     logging.info("")
     logging.info("--- PHASE 0 - INITIATE PROJECT -------------------------------------------")
+    logging.info("")
+
     bom = BOM(conf)
 
     if bom.get_proj():
         logging.info(f"Project {conf.bd_project} Version {conf.bd_version} already exists")
-
-    if conf.output_file == '':
+    elif conf.output_file == '':
         logging.info("Running Detect to initialise project")
         extra_opt = '--detect.tools=DETECTOR'
         if conf.unmap:
@@ -47,6 +48,7 @@ def main():
 
     logging.info("")
     logging.info("--- PHASE 1 - GET OE DATA ------------------------------------------------")
+    logging.info("")
     if conf.process_oe_recipes:
         if not conf.oe_data_folder:
             logging.info("Not using OE data cache folder (consider using --oe_data_folder) ...")
@@ -55,6 +57,7 @@ def main():
             oe_class = OE(conf)
             logging.info("")
             logging.info("--- PHASE 2 - MATCH RECIPES AGAINST OE DATA ------------------------------")
+            logging.info("")
             logging.info("Checking recipes ...")
 
             reclist.check_recipes_in_oe(conf, oe_class)
@@ -68,6 +71,7 @@ def main():
 
     logging.info("")
     logging.info("--- PHASE 3 - GENERATE & UPLOAD SBOM -------------------------------------")
+    logging.info("")
     if conf.process_oe_recipes:
         sbom = SBOM(conf.bd_project, conf.bd_version)
         sbom.process_recipes(reclist.recipes)
@@ -95,9 +99,11 @@ def main():
         logging.info("Skipped - mode OE_RECIPES not specified")
     bom.get_proj()
     bom.process(reclist)
+    logging.info(f"- {reclist.unmatched} Recipes not matched so far")
 
     logging.info("")
     logging.info("--- PHASE 4 - SIGNATURE SCAN PACKAGES ------------------------------------")
+    logging.info("")
     if conf.run_sig_scan:
         if conf.package_dir and conf.download_dir:
             num, ret = reclist.scan_pkg_download_files(conf, bom)
@@ -106,6 +112,8 @@ def main():
                     logging.info("Done")
                     bom.get_proj()
                     bom.process(reclist)
+                    logging.info(f"- {reclist.unmatched} Recipes not matched so far")
+
                 else:
                     logging.error(f"Unable to run Signature scan on package and download files")
                     sys.exit(2)
@@ -118,18 +126,24 @@ def main():
 
     logging.info("")
     logging.info("--- PHASE 5 - ADDING RECIPES BY CPE OR CUSTOM COMPONENT ------------------")
+    logging.info("")
     if conf.run_cpe_components or conf.run_custom_components:
         if reclist.process_missing_recipes(conf, bom):
             bom.process(reclist)
+            logging.info(f"- {reclist.unmatched} Recipes not matched so far")
+        else:
+            logging.info("Skipped - no unmatched recipes")
     else:
         logging.info("Skipped - mode CPE_COMPS or CUSTOM_COMPS not specified")
 
     logging.info("")
     logging.info("--- PHASE 6 - BOM REPORT -------------------------------------------------")
+    logging.info("")
     reclist.report_recipes_in_bom(conf)
 
     logging.info("")
     logging.info("--- PHASE 7 - APPLY CVE PATCHES FROM CVE_CHECK ---------------------------")
+    logging.info("")
     if conf.process_cves and conf.cve_check_file:
         # bom.get_proj()
         if bom.process_cve_file(conf.cve_check_file, reclist):
@@ -139,6 +153,7 @@ def main():
 
     logging.info("")
     logging.info("--- PHASE 8 - PROCESS KERNEL VULNS ---------------------------------------")
+    logging.info("")
     if conf.process_kernel_vulns:
         if bom.check_kernel_in_bom():
             logging.info("Ignoring Kernel vulnerabilities for modules not included in kernel build ...")
@@ -154,6 +169,7 @@ def main():
                                                kernel_source_file=kfile.name, project=conf.bd_project,
                                                version=conf.bd_version, logger=logging,
                                                blackduck_trust_cert=conf.bd_trustcert)
+                logging.info("NOTE: Kernel vuln remediations are queued in the BD server - updates may take some time to be applied in the BOM.")
         else:
             logging.info("Kernel component not found in project - skipping")
     else:

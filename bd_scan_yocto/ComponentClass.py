@@ -1,4 +1,4 @@
-# import logging
+import logging
 
 
 class Component:
@@ -56,22 +56,26 @@ class Component:
     #         return []
 
     def get_clean_name_ver(self):
-        if self.data:
-            if 'origins' not in self.data or len(self.data['origins']) == 0:
-                return self.data['componentName'], self.data['componentVersionName']
-            else:
-                origin = self.data['origins'][0]
-                if 'externalNamespace' in origin and 'externalId' in origin:
-                    origarr = origin['externalId'].replace('//', '/').split('/')
-                    # print(origin['externalId'])
-                    if len(origarr) >= 2:
-                        if origin['externalNamespace'] == 'openembedded':
-                            return origarr[1], origarr[2]
-                        elif origin['externalId'].startswith('git:'):
-                            if len(origarr) > 4:
-                                return origarr[3], origarr[4]
-                        else:
-                            return origarr[0], origarr[1]
+        try:
+            if self.data:
+                if 'origins' not in self.data or len(self.data['origins']) == 0:
+                    return self.data['componentName'], self.data['componentVersionName']
+                else:
+                    origin = self.data['origins'][0]
+                    if 'externalNamespace' in origin and 'externalId' in origin:
+                        origarr = origin['externalId'].replace('//', '/').split('/')
+                        # print(origin['externalId'])
+                        if len(origarr) >= 2:
+                            if origin['externalNamespace'] == 'openembedded':
+                                if len(origarr) > 2:
+                                    return origarr[1], origarr[2]
+                            elif origin['externalId'].startswith('git:'):
+                                if len(origarr) > 4:
+                                    return origarr[3], origarr[4]
+                            else:
+                                return origarr[0], origarr[1]
+        except Exception as e:
+            logging.error(f"Unable to get clean component name & version - {e}")
 
         return self.name, self.version
 
