@@ -332,6 +332,10 @@ Server credentials can also be specified using the standard environment variable
 
 ### Example Distance Calculations for `--max_oe_version_difference`
 
+When no exact match, use this option to find the most recent previous recipe version up to the specified distance against OE data.
+Setting this value allows close (previous) recipe version matching. The value must be in `MAJOR.MINOR.PATCH` format (e.g., `0.10.0`). 
+**CAUTION**: Setting this value too high may cause components to be matched against older recipes in the OE data, potentially leading to different vulnerability reports. It's generally better to maintain a close relationship between matched versions and project versions. Consider values in the range `0.0.1` to `0.0.10`.
+
   * Recipe version is `3.2.4` - closest previous OE recipe version is `3.2.1`: Distance value needed: minimum `0.0.3`
   * Recipe version is `3.2.4` - closest previous OE recipe version is `3.0.1`: Distance value needed: minimum `0.2.0`
   * Recipe version is `3.2.4` - closest previous OE recipe version is `2.0.1`: Distance value needed: minimum `1.0.0`
