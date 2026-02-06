@@ -1,6 +1,6 @@
 -----
 
-# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.4.0
+# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.4.1
 
 -----
 
