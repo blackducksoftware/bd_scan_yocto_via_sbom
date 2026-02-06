@@ -1,6 +1,6 @@
 -----
 
-# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.4.0
+# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.4.1
 
 -----
 
@@ -402,6 +402,8 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 ## Release Notes
 
+* **v1.4.1**
+   * Minor fix to layer detection for OE recipes, backup & increment recipe_report file
 * **v1.4.0**
    * Multiple improvements to reporting and output, other recipe reporting and 2nd origin lookup, stopped running Detect if project exists. Also implemented fall-back when show-layers data missing to use OE data lookup.
 * **v1.3.2**

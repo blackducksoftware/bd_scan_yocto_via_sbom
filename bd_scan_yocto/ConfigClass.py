@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.4.0"
+script_version = "v1.4.1"
 
 
 class Config:
@@ -426,8 +426,12 @@ class Config:
 
         if args.recipe_report != '':
             if os.path.exists(args.recipe_report):
-                logging.error(f"Output recipe report file {args.recipe_report} already exists - terminating")
-                terminate = True
+                newfile = self.backup_repfile(args.recipe_report)
+                if newfile:
+                    self.recipe_report = newfile
+                else:
+                    logging.error(f"Recipe_report file '{args.recipe_report}' exists and not possible to rename")
+                    terminate = True
             else:
                 self.recipe_report = args.recipe_report
 
@@ -454,3 +458,26 @@ class Config:
         if terminate:
             sys.exit(2)
         return
+
+    @staticmethod
+    def backup_repfile(filename):
+
+        if os.path.isfile(filename):
+            # Determine root filename so the extension doesn't get longer
+            n, e = os.path.splitext(filename)
+
+            # Is e an integer?
+            try:
+                num = int(e)
+                root = n
+            except ValueError:
+                root = filename
+
+            # Find next available file version
+            for i in range(1000):
+                new_file = "{}.{:03d}".format(root, i)
+                if not os.path.isfile(new_file):
+                    os.rename(filename, new_file)
+                    logging.info(f"INFO: Moved old report file '{filename}' to '{new_file}'")
+                    return new_file
+        return ""

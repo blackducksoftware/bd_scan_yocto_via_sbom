@@ -357,8 +357,11 @@ class OE:
                     recipe_ver = f"{recipe.epoch}:{recipe.version}"
                 else:
                     recipe_ver = recipe.version
+                recipe.recipename_in_oe = True
 
-                # oe_ver_array = []
+                meta_layer_found = False
+                recipe_match = False
+                best_layer = None
                 for oe_recipe in self.recipename_dict[recipe.name]:
                     if oe_recipe['pe']:
                         oe_ver = f"{oe_recipe['pe']}:{oe_recipe['pv']}"
@@ -369,14 +372,24 @@ class OE:
                         #Exact match
                         recipe.matched_oe = True
                         recipe.matched_oe_exact = True
-                        best_recipe = oe_recipe
                         exact_ver = True
                         exact_layer = True
-                        best_layer = self.get_layer_by_layerbranchid(best_recipe['layerbranch'])
 
-                        logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - OE exact match "
-                                      f"{best_layer['name']}/{best_recipe['pn']}/{exact_ver}-{best_recipe['pr']}")
-                        return best_recipe, best_layer, exact_ver, exact_layer
+                        this_layer = self.get_layer_by_layerbranchid(oe_recipe['layerbranch'])
+                        if this_layer['name'] == 'openembedded-core' or this_layer['name'] == 'meta':
+                            meta_layer_found = True
+                            best_layer = this_layer
+                            best_recipe = oe_recipe
+                            recipe_match = True
+                        elif not meta_layer_found:
+                            best_layer = this_layer
+                            best_recipe = oe_recipe
+                            recipe_match = True
+
+                if recipe_match:
+                    logging.debug(f"Recipe {recipe.name}: {recipe.layer}/{recipe.name}/{recipe_ver} - OE exact match "
+                                  f"{best_layer['name']}/{best_recipe['pn']}/{exact_ver}-{best_recipe['pr']}")
+                    return best_recipe, best_layer, exact_ver, exact_layer
 
                 if conf.max_oe_version_distance[0] == conf.max_oe_version_distance[1] == \
                                 conf.max_oe_version_distance[2] == 0:
