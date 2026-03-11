@@ -24,6 +24,7 @@ class Recipe:
         self.cpe_component = False
         self.cpe_comp_href = ''
         self.compname = ''
+        self.matched_sig = False
 
     def add_layer(self, layer):
         self.layer = layer

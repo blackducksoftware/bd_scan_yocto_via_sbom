@@ -69,10 +69,12 @@ class ComponentList:
                 recver = rec.clean_version_string()
                 if recver in comp.version or comp.version in recver:  # ToDo - logic needs checking
                     rec.compname = comp.name
+                    rec.matched_sig = comp.is_signature()
                     return True
                 elif rec.oe_recipe != {}:
                     if recver == rec.oe_recipe['pv']:
                         rec.compname = comp.name
+                        rec.matched_sig = comp.is_signature()
                         return True
                     logging.debug(f'check_recipe_in_list: Component name {rec.name} missing from BOM')
 

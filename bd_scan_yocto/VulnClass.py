@@ -148,7 +148,7 @@ class Vuln:
 
         payload['remediationStatus'] = remediation_status
 
-        logging.debug(f"{self.id} - {self.url()}")
+        logging.debug(f"{self.id()} - {self.url()}")
         async with session.put(self.url(), headers=headers, json=payload, ssl=ssl) as response:
             res = response.status
 

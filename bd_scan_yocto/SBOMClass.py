@@ -1,7 +1,6 @@
 import logging
-# import sys
 import datetime
-from random import randint
+import uuid
 import json
 import tempfile
 
@@ -18,7 +17,6 @@ class SBOM:
         self.file = ''
 
         mytime = datetime.datetime.now()
-        mytime.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
         self.json = {
             "SPDXID": "SPDXRef-DOCUMENT",
@@ -62,23 +60,16 @@ class SBOM:
 
     @staticmethod
     def quote(astr):
-        name = ''
+        name = astr
         remove_chars = ['"', "'"]
         for i in remove_chars:
-            name = astr.replace(i, '')
+            name = name.replace(i, '')
         return name
 
     @staticmethod
     def create_spdx_ident():
         # "SPDXRef-package-59f5a8a4-d154-42f5-a995-b89a35aad53c"
-        hex1 = hex(randint(0, 4294967295))
-        hex2 = hex(randint(0, 65535))
-        hex3 = hex(randint(0, 65535))
-        hex4 = hex(randint(0, 65535))
-        hex5 = hex(randint(0, 281474976710655))
-
-        rand_hex_str = f"{hex1}-{hex2}-{hex3}-{hex4}-{hex5}"
-        return rand_hex_str
+        return str(uuid.uuid4())
 
     def add_recipe(self, recipe: "Recipe", clean_version=False, output_license=False):
         spdxid = self.create_spdx_ident()

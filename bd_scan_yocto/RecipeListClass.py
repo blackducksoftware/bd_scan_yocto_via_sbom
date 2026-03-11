@@ -37,7 +37,7 @@ class RecipeList:
         for recipe in self.recipes:
             if recipe.name == rec:
                 if recipe.version != '':
-                    if recipe.version in version:
+                    if recipe.version == version:
                         recipe.add_layer(layer)
                         recipe.epoch = epoch
                 else:
@@ -196,6 +196,9 @@ class RecipeList:
                 elif recipe.matched_oe:
                     fullid += f" (OE Closest version {recipe.oe_recipe['pv']}-{recipe.oe_recipe['pr']} - component '{recipe.compname}')"
                     matched_oe.append(fullid)
+                elif recipe.matched_sig:
+                    fullid += f" (Signature scan match - component '{recipe.compname}')"
+                    matched_sig.append(fullid)
                 else:
                     matched_other.append(fullid)
                     fullid += f" (Other match - component '{recipe.compname}')"
@@ -378,8 +381,4 @@ class RecipeList:
             return False
 
     def remove_recipe(self, rec_name):
-        index = 0
-        for rec in self.recipes:
-            if rec.name == rec_name:
-                self.recipes.pop(index)
-            index += 1
+        self.recipes = [rec for rec in self.recipes if rec.name != rec_name]

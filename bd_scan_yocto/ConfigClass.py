@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.4.1"
+script_version = "v1.4.2"
 
 
 class Config:
@@ -139,7 +139,7 @@ class Config:
                             default="")
         parser.add_argument("--api_timeout", type=int,
                             help="OPTIONAL API and Detect timeout in seconds (default 600)",
-                            default="600")
+                            default=600)
 
         parser.add_argument("--debug",
                             help="Debug logging mode",
@@ -151,7 +151,7 @@ class Config:
                             help="Output recipe report to file",
                             default="")
         parser.add_argument("--unmap",
-                            help="Unmap previous scans when running new scan (not supported with Detect11",
+                            help="Unmap previous scans when running new scan (not supported with Detect11)",
                             action='store_true')
         parser.add_argument("--ignore_licenses",
                             help="Do not use license text from license.manifest to create Custom Components (use"
@@ -187,7 +187,7 @@ class Config:
         self.build_dir = ''
         self.log_dir = ''
         self.image_package_type = args.image_package_type
-        self.run_sig_scan = True
+        self.run_sig_scan = False
         self.scan_all_packages = False
         self.detect_jar = ''
         self.detect_opts = ''
@@ -201,8 +201,8 @@ class Config:
         self.process_kernel_vulns = False
         self.kernel_recipe = args.kernel_recipe
         self.kernel_files = []
-        self.process_oe_recipes = True
-        self.process_cves = True
+        self.process_oe_recipes = False
+        self.process_cves = False
         self.exclude_recipes = []
         self.exclude_layers = []
         self.ignore_licenses = args.ignore_licenses
@@ -273,6 +273,10 @@ class Config:
                     setattr(self, mode_dict[mode], True)
                 else:
                     setattr(self, mode_dict[mode], False)
+        else:
+            self.process_oe_recipes = True
+            self.run_sig_scan = True
+            self.process_cves = True
 
         if args.process_image_manifest:
             self.process_image_manifest = args.process_image_manifest
@@ -408,6 +412,7 @@ class Config:
 
         if args.skip_sig_scan:
             self.run_sig_scan = False
+            self.scan_all_packages = False
         elif args.scan_all_packages:
             self.scan_all_packages = True
 
@@ -447,7 +452,9 @@ class Config:
             self.run_sig_scan = True
 
         if args.detect_opts != '':
-            self.detect_opts = args.detect_opts.replace('detect', '--detect')
+            self.detect_opts = ' '.join(
+                '--' + t if t.startswith('detect') else t for t in args.detect_opts.split()
+            )
 
         if args.exclude_recipes != '':
             self.exclude_recipes = args.exclude_recipes.split(',')
