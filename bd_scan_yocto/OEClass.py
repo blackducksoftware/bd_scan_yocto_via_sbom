@@ -1,5 +1,6 @@
 import os
 import requests
+import requests.exceptions
 import json
 import logging
 import re
@@ -50,7 +51,7 @@ class OE:
 
                 return layer_dict
 
-            except ConnectionError as e:
+            except requests.exceptions.RequestException as e:
                 logging.warning(f"Unable to connect to openembedded.org to get list of layers - error {e}")
         else:
             try:
@@ -91,7 +92,7 @@ class OE:
 
                 return recipe_dict
 
-            except ConnectionError as e:
+            except requests.exceptions.RequestException as e:
                 logging.warning(f"Unable to connect to openembedded.org to get list of recipes - error {e}")
         else:
             try:
@@ -134,7 +135,7 @@ class OE:
 
                 return layerbranches_dict
 
-            except ConnectionError as e:
+            except requests.exceptions.RequestException as e:
                 logging.warning(f"Unable to connect to openembedded.org to get list of layerbranches - error {e}")
         else:
             try:
@@ -177,7 +178,7 @@ class OE:
 
                 return branches_dict
 
-            except ConnectionError as e:
+            except requests.exceptions.RequestException as e:
                 logging.warning(f"Unable to connect to openembedded.org to get list of branches - error {e}")
         else:
             try:

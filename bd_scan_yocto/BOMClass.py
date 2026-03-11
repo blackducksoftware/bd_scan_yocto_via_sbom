@@ -123,11 +123,11 @@ class BOM:
                         break
                 break
         else:
-            logging.warning(f"Version '{self.bdvername}' does not exist in project '{self.bdprojname}'")
+            logging.warning(f"Project '{self.bdprojname}' does not exist")
             return None
 
         if ver_dict is None:
-            logging.warning(f"Project '{self.bdprojname}' does not exist")
+            logging.warning(f"Version '{self.bdvername}' does not exist in project '{self.bdprojname}'")
             return None
 
         return ver_dict
@@ -202,7 +202,7 @@ class BOM:
         url = self.bd.base_url + "/api/scan/data"
         headers = {
             'X-CSRF-TOKEN': self.bd.session.auth.csrf_token,
-            'Authorization': f"Bearer  {self.bd.session.auth.bearer_token}",
+            'Authorization': f"Bearer {self.bd.session.auth.bearer_token}",
             'Accept': '*/*',
         }
 
@@ -211,15 +211,16 @@ class BOM:
             create_custom_comps = False
 
         try:
-            files = {'file': (sbom.file, open(sbom.file, 'rb'), 'application/spdx')}
-            multipart_form_data = {
-                'projectName': conf.bd_project,
-                'versionName': conf.bd_version,
-                'autocreate': create_custom_comps
-            }
-            # headers['Content-Type'] = 'multipart/form-data; boundary=6o2knFse3p53ty9dmcQvWAIx1zInP11uCfbm'
-            response = requests.post(url, headers=headers, files=files, data=multipart_form_data,
-                                     verify=(not conf.bd_trustcert))
+            with open(sbom.file, 'rb') as sbom_fh:
+                files = {'file': (sbom.file, sbom_fh, 'application/spdx')}
+                multipart_form_data = {
+                    'projectName': conf.bd_project,
+                    'versionName': conf.bd_version,
+                    'autocreate': create_custom_comps
+                }
+                # headers['Content-Type'] = 'multipart/form-data; boundary=6o2knFse3p53ty9dmcQvWAIx1zInP11uCfbm'
+                response = requests.post(url, headers=headers, files=files, data=multipart_form_data,
+                                         verify=(not conf.bd_trustcert))
 
             if response.status_code == 201:
                 return True
@@ -413,7 +414,8 @@ class BOM:
 
             j = requests.get("https://detect.blackduck.com/detect11.sh")
             if j.ok:
-                open(shpath, 'wb').write(j.content)
+                with open(shpath, 'wb') as f:
+                    f.write(j.content)
                 if not os.path.isfile(shpath):
                     logging.error("Cannot download BD Detect shell script -"
                                   " download manually and use --detect-jar-path option")

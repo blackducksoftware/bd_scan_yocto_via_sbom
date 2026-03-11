@@ -481,8 +481,8 @@ class BB:
                 if recipe in recipe_dict.keys():
                     if create_reclist:
                         rec_obj = Recipe(recipe, recipe_dict[recipe]['ver'], recipe_dict[recipe]['rel'])
-                        if recipe.name not in conf.exclude_recipes:
-                            logging.info(f"Excluding recipe {recipe.name} due to --exclude_recipes list")
+                        if recipe in conf.exclude_recipes:
+                            logging.info(f"Excluding recipe {recipe} due to --exclude_recipes list")
                         elif not reclist.check_recipe_exists(recipe):
                             reclist.recipes.append(rec_obj)
                             recipes_total += 1
@@ -508,9 +508,9 @@ class BB:
                 if kfile.endswith(".tgz"):
                     tpath = os.path.join(conf.deploy_dir, "images", conf.machine.replace('_', '-'), '**', kfile)
                     kfilelist = sorted(glob.glob(tpath, recursive=True), key=os.path.getmtime, reverse=True)
-                    if len(kfilelist) == 0 or not os.path.isfile(kfilelist[-1]):
+                    if len(kfilelist) == 0 or not os.path.isfile(kfilelist[0]):
                         continue
-                    with tarfile.open(kfilelist[-1], 'r') as tar:
+                    with tarfile.open(kfilelist[0], 'r') as tar:
                         # Use getnames() to get a list of all member names
                         file_names = tar.getnames()
                         for fname in file_names:
@@ -522,5 +522,5 @@ class BB:
         except tarfile.ReadError as e:
             print(f"Failed to read '{e}'. It may not be a valid tar file.")
         except Exception as e:
-            conf.logger.error(f"Unidentified error - {e}\n")
+            logging.error(f"Unidentified error - {e}\n")
         return []
