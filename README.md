@@ -18,6 +18,26 @@ Refer to [How to Report Issues ](https://github.com/blackducksoftware/bd_scan_yo
 
 -----
 
+## IMPORTANT
+
+This utility is intended to scan a **Yocto build output**, including standard open-source (OSS) recipes and the custom kernel, as a single aggregated project.
+
+For **local custom recipes** that you actively develop and intend to distribute as part of your Yocto-based product, the recommended approach is to scan these recipes **individually**. This enables higher accuracy and more actionable results by using scan methods tailored to each recipe’s technology stack.
+
+- **C/C++–based recipes** should be scanned using the  
+  [Black Duck C/C++ Tool](https://community.blackduck.com/s/article/Using-the-Black-Duck-C-CPP-Tool).
+- **Recipes implemented in other languages** should be scanned using  
+  [Black Duck Detect](https://documentation.blackduck.com/bundle/detect/page/introduction.html).
+
+These scans should be performed separately as part of the recipe’s own test and validation processes, and may be combined with other application security techniques such as **Black Duck SAST**, where appropriate.
+
+Once complete, the individual recipe projects can be **combined into the main Yocto project** in Black Duck:
+- Manually via the Black Duck UI using **Add → Project**, or
+- Automatically by configuring Detect with a parent project using the  
+  [`--detect.project.parent.name`](https://documentation.blackduck.com/bundle/detect/page/properties/configuration/project.html#parent-project-name-advanced) option.
+
+-----
+
 ## Quick Start
 
 See the [quick start](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom/blob/main/QuickStart.md#black-duck-sca-scan-yocto-script---quick-start-guide) guide.
