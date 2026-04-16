@@ -255,7 +255,17 @@ class BB:
                         # else:
                         #     rec_obj = Recipe(recipe_name, ver)
 
-                        if recipe_name in conf.exclude_recipes:
+                        license_filtered = False
+                        if conf.filter_recipes_by_licenses:
+                            for lic_filter in conf.filter_recipes_by_licenses:
+                                if lic_filter.lower() in licstring.lower():
+                                    logging.info(f"Filtering recipe {recipe_name} (license '{licstring}' "
+                                                 f"matched filter '{lic_filter}')")
+                                    license_filtered = True
+                                    break
+                        if license_filtered:
+                            pass
+                        elif recipe_name in conf.exclude_recipes:
                             logging.info(f"Excluding recipe {recipe_name} due to --exclude_recipes list")
                         elif not reclist.check_recipe_exists(recipe_name):
                             reclist.recipes.append(rec_obj)

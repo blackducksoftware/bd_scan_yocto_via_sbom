@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.4.2"
+script_version = "v1.4.3"
 
 
 class Config:
@@ -48,6 +48,10 @@ class Config:
                             default="")
         parser.add_argument("--exclude_recipes", type=str,
                             help="OPTIONAL Specify list of recipes to exclude from the scan (comma delimited)",
+                            default="")
+        parser.add_argument("--filter_recipes_by_licenses", type=str,
+                            help="OPTIONAL Specify list of license search strings to filter recipes from processing "
+                                 "(comma delimited, case-insensitive substring match against license.manifest entries)",
                             default="")
         parser.add_argument("--exclude_layers", type=str,
                             help="OPTIONAL Specify list of layers to exclude from the scan (comma delimited)",
@@ -205,6 +209,7 @@ class Config:
         self.process_cves = False
         self.exclude_recipes = []
         self.exclude_layers = []
+        self.filter_recipes_by_licenses = []
         self.ignore_licenses = args.ignore_licenses
         self.skip_layers = False
 
@@ -461,6 +466,9 @@ class Config:
 
         if args.exclude_layers != '':
             self.exclude_layers = args.exclude_layers.split(',')
+
+        if args.filter_recipes_by_licenses != '':
+            self.filter_recipes_by_licenses = args.filter_recipes_by_licenses.split(',')
 
         if terminate:
             sys.exit(2)
