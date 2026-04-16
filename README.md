@@ -303,6 +303,7 @@ Create BD-SCA project version from Yocto project
   * `--kernel_recipe RECIPE_NAME`: Define a non-standard kernel recipe name (defaults to 'linux-yocto').
   * `--exclude_recipes RECIPE_LIST`: Exclude specified recipes from BOM (comma-delimited).
   * `--exclude_layers LAYER_LIST`: Exclude specified layers from BOM (comma-delimited).
+  * `--filter_recipes_by_licenses EXPR`: Filter recipes from processing based on license strings in the license manifest files (comma-delimited, case-insensitive substring match). For example, `--filter_recipes_by_licenses "CLOSED,Proprietary"` will skip any recipe whose license entry contains "CLOSED" or "Proprietary". Filtered recipes are reported in the log and excluded from all subsequent processing.
   * `--ignore_licenses`: Ignore licenses when creating custom components (Use this option if Phase 5 SBOM upload fails when trying to add custom components - custom components will have Unknown license).
 
 ### Script Behavior Parameters - OPTIONAL:
@@ -422,6 +423,8 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 ## Release Notes
 
+* **v1.4.3**
+   * Added --filter_recipes_by_licenses option
 * **v1.4.2**
    * Several minor fixes including command line option combinations
 * **v1.4.1**
