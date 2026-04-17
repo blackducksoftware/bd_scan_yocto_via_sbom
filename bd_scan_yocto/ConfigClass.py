@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.4.3"
+script_version = "v1.4.4"
 
 
 class Config:
@@ -89,7 +89,7 @@ class Config:
                             default="")
         parser.add_argument("--image_package_type", type=str,
                             help="Package type used for installing packages (e.g. rpm, deb or ipx)",
-                            default="rpm")
+                            default="")
 
         parser.add_argument("--skip_bitbake",
                             help="Do not run 'bitbake -e' or 'bitbake-layers show-recipes' commands to extract data",

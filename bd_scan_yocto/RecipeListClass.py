@@ -367,13 +367,12 @@ class RecipeList:
 
             if comps_added:
                 if not add_sbom.output(conf.output_file):
-                    logging.error("Unable to create SBOM file")
-                    return False
+                    raise RuntimeError("Unable to create SBOM file for missing recipes")
                 elif bom.upload_sbom(conf, add_sbom, allow_create_custom_comps=True):
                     logging.info(f"Uploaded add-on SBOM file '{add_sbom.file}' to modify project "
                                  f"'{conf.bd_project}' version '{conf.bd_version}'")
                 else:
-                    return False
+                    raise RuntimeError("Unable to upload SBOM file for missing recipes")
             return comps_added
 
         except Exception as e:

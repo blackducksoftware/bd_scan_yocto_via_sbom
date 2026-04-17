@@ -128,11 +128,20 @@ def main():
     logging.info("--- PHASE 5 - ADDING RECIPES BY CPE OR CUSTOM COMPONENT ------------------")
     logging.info("")
     if conf.run_cpe_components or conf.run_custom_components:
-        if reclist.process_missing_recipes(conf, bom):
-            bom.process(reclist)
-            logging.info(f"- {reclist.unmatched} Recipes not matched so far")
-        else:
-            logging.info("Skipped - no unmatched recipes")
+        try:
+            if reclist.process_missing_recipes(conf, bom):
+                bom.process(reclist)
+                logging.info(f"- {reclist.unmatched} Recipes not matched so far")
+            else:
+                logging.info("Skipped - no unmatched recipes")
+        except RuntimeError as e:
+            logging.error(f"PHASE 5 failed: {e}")
+            logging.error("This may be caused by invalid SPDX license definitions in recipe entries.")
+            logging.error("Consider re-running with --ignore_licenses to skip license text in custom "
+                          "components, or --filter_recipes_by_licenses to exclude recipes with "
+                          "problematic licenses.")
+            logging.error()
+            sys.exit(2)
     else:
         logging.info("Skipped - mode CPE_COMPS or CUSTOM_COMPS not specified")
 
