@@ -140,7 +140,6 @@ def main():
             logging.error("Consider re-running with --ignore_licenses to skip license text in custom "
                           "components, or --filter_recipes_by_licenses to exclude recipes with "
                           "problematic licenses.")
-            logging.error()
             sys.exit(2)
     else:
         logging.info("Skipped - mode CPE_COMPS or CUSTOM_COMPS not specified")
