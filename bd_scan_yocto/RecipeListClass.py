@@ -375,6 +375,8 @@ class RecipeList:
                     raise RuntimeError("Unable to upload SBOM file for missing recipes")
             return comps_added
 
+        except RuntimeError:
+            raise
         except Exception as e:
             logging.exception(f"Error processing missing recipes - {e}")
             return False
