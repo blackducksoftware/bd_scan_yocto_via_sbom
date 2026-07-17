@@ -7,6 +7,9 @@ class Vuln:
     class RemediationStatus(str, Enum):
         PATCHED = 'PATCHED'
         IGNORED = 'IGNORED'
+        REMEDIATION_REQUIRED = 'REMEDIATION_REQUIRED'
+        REMEDIATION_COMPLETE = 'REMEDIATION_COMPLETE'
+        MITIGATED = 'MITIGATED'
 
     def __init__(self, data):
         self.data = data

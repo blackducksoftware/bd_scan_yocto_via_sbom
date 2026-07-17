@@ -37,9 +37,9 @@ class VulnList:
     #
     #     return table, ["ID", "Status", "Severity", "Component", "Linked Vuln"]
 
-    async def async_ignore_vulns(self, conf, bd, cve_dict):
+    async def async_remediate_vulns(self, conf, bd, cve_dict, remediation_status):
         token = bd.session.auth.bearer_token
-        logging.info("- Remediate locally ignored vulnerabilities ...")
+        logging.info(f"- Remediate locally {remediation_status} vulnerabilities ...")
 
         async with aiohttp.ClientSession(trust_env=True) as session:
             vuln_tasks = []
@@ -48,34 +48,10 @@ class VulnList:
                     cve = vuln.linked_cve
                 else:
                     cve = vuln.id()
-                if not cve or cve not in cve_dict.keys() or vuln.is_remediated(vuln.RemediationStatus.IGNORED):
+                if not cve or cve not in cve_dict.keys() or vuln.is_remediated(remediation_status):
                     continue
                 vuln_task = asyncio.ensure_future(
-                    vuln.async_remediate_vuln(conf, session, token,vuln.RemediationStatus.IGNORED, cve_dict[cve])
-                )
-                vuln_tasks.append(vuln_task)
-
-            vuln_data = dict(await asyncio.gather(*vuln_tasks))
-            await asyncio.sleep(0.250)
-
-        return len(vuln_data)
-
-    async def async_patch_vulns(self, conf, bd, cve_dict):
-        token = bd.session.auth.bearer_token
-        logging.info("- Remediate locally patched vulnerabilities ...")
-
-        async with aiohttp.ClientSession(trust_env=True) as session:
-            vuln_tasks = []
-            for vuln in self.vulns:
-                if vuln.get_vuln_origin() == 'BDSA':
-                    cve = vuln.linked_cve
-                else:
-                    cve = vuln.id()
-
-                if not cve or cve not in cve_dict.keys() or vuln.is_remediated(vuln.RemediationStatus.PATCHED):
-                    continue
-                vuln_task = asyncio.ensure_future(
-                    vuln.async_remediate_vuln(conf, session, token, vuln.RemediationStatus.PATCHED, cve_dict[cve])
+                    vuln.async_remediate_vuln(conf, session, token, remediation_status, cve_dict[cve])
                 )
                 vuln_tasks.append(vuln_task)
 

@@ -18,13 +18,22 @@ from .VulnListClass import VulnList
 
 
 class BOM:
+    # Mapping of cve_check report status (lowercase) -> Black Duck remediation status.
+    # Add new statuses here to have them managed automatically.
+    CVE_STATUS_REMEDIATION_MAP = {
+        'patched': 'PATCHED',
+        'ignored': 'IGNORED',
+        'remediation required': 'REMEDIATION_REQUIRED',
+        'remediation complete': 'REMEDIATION_COMPLETE',
+        'mitigated': 'MITIGATED',
+    }
+
     def __init__(self, conf: "Config"):
         self.bdprojname = conf.bd_project
         self.bdvername = conf.bd_version
         self.complist = ComponentList()
         self.vulnlist = VulnList()
-        self.CVEPatchedVulnDict = {}
-        self.CVEIgnoredVulnDict = {}
+        self.CVERemediationDicts = {}
         self.bdver_dict = None
         self.projver = None
 
@@ -155,12 +164,15 @@ class BOM:
 
         #DEBUG
 
-        patched = self.patch_vulns_async(conf, self.CVEPatchedVulnDict)
-        ignored = self.ignore_vulns_async(conf, self.CVEIgnoredVulnDict)
+        summary = []
+        for bd_status, cve_dict in self.CVERemediationDicts.items():
+            count = self.remediate_vulns_async(conf, cve_dict, bd_status)
+            summary.append((bd_status, count))
+
         logging.info("")
         logging.info("CVE SUMMARY:")
-        logging.info(f"- {patched} CVEs marked as PATCHED in BD project")
-        logging.info(f"- {ignored} CVEs marked as IGNORED in BD project")
+        for bd_status, count in summary:
+            logging.info(f"- {count} CVEs marked as {bd_status} in BD project")
         return
 
     def wait_for_bom_completion(self):
@@ -263,8 +275,7 @@ class BOM:
             'CVE DETAIL': 'detail',
             'CVE DESCRIPTION': 'description'
         }
-        patched_vulns = {}
-        ignored_vulns = {}
+        remediation_dicts = {}
         pkgvuln = {}
         for line in cvelines:
             arr = line.split(":")
@@ -278,10 +289,9 @@ class BOM:
                     if 'CVE' in pkgvuln and pkgvuln_key in pkgvuln:
                         # Duplicate entry - indicates New record
                         if reclist.check_recipe_exists(pkgvuln.get('package', '')):
-                            if pkgvuln.get('status') == 'Patched':
-                                patched_vulns[pkgvuln['CVE']] = pkgvuln
-                            elif pkgvuln.get('status') == 'Ignored':
-                                ignored_vulns[pkgvuln['CVE']] = pkgvuln
+                            bd_status = self.CVE_STATUS_REMEDIATION_MAP.get(pkgvuln.get('status', '').lower())
+                            if bd_status is not None:
+                                remediation_dicts.setdefault(bd_status, {})[pkgvuln['CVE']] = pkgvuln
                         pkgvuln = {}
                     pkgvuln[pkgvuln_key] = value
 
@@ -307,11 +317,11 @@ class BOM:
                 # elif key == "CVE DESCRIPTION":
                 #     pkgvuln['description'] = value
 
-        logging.info(f"      {len(patched_vulns) + len(ignored_vulns)} total patched and ignored CVEs loaded from "
+        total = sum(len(d) for d in remediation_dicts.values())
+        logging.info(f"      {total} total CVEs with managed statuses loaded from "
                      f"cve_check file (CVEs not identified in project yet)")
-        self.CVEPatchedVulnDict = patched_vulns
-        self.CVEIgnoredVulnDict = ignored_vulns
-        if len(patched_vulns) > 0 or len(ignored_vulns) > 0:
+        self.CVERemediationDicts = remediation_dicts
+        if total > 0:
             return True
         return False
 
@@ -323,8 +333,7 @@ class BOM:
 
             logging.info(f"- loaded CVEs from cve_check file {cve_file}")
 
-            patched_vulns = {}
-            ignored_vulns = {}
+            remediation_dicts = {}
 
             if data and 'package' in data:
                 # Parse each JSON object separately
@@ -342,19 +351,18 @@ class BOM:
                                 'status': issue.get('status', '')
                             }
 
-                            if pkgvuln["status"] == "Patched":
-                                if reclist.check_recipe_exists(pkgvuln['package']) and pkgvuln['CVE'] not in patched_vulns:
-                                    patched_vulns[pkgvuln['CVE']] = pkgvuln
-                            elif pkgvuln["status"] == "Ignored":
-                                if reclist.check_recipe_exists(pkgvuln['package']) and pkgvuln['CVE'] not in ignored_vulns:
-                                    ignored_vulns[pkgvuln['CVE']] = pkgvuln
+                            bd_status = self.CVE_STATUS_REMEDIATION_MAP.get(pkgvuln["status"].lower())
+                            if bd_status is not None and reclist.check_recipe_exists(pkgvuln['package']):
+                                status_dict = remediation_dicts.setdefault(bd_status, {})
+                                if pkgvuln['CVE'] not in status_dict:
+                                    status_dict[pkgvuln['CVE']] = pkgvuln
 
-                self.CVEPatchedVulnDict = patched_vulns
-                self.CVEIgnoredVulnDict = ignored_vulns
+                self.CVERemediationDicts = remediation_dicts
 
-            logging.info(f"      {len(patched_vulns) + len(ignored_vulns)} total patched and ignored CVEs loaded from "
+            total = sum(len(d) for d in remediation_dicts.values())
+            logging.info(f"      {total} total CVEs with managed statuses loaded from "
                          f"cve_check file (CVEs not identified in project yet)")
-            if len(patched_vulns) > 0 or len(ignored_vulns) > 0:
+            if total > 0:
                 return True
 
         except Exception as e:
@@ -459,18 +467,11 @@ class BOM:
     #         logging.exception(f"Error creating manual component - {e}")
     #     return False
 
-    def ignore_vulns_async(self, conf: "Config", cve_dict):
+    def remediate_vulns_async(self, conf: "Config", cve_dict, remediation_status):
         if platform.system() == "Windows":
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-        count = asyncio.run(self.vulnlist.async_ignore_vulns(conf, self.bd, cve_dict))
-        return count
-
-    def patch_vulns_async(self, conf: "Config", cve_dict):
-        if platform.system() == "Windows":
-            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
-        count = asyncio.run(self.vulnlist.async_patch_vulns(conf, self.bd, cve_dict))
+        count = asyncio.run(self.vulnlist.async_remediate_vulns(conf, self.bd, cve_dict, remediation_status))
         return count
 
     def process(self, reclist: "RecipeListClass"):
