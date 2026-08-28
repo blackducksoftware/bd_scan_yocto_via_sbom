@@ -85,9 +85,9 @@ class ComponentList:
 
     def check_kernel_in_bom(self):
         for component in self.components:
-            if component.name == 'Linux Kernel':
-                return True
-        return False
+            if component.name == 'Linux Kernel' or component.name == conf.kernel_recipe or component.name == 'linux_kernel':
+                return component.name
+        return ''
 
     def get_hrefs(self):
         arr = []
