@@ -83,7 +83,7 @@ class ComponentList:
 
         return False
 
-    def check_kernel_in_bom(self):
+    def check_kernel_in_bom(self, conf):
         for component in self.components:
             if component.name == 'Linux Kernel' or component.name == conf.kernel_recipe or component.name == 'linux_kernel':
                 return component.name
