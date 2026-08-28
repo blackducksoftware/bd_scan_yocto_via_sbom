@@ -158,7 +158,7 @@ def main():
         kernel_comp = bom.check_kernel_in_bom(conf)
         if kernel_comp:
             logging.info("Ignoring Kernel vulnerabilities for modules not included in kernel build ...")
-            kfilelist = bb.process_kernel_files()
+            kfilelist = bb.process_kernel_files(conf)
             if len(kfilelist) == 0:
                 logging.error("Unable to extract kernel source modules from kernel image - skipping")
             else:
