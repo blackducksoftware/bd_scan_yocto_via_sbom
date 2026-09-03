@@ -430,8 +430,8 @@ class BOM:
     def check_recipe_in_bom(self, rec: "RecipeClass"):
         return self.complist.check_recipe_in_list(rec)
 
-    def check_kernel_in_bom(self):
-        return self.complist.check_kernel_in_bom()
+    def check_kernel_in_bom(self, conf):
+        return self.complist.check_kernel_in_bom(conf)
 
     # def add_manual_comp(self, comp_url):
     #     try:

@@ -155,7 +155,8 @@ def main():
     logging.info("--- PHASE 8 - PROCESS KERNEL VULNS ---------------------------------------")
     logging.info("")
     if conf.process_kernel_vulns:
-        if bom.check_kernel_in_bom():
+        kernel_comp = bom.check_kernel_in_bom(conf)
+        if kernel_comp:
             logging.info("Ignoring Kernel vulnerabilities for modules not included in kernel build ...")
             kfilelist = bb.process_kernel_files(conf)
             if len(kfilelist) == 0:
@@ -168,7 +169,8 @@ def main():
                 bdkv_main.process_kernel_vulns(blackduck_url=conf.bd_url, blackduck_api_token=conf.bd_api,
                                                kernel_source_file=kfile.name, project=conf.bd_project,
                                                version=conf.bd_version, logger=logging,
-                                               blackduck_trust_cert=conf.bd_trustcert)
+                                               blackduck_trust_cert=conf.bd_trustcert,
+                                               kernel_comp_name=kernel_comp)
                 logging.info("NOTE: Kernel vuln remediations are queued in the BD server - updates may take some time to be applied in the BOM.")
         else:
             logging.info("Kernel component not found in project - skipping")

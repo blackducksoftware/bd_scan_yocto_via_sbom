@@ -63,12 +63,15 @@ class Recipe:
         return f"{self.layer}/{self.name}/{self.version}"
 
     def cpe_string(self, conf):
-        # cpe:2.3:a:*:glibc:2.40:*:*:*:*:*:*:*
+        # cpe:2.3:<part>:<vendor>:<product>:<version>:<update>:<edition>:<language>:<sw_edition>:<target_sw>:<target_hw>
         # ver = self.version.split('+')[0]
         ver = self.clean_version_string()
         name = self.name
+        part = "a"  # default to application
+        
         if conf.kernel_recipe in self.name:
             name = 'linux_kernel'
+            part = "o"  # kernel is an operating system component
 
-        cpe = f"cpe:2.3:a:*:{name}:{ver}:*:*:*:*:*:*:*"
+        cpe = f"cpe:2.3:{part}:*:{name}:{ver}:*:*:*:*:*:*:*"
         return cpe
