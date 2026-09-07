@@ -314,9 +314,11 @@ class RecipeList:
         return ''
 
     def process_missing_recipes(self, conf: "Config", bom: "BOM"):
+        # Returns the add-on SBOM filename if one was uploaded (truthy, and usable by the
+        # caller to resolve the new scan's per-scan bom-status), else None.
         comps_added = False
         if not conf.run_cpe_components and not conf.run_custom_components:
-            return comps_added
+            return None
 
         try:
             add_sbom = SBOM(conf.bd_project, conf.bd_version, sbom_version="2.0")
@@ -373,7 +375,8 @@ class RecipeList:
                                  f"'{conf.bd_project}' version '{conf.bd_version}'")
                 else:
                     raise RuntimeError("Unable to upload SBOM file for missing recipes")
-            return comps_added
+                return add_sbom.file
+            return None
 
         except RuntimeError:
             raise

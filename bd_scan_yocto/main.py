@@ -98,7 +98,7 @@ def main():
     else:
         logging.info("Skipped - mode OE_RECIPES not specified")
     bom.get_proj()
-    bom.process(reclist)
+    bom.process(reclist, sbom.file if conf.process_oe_recipes else None)
     logging.info(f"- {reclist.unmatched} Recipes not matched so far")
 
     logging.info("")
@@ -129,8 +129,9 @@ def main():
     logging.info("")
     if conf.run_cpe_components or conf.run_custom_components:
         try:
-            if reclist.process_missing_recipes(conf, bom):
-                bom.process(reclist)
+            addon_sbom_file = reclist.process_missing_recipes(conf, bom)
+            if addon_sbom_file:
+                bom.process(reclist, addon_sbom_file)
                 logging.info(f"- {reclist.unmatched} Recipes not matched so far")
             else:
                 logging.info("Skipped - no unmatched recipes")

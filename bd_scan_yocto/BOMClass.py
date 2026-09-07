@@ -163,7 +163,57 @@ class BOM:
         logging.info(f"- {ignored} CVEs marked as IGNORED in BD project")
         return
 
-    def wait_for_bom_completion(self):
+    def _find_scan_id_for_sbom(self, sbom_filename):
+        # Try to identify the code location/scan created by uploading sbom_filename, so its
+        # own bom-status/{scanId} can be polled instead of the project-version aggregate
+        # bom-status, which can read UP_TO_DATE before this scan's processing has even started.
+        # Black Duck names SPDX-import code locations after the project/version (e.g.
+        # "<project>-<version>-1.0 spdx/sbom"), not after the uploaded file, so match on that.
+        try:
+            links = self.bdver_dict['_meta']['links']
+            cl_link = next((item for item in links
+                             if item["rel"] in ("codelocations", "codeLocations", "code-locations")), None)
+            if not cl_link:
+                logging.debug(f"No codelocations link on project version - available rels: "
+                              f"{[item.get('rel') for item in links]}")
+                return None
+
+            codelocations = self.get_paginated_data(
+                cl_link['href'], "application/vnd.blackducksoftware.internal-1+json")
+
+            prefix = f"{self.bdprojname}-{self.bdvername}"
+            matches = [cl for cl in codelocations if cl.get('name', '').startswith(prefix)]
+            if not matches:
+                logging.debug(f"No codelocation found matching project/version prefix '{prefix}'")
+                return None
+
+            matches.sort(key=lambda cl: cl.get('updatedAt', cl.get('createdAt', '')), reverse=True)
+            cl = matches[0]
+
+            # bom-status/{scanId} expects the scan-summary id, not the codelocation's own id -
+            # fetch the codelocation's scan-summaries to get it.
+            scans_link = next((item for item in cl.get('_meta', {}).get('links', [])
+                                if item["rel"] == "scans"), None)
+            if not scans_link:
+                logging.debug(f"No scans link on codelocation '{cl.get('name')}'")
+                return None
+
+            scan_summaries = self.get_paginated_data(scans_link['href'], "application/json")
+            if not scan_summaries:
+                logging.debug(f"No scan summaries found for codelocation '{cl.get('name')}'")
+                return None
+
+            scan_summaries.sort(key=lambda s: s.get('createdAt', ''), reverse=True)
+            scan_id = scan_summaries[0]['_meta']['href'].rstrip('/').split('/')[-1]
+            logging.debug(f"Resolved codelocation '{cl.get('name')}' for uploaded SBOM "
+                          f"'{os.path.basename(sbom_filename)}' -> scan id {scan_id}")
+            return scan_id
+
+        except Exception as e:
+            logging.debug(f"Unable to resolve scan-specific BOM status for '{sbom_filename}' - {e}")
+            return None
+
+    def wait_for_bom_completion(self, sbom_filename=None):
         # Check job status
         uptodate = False
 
@@ -173,20 +223,48 @@ class BOM:
             links = self.bdver_dict['_meta']['links']
             link = next((item for item in links if item["rel"] == "bom-status"), None)
 
-            href = link['href']
-            # headers = {'Accept': 'application/vnd.blackducksoftware.internal-1+json'}
-            # resp = hub.execute_get(href, custom_headers=custom_headers)
+            agg_href = link['href']
+            scan_href = None
+            if sbom_filename:
+                scan_id = self._find_scan_id_for_sbom(sbom_filename)
+                if scan_id:
+                    scan_href = f"{agg_href}/{scan_id}"
+
+            href = scan_href or agg_href
+            confirmations_needed = 1 if scan_href else 2
+            confirmed = 0
+
             loop = 0
             while not uptodate and loop < 80:
-                # resp = hub.execute_get(href, custom_headers=custom_headers)
                 resp = self.bd.get_json(href)
-                if 'status' in resp:
-                    uptodate = (resp['status'] == 'UP_TO_DATE')
-                elif 'upToDate' in resp:
-                    uptodate = resp['upToDate']
+
+                if href == scan_href:
+                    status = resp.get('status')
+                    if status == 'SUCCESS':
+                        uptodate = True
+                    elif status == 'FAILURE':
+                        logging.error("BOM processing failed for uploaded SBOM (scan status FAILURE)")
+                        return False
+                    elif status in ('NOT_INCLUDED', 'BUILDING'):
+                        uptodate = False
+                    else:
+                        logging.warning(f"Unexpected scan bom-status value '{status}' - falling back "
+                                        f"to aggregate BOM status")
+                        href = agg_href
+                        confirmations_needed = 2
+                        confirmed = 0
+                        continue
                 else:
-                    logging.error('Unable to determine bom status')
-                    return False
+                    if 'status' in resp:
+                        is_up_to_date = (resp['status'] == 'UP_TO_DATE')
+                    elif 'upToDate' in resp:
+                        is_up_to_date = resp['upToDate']
+                    else:
+                        logging.error('Unable to determine bom status')
+                        return False
+
+                    confirmed = confirmed + 1 if is_up_to_date else 0
+                    uptodate = confirmed >= confirmations_needed
 
                 if not uptodate:
                     time.sleep(5)
@@ -473,8 +551,10 @@ class BOM:
         count = asyncio.run(self.vulnlist.async_patch_vulns(conf, self.bd, cve_dict))
         return count
 
-    def process(self, reclist: "RecipeListClass"):
-        self.wait_for_bom_completion()
+    def process(self, reclist: "RecipeListClass", sbom_filename=None):
+        if not self.wait_for_bom_completion(sbom_filename):
+            logging.warning("BOM processing completion could not be confirmed - recipe match "
+                            "results below may be based on a partially-processed BOM")
         self.get_comps()
         reclist.mark_recipes_in_bom(self)
 
