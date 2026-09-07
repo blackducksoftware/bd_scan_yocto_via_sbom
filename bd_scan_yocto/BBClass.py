@@ -126,11 +126,16 @@ class BB:
                     deb_dir = val
                     logging.info(f"Bitbake Env: deb_dir={deb_dir}")
                 elif re.search('^IMAGE_PKGTYPE=', mline):
-                    conf.image_package_type = val
-                    logging.info(f"Bitbake Env: image_package_type={conf.image_package_type}")
+                    if not conf.image_package_type:
+                        conf.image_package_type = val
+                        logging.info(f"Bitbake Env: image_package_type={conf.image_package_type}")
                 elif re.search('^LOG_DIR=', mline):
                     conf.log_dir = val
                     logging.info(f"Bitbake Env: log_dir={conf.log_dir}")
+
+        if not conf.image_package_type:
+            conf.image_package_type = 'rpm'
+            logging.info(f"Defaulting: image_package_type={conf.image_package_type}")
 
         if not conf.package_dir:
             if conf.image_package_type == 'rpm' and rpm_dir:
