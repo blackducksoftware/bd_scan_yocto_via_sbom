@@ -72,6 +72,11 @@ class Recipe:
         if conf.kernel_recipe in self.name:
             name = 'linux_kernel'
             part = "o"  # kernel is an operating system component
+            # Specific yocto/vendor kernel recipes (e.g. 'linux-qoriq') carry downstream
+            # BSP-specific versions that never exactly match the upstream Linux Kernel versions tracked in
+            # the Black Duck KB CPE dictionary. 
+            # Since an exact kernel version will never match the canonical "Linux Kernel" component wildcard it here
+            ver = "*"
 
         cpe = f"cpe:2.3:{part}:*:{name}:{ver}:*:*:*:*:*:*:*"
         return cpe
