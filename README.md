@@ -301,6 +301,8 @@ Create BD-SCA project version from Yocto project
   * `--package_dir PACKAGE_DIR`: Alternate directory where package files are downloaded (e.g., `poky/build/tmp/deploy/rpm/<ARCH>`).
   * `--image_package_type IMAGE_PACKAGE_TYPE`: Package type used for installing packages (specify one of `rpm`, `deb`, or `ipx` - default `rpm`).
   * `--kernel_recipe RECIPE_NAME`: Define a non-standard kernel recipe name (defaults to 'linux-yocto').
+  * `--kernel_vulns_remediation_status STATUS`: Remediation status applied to kernel vulnerabilities not affecting compiled kernel modules (`--modes KERNEL_VULNS`) - one of `REMEDIATION_COMPLETE`, `NOT_AFFECTED`, `MITIGATED`, `DUPLICATE`, `IGNORED`, `PATCHED`, `NEW`, `UNDER_INVESTIGATION`, `NEEDS_REVIEW`, `AFFECTED`, `REMEDIATION_REQUIRED` (default `NOT_AFFECTED`).
+  * `--kernel_vulns_remediation_justification JUSTIFICATION`: Remediation justification applied alongside `--kernel_vulns_remediation_status` - one of `NO_COMPONENT`, `NO_CODE`, `NOT_CONTROLLED`, `NOT_EXECUTED`, `ALREADY_MITIGATED`, `MITIGATION`, `NO_FIX_PLANNED`, `NONE_AVAILABLE`, `VENDOR_FIX`, `WORKAROUND` (default `NO_CODE`).
   * `--exclude_recipes RECIPE_LIST`: Exclude specified recipes from BOM (comma-delimited).
   * `--exclude_layers LAYER_LIST`: Exclude specified layers from BOM (comma-delimited).
   * `--filter_recipes_by_licenses EXPR`: Filter recipes from processing based on license strings in the license manifest files (comma-delimited, case-insensitive substring match). For example, `--filter_recipes_by_licenses "CLOSED,Proprietary"` will skip any recipe whose license entry contains "CLOSED" or "Proprietary". Filtered recipes are reported in the log and excluded from all subsequent processing.

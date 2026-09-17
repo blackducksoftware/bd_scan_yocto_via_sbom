@@ -124,6 +124,19 @@ class Config:
                             help="Alternate kernel recipe name - used in CPE matching --add_comps_by_cpe "
                                  "(default 'linux-yocto')",
                             default="linux-yocto")
+        parser.add_argument("--kernel_vulns_remediation_status", type=str,
+                            help="OPTIONAL Remediation status to apply to kernel vulns not in compiled kernel "
+                                 "modules (default 'NOT_AFFECTED')",
+                            choices=['REMEDIATION_COMPLETE', 'NOT_AFFECTED', 'MITIGATED', 'DUPLICATE', 'IGNORED',
+                                     'PATCHED', 'NEW', 'UNDER_INVESTIGATION', 'NEEDS_REVIEW', 'AFFECTED',
+                                     'REMEDIATION_REQUIRED'],
+                            default="NOT_AFFECTED")
+        parser.add_argument("--kernel_vulns_remediation_justification", type=str,
+                            help="OPTIONAL Remediation justification to apply to kernel vulns not in compiled "
+                                 "kernel modules (default 'NO_CODE')",
+                            choices=['NO_COMPONENT', 'NO_CODE', 'NOT_CONTROLLED', 'NOT_EXECUTED', 'ALREADY_MITIGATED',
+                                     'MITIGATION', 'NO_FIX_PLANNED', 'NONE_AVAILABLE', 'VENDOR_FIX', 'WORKAROUND'],
+                            default="NO_CODE")
         parser.add_argument("--sbom_create_custom_components",
                             help="LEGACY PARAMETER - Create custom components for unmatched components on SBOM upload "
                                  "- replace with '--modes CUSTOM_COMPS'",
@@ -204,6 +217,8 @@ class Config:
         self.run_cpe_components = False
         self.process_kernel_vulns = False
         self.kernel_recipe = args.kernel_recipe
+        self.kernel_vulns_remediation_status = args.kernel_vulns_remediation_status
+        self.kernel_vulns_remediation_justification = args.kernel_vulns_remediation_justification
         self.kernel_files = []
         self.process_oe_recipes = False
         self.process_cves = False
