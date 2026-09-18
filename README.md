@@ -1,6 +1,6 @@
 -----
 
-# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.4.4
+# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.4.5
 
 -----
 
@@ -425,6 +425,10 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 ## Release Notes
 
+* **v1.4.5**
+   * Added --kernel_vulns_remediation_status and --kernel_vulns_remediation_justification options to pass to bd_kernel_vulns
+* **v1.4.4**
+   * Modified BOM completion checking and other changes
 * **v1.4.3**
    * Added --filter_recipes_by_licenses option
 * **v1.4.2**
