@@ -1,6 +1,6 @@
 -----
 
-# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.4.5
+# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.4.6
 
 -----
 
@@ -425,6 +425,8 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 ## Release Notes
 
+* **v1.4.6**
+   * Added API call to unmap existing code locations from a project version (via --unmap) when the project already exists
 * **v1.4.5**
    * Added --kernel_vulns_remediation_status and --kernel_vulns_remediation_justification options to pass to bd_kernel_vulns
 * **v1.4.4**

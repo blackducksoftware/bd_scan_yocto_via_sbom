@@ -48,6 +48,43 @@ class BOM:
             return False
         return True
 
+    def _get_codelocations(self):
+        links = self.bdver_dict['_meta']['links']
+        cl_link = next((item for item in links
+                         if item["rel"] in ("codelocations", "codeLocations", "code-locations")), None)
+        if not cl_link:
+            logging.debug(f"No codelocations link on project version - available rels: "
+                          f"{[item.get('rel') for item in links]}")
+            return None
+
+        return self.get_paginated_data(
+            cl_link['href'], "application/vnd.blackducksoftware.internal-1+json")
+
+    def unmap_codelocations(self):
+        num_unmapped = 0
+        try:
+            codelocations = self._get_codelocations()
+            if codelocations is None:
+                logging.warning("Unable to unmap code locations - no codelocations link found on project version")
+                return num_unmapped
+
+            for codelocation in codelocations:
+                url = codelocation['_meta']['href']
+                codelocation['mappedProjectVersion'] = None
+                res = self.bd.session.put(url, json=codelocation)
+                if res.ok:
+                    num_unmapped += 1
+                else:
+                    logging.warning(f"Unable to unmap code location '{codelocation.get('name')}' - "
+                                    f"status code {res.status_code}")
+        except Exception as exc:
+            logging.warning(f"Unable to unmap code locations - {exc}")
+            return num_unmapped
+
+        logging.info(f"- Unmapped {num_unmapped} code location(s) from project '{self.bdprojname}' "
+                     f"version '{self.bdvername}'")
+        return num_unmapped
+
     def get_comps(self):
         self.complist = ComponentList()  # Reset component list
 
@@ -170,16 +207,9 @@ class BOM:
         # Black Duck names SPDX-import code locations after the project/version (e.g.
         # "<project>-<version>-1.0 spdx/sbom"), not after the uploaded file, so match on that.
         try:
-            links = self.bdver_dict['_meta']['links']
-            cl_link = next((item for item in links
-                             if item["rel"] in ("codelocations", "codeLocations", "code-locations")), None)
-            if not cl_link:
-                logging.debug(f"No codelocations link on project version - available rels: "
-                              f"{[item.get('rel') for item in links]}")
+            codelocations = self._get_codelocations()
+            if codelocations is None:
                 return None
-
-            codelocations = self.get_paginated_data(
-                cl_link['href'], "application/vnd.blackducksoftware.internal-1+json")
 
             prefix = f"{self.bdprojname}-{self.bdvername}"
             matches = [cl for cl in codelocations if cl.get('name', '').startswith(prefix)]

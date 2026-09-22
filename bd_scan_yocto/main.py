@@ -31,6 +31,9 @@ def main():
 
     if bom.get_proj():
         logging.info(f"Project {conf.bd_project} Version {conf.bd_version} already exists")
+        if conf.unmap and conf.output_file == '':
+            logging.info("Unmapping existing code locations from project version (--unmap specified) ...")
+            bom.unmap_codelocations()
     elif conf.output_file == '':
         logging.info("Running Detect to initialise project")
         extra_opt = '--detect.tools=DETECTOR'
