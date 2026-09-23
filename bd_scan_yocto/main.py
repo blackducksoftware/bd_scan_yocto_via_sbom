@@ -151,7 +151,13 @@ def main():
     logging.info("")
     logging.info("--- PHASE 6 - BOM REPORT -------------------------------------------------")
     logging.info("")
-    reclist.report_recipes_in_bom(conf)
+    not_in_bom = reclist.report_recipes_in_bom(conf)
+
+    if conf.fail_on_unmatched_recipes and not_in_bom:
+        logging.error(f"{len(not_in_bom)} recipe(s) not matched in BOM (--fail_on_unmatched_recipes specified):")
+        for desc in not_in_bom:
+            logging.error(f"- {desc}")
+        sys.exit(-1)
 
     logging.info("")
     logging.info("--- PHASE 7 - APPLY CVE PATCHES FROM CVE_CHECK ---------------------------")

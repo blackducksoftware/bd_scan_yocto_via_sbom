@@ -167,6 +167,10 @@ class Config:
         parser.add_argument("--recipe_report", type=str,
                             help="Output recipe report to file",
                             default="")
+        parser.add_argument("--fail_on_unmatched_recipes",
+                            help="OPTIONAL Report an error and return -1 if any recipes are not matched in the BOM "
+                                 "reported in PHASE 6 (default False)",
+                            action='store_true')
         parser.add_argument("--unmap",
                             help="Unmap previous scans when running new scan (not supported with Detect11)",
                             action='store_true')
@@ -213,6 +217,7 @@ class Config:
         self.cve_check_dir = ''
         self.license_dir = ''
         self.recipe_report = ''
+        self.fail_on_unmatched_recipes = args.fail_on_unmatched_recipes
         self.unmap = args.unmap
         self.run_cpe_components = False
         self.process_kernel_vulns = False
@@ -250,7 +255,7 @@ class Config:
         logging.info("--- PHASE 0 - CONFIG -----------------------------------------------------")
 
         logging.info("SUPPLIED ARGUMENTS:")
-        for arg in vars(args):
+        for arg in sorted(vars(args)):
             logging.info(f"    --{arg}={getattr(args, arg)}")
 
         # Check modes

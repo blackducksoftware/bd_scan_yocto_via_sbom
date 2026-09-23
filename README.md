@@ -333,6 +333,7 @@ Create BD-SCA project version from Yocto project
 ### General Parameters:
 
   * `--recipe_report REPFILE`: Create a report file with a list of recipes, including those not matched in the BOM.
+  * `--fail_on_unmatched_recipes`: Report an error and return exit code -1 if any recipes are not matched in the BOM reported in PHASE 6 (default is not to fail, just report unmatched recipes).
   * `-o OUTPUT, --output OUTPUT`: Specify output SPDX SBOM file. If specified, only the initial SBOM will be created and all other script features will be skipped (use for debug purposes only).
   * `--debug`: Enable debug logging mode.
   * `--logfile LOGFILE`: Output logging messages to a specified file.
@@ -427,6 +428,7 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 * **v1.4.6**
    * Added API call to unmap existing code locations from a project version (via --unmap) when the project already exists
+   * Added --fail_on_unmatched_recipes option to return an error and exit code -1 if any recipes are unmatched in the PHASE 6 BOM report
 * **v1.4.5**
    * Added --kernel_vulns_remediation_status and --kernel_vulns_remediation_justification options to pass to bd_kernel_vulns
 * **v1.4.4**
