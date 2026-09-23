@@ -358,7 +358,11 @@ class BB:
                 #             cvefile = os.path.join(imgdir, file)
                 #             break
 
-                v5_cvepath = os.path.join(conf.deploy_dir, "images", "**", conf.target + "-" + machine + "*.cve")
+                # conf.target may not be set (e.g. license.manifest auto-detected without --target) - fall back to
+                # a wildcard so the pattern still matches the actual image filename
+                target_part = conf.target if conf.target else "*"
+
+                v5_cvepath = os.path.join(conf.deploy_dir, "images", "**", target_part + "-" + machine + "*.cve")
                 v5_cvelist = sorted(glob.glob(v5_cvepath, recursive=True), key=os.path.getmtime)
                 if len(v5_cvelist) > 0:
                     # Get most recent file
@@ -366,7 +370,7 @@ class BB:
                     if os.path.isfile(cfile):
                         cvefile = cfile
                 if cvefile == '':
-                    v6_cvepath = os.path.join(conf.deploy_dir, "images", "**", conf.target + "-" + machine + "*.sbom-cve-check.yocto.json")
+                    v6_cvepath = os.path.join(conf.deploy_dir, "images", "**", target_part + "-" + machine + "*.sbom-cve-check.yocto.json")
                     v6_cvelist = sorted(glob.glob(v6_cvepath, recursive=True), key=os.path.getmtime)
                     if len(v6_cvelist) > 0:
                         # Get most recent file
