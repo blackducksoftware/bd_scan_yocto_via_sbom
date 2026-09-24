@@ -167,10 +167,13 @@ class Config:
         parser.add_argument("--recipe_report", type=str,
                             help="Output recipe report to file",
                             default="")
-        parser.add_argument("--fail_on_unmatched_recipes",
-                            help="OPTIONAL Report an error and return -1 if any recipes are not matched in the BOM "
-                                 "reported in PHASE 6 (default False)",
-                            action='store_true')
+        parser.add_argument("--fail_on_unmatched_recipes", type=str.upper,
+                            choices=['NONE', 'ANY', 'OE_RECIPES'],
+                            help="OPTIONAL Report an error and return -1 if recipes are not matched in the BOM "
+                                 "reported in PHASE 6. NONE - do not fail (default), ANY - fail if any recipes are "
+                                 "unmatched, OE_RECIPES - fail only if recipes were matched in the OE data but with "
+                                 "no version match",
+                            default='NONE')
         parser.add_argument("--unmap",
                             help="Unmap previous scans when running new scan (not supported with Detect11)",
                             action='store_true')

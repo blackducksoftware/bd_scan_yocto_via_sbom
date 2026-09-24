@@ -170,6 +170,7 @@ class RecipeList:
 
         in_bom = []
         not_in_bom = []
+        not_in_bom_no_oe_version_match = []
         matched_oe = []
         matched_cpe = []
         matched_custom = []
@@ -227,6 +228,8 @@ class RecipeList:
                 # logging.info(f"- Recipe {desc}")
                 count_missing += 1
                 not_in_bom.append(desc)
+                if recipe.recipename_in_oe:
+                    not_in_bom_no_oe_version_match.append(desc)
                 # if recipe.matched_oe:
                 #     matched_oe_not_in_bom.append(fullid)
                 #     logging.info(f"- Recipe {fullid}: Matched in OE data but NOT found in BOM")
@@ -280,7 +283,7 @@ class RecipeList:
             except IOError as error:
                 logging.error(f"Unable to write recipe report file {conf.recipe_report} - {error}")
 
-        return not_in_bom
+        return not_in_bom, not_in_bom_no_oe_version_match
 
     def mark_recipes_in_bom(self, bom: "BOM"):
         self.unmatched = 0
