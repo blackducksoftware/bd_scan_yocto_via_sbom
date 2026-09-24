@@ -170,6 +170,7 @@ class RecipeList:
 
         in_bom = []
         not_in_bom = []
+        not_in_bom_no_oe_version_match = []
         matched_oe = []
         matched_cpe = []
         matched_custom = []
@@ -179,7 +180,8 @@ class RecipeList:
         # not_matched_oe_not_in_bom = []
         # not_matched_oe_in_bom = []
         # not_in_bom_recipename_in_oe = []
-        logging.info(f"Missing Recipes:")
+        # logging.info(f"Missing Recipes:")
+        
         count_missing = 0
         for recipe in self.recipes:
             fullid = f"{recipe.full_id():<80s}"
@@ -223,9 +225,11 @@ class RecipeList:
                     desc += ', Not found by CPE lookup'
                 if conf.run_custom_components:
                     desc += ', Not created as Custom Component'
-                logging.info(f"- Recipe {desc}")
+                # logging.info(f"- Recipe {desc}")
                 count_missing += 1
                 not_in_bom.append(desc)
+                if recipe.recipename_in_oe:
+                    not_in_bom_no_oe_version_match.append(desc)
                 # if recipe.matched_oe:
                 #     matched_oe_not_in_bom.append(fullid)
                 #     logging.info(f"- Recipe {fullid}: Matched in OE data but NOT found in BOM")
@@ -256,9 +260,7 @@ class RecipeList:
         logging.info(f"    - Of which {len(matched_custom)} matched as custom components")
         logging.info(f"    - Of which {len(matched_other)} other matches (existing components)")
         logging.info(f"- Recipes NOT in BOM - {len(not_in_bom)}")
-        # logging.info(f"    - Of which {len(matched_oe_not_in_bom)} matched in OE data")
-        # logging.info(f"    - Of which {len(not_matched_oe_not_in_bom)} not matched in OE data")
-        # logging.info(f"    - Of which {len(not_in_bom_recipename_in_oe)} not matched but recipe exists in OE data")
+        logging.info("")
 
         if conf.recipe_report != '':
             try:
@@ -280,6 +282,8 @@ class RecipeList:
                 logging.info(f"Output full recipe report to '{conf.recipe_report}'")
             except IOError as error:
                 logging.error(f"Unable to write recipe report file {conf.recipe_report} - {error}")
+
+        return not_in_bom, not_in_bom_no_oe_version_match
 
     def mark_recipes_in_bom(self, bom: "BOM"):
         self.unmatched = 0

@@ -340,7 +340,8 @@ class BB:
                                 f"file - Will skip processing image manifest")
                 conf.process_image_manifest = False
 
-        # CVE JSON is at build/tmp/log/cve/cve-summary.json
+        # v5 CVE JSON is at build/tmp/log/cve/cve-summary.json
+        # v6 CVE JSON is at <deploydir>/images/<machine>/<target>-<machine>.rootfs-<date>.sbom-cve-check.yocto.json 
         cvefile = ''
         if conf.cve_check_file != "":
             cvefile = conf.cve_check_file
@@ -357,13 +358,25 @@ class BB:
                 #             cvefile = os.path.join(imgdir, file)
                 #             break
 
-                cvepath = os.path.join(conf.deploy_dir, "images", "**", conf.target + "-" + machine + "*.cve")
-                cvelist = sorted(glob.glob(cvepath, recursive=True), key=os.path.getmtime)
-                if len(cvelist) > 0:
+                # conf.target may not be set (e.g. license.manifest auto-detected without --target) - fall back to
+                # a wildcard so the pattern still matches the actual image filename
+                target_part = conf.target if conf.target else "*"
+
+                v5_cvepath = os.path.join(conf.deploy_dir, "images", "**", target_part + "-" + machine + "*.cve")
+                v5_cvelist = sorted(glob.glob(v5_cvepath, recursive=True), key=os.path.getmtime)
+                if len(v5_cvelist) > 0:
                     # Get most recent file
-                    cfile = cvelist[-1]
+                    cfile = v5_cvelist[-1]
                     if os.path.isfile(cfile):
                         cvefile = cfile
+                if cvefile == '':
+                    v6_cvepath = os.path.join(conf.deploy_dir, "images", "**", target_part + "-" + machine + "*.sbom-cve-check.yocto.json")
+                    v6_cvelist = sorted(glob.glob(v6_cvepath, recursive=True), key=os.path.getmtime)
+                    if len(v6_cvelist) > 0:
+                        # Get most recent file
+                        cfile = v6_cvelist[-1]
+                        if os.path.isfile(cfile):
+                            cvefile = cfile
 
         if not os.path.isfile(cvefile):
             logging.warning(f"CVE check file {cvefile} could not be located - skipping CVE processing")

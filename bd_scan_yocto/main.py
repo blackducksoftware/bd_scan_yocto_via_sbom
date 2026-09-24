@@ -31,6 +31,9 @@ def main():
 
     if bom.get_proj():
         logging.info(f"Project {conf.bd_project} Version {conf.bd_version} already exists")
+        if conf.unmap and conf.output_file == '':
+            logging.info("Unmapping existing code locations from project version (--unmap specified) ...")
+            bom.unmap_codelocations()
     elif conf.output_file == '':
         logging.info("Running Detect to initialise project")
         extra_opt = '--detect.tools=DETECTOR'
@@ -148,7 +151,22 @@ def main():
     logging.info("")
     logging.info("--- PHASE 6 - BOM REPORT -------------------------------------------------")
     logging.info("")
-    reclist.report_recipes_in_bom(conf)
+    not_in_bom, not_in_bom_no_oe_version_match = reclist.report_recipes_in_bom(conf)
+
+    if conf.fail_on_unmatched_recipes == 'ANY':
+        fail_recipes = not_in_bom
+    elif conf.fail_on_unmatched_recipes == 'OE_RECIPES':
+        fail_recipes = not_in_bom_no_oe_version_match
+    else:
+        fail_recipes = []
+
+    if fail_recipes:
+        logging.error("")
+        logging.error(f"{len(fail_recipes)} recipe(s) not matched in BOM "
+                      f"(--fail_on_unmatched_recipes={conf.fail_on_unmatched_recipes} specified):")
+        for desc in fail_recipes:
+            logging.error(f"- {desc}")
+        sys.exit(-1)
 
     logging.info("")
     logging.info("--- PHASE 7 - APPLY CVE PATCHES FROM CVE_CHECK ---------------------------")

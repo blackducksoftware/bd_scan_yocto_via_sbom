@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.4.5"
+script_version = "v1.4.6"
 
 
 class Config:
@@ -167,6 +167,13 @@ class Config:
         parser.add_argument("--recipe_report", type=str,
                             help="Output recipe report to file",
                             default="")
+        parser.add_argument("--fail_on_unmatched_recipes", type=str.upper,
+                            choices=['NONE', 'ANY', 'OE_RECIPES'],
+                            help="OPTIONAL Report an error and return -1 if recipes are not matched in the BOM "
+                                 "reported in PHASE 6. NONE - do not fail (default), ANY - fail if any recipes are "
+                                 "unmatched, OE_RECIPES - fail only if recipes were matched in the OE data but with "
+                                 "no version match",
+                            default='NONE')
         parser.add_argument("--unmap",
                             help="Unmap previous scans when running new scan (not supported with Detect11)",
                             action='store_true')
@@ -213,6 +220,7 @@ class Config:
         self.cve_check_dir = ''
         self.license_dir = ''
         self.recipe_report = ''
+        self.fail_on_unmatched_recipes = args.fail_on_unmatched_recipes
         self.unmap = args.unmap
         self.run_cpe_components = False
         self.process_kernel_vulns = False
@@ -250,7 +258,7 @@ class Config:
         logging.info("--- PHASE 0 - CONFIG -----------------------------------------------------")
 
         logging.info("SUPPLIED ARGUMENTS:")
-        for arg in vars(args):
+        for arg in sorted(vars(args)):
             logging.info(f"    --{arg}={getattr(args, arg)}")
 
         # Check modes
