@@ -219,7 +219,7 @@ For optimal Yocto scan results, review the following:
 6. **Fuzzy Match Modified Recipes:** For recipes modified from standard OE versions, optionally use `--max_oe_version_distance X.X.X` (e.g., `0.0.1` to `0.0.10`) for fuzzy matching against OE recipes. Be cautious, as this can sometimes disable correct matches. It's recommended to create two projects and compare results with and without this parameter. See [OE Difference Calculations](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#example-distance-calculations-for---max_oe_version_difference) for more information.
 7. **Process Image Manifest:** To include the Linux kernel and other packages specified in the image manifest, consider adding `--modes IMAGE_MANIFEST`. Optionally, specify the `image_license.manifest` file path (`--image_license_manifest FILEPATH`) if the latest build is not desired. You may also need to add mode CPE_COMPS to add the kernel.
 8. **Add Components by CPE:** Add `--modes CPE_COMPS` to create packages not matched by other methods through CPE lookup. Note that only packages with reported vulnerabilities have legitimate published CPEs - see [OWASP report on component identification (PDF)](https://owasp.org/assets/files/posts/A%20Proposal%20to%20Operationalize%20Component%20Identification%20for%20Vulnerability%20Management.pdf).
-9. **Process Kernel Vulnerabilities:** To ignore kernel vulnerabilities not within compiled kernel sources, add `--modes KERNEL_VULNS` (assumes `IMAGE_MANIFEST` mode).
+9. **Process Kernel Vulnerabilities:** To ignore kernel vulnerabilities not within compiled kernel sources, add `--modes KERNEL_VULNS` (assumes `IMAGE_MANIFEST` mode) - see [Kernel Processing](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#Kernel%20Identification%20and%20CVE%20Patching)
 10. **Add Custom Components for Unmatched recipes:** Where OSS recipes are not matched by any other method, and for custom or commercial recipes, you can consider adding `--modes CUSTOM_COMPS` to create Custom Components for unmatched recipes and add them to the BD project as placeholders. However, note that Custom Components do not have any vulnerabilities mapped, will use the license specified in the license.manifest and cannot be easily deleted from the BD server once created without deleting all projects where referenced. Also note that all future scans for the same recipe will map to the created Custom Components even when KB updates add new recipes (unless
 the associated PURL is deleted under 'Management-->Unmatched Components').
 
@@ -233,13 +233,13 @@ It can be used to replace existing scan control parameters and simplify the comm
 Explanation of modes:
   - `DEFAULT`        - Includes `OE_RECIPES,SIG_SCAN,CVE_PATCHES`
   - `OE_RECIPES`     - Map components by OE recipe lookup (set by `DEFAULT`)
-  - `IMAGE_MANIFEST` - Process image manifest in addition to standard manifest (usually to add linux kernel). You may need to use mode CPE_COMPS to add a custom kernel version
+  - `IMAGE_MANIFEST` - Process image manifest in addition to standard manifest (usually to add linux kernel). You may need to use mode CPE_COMPS to add a custom kernel version - see [Kernel Processing](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#Kernel%20Identification%20and%20CVE%20Patching)
   - `SIG_SCAN`       - Scan unmatched recipes/packages using Signature scan (set in `DEFAULT` mode) - see [FAQs](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#faqs)
   - `SIG_SCAN_ALL`   - Scan all recipes/packages using Signature scan
   - `CPE_COMPS`      - Add unmatched recipes as packages by CPE lookup (where CPEs available - only works for components with reported vulnerabilities)- See [OWASP report on component identification (PDF)](https://owasp.org/assets/files/posts/A%20Proposal%20to%20Operationalize%20Component%20Identification%20for%20Vulnerability%20Management.pdf).
   - `CUSTOM_COMPS`   - Create Custom Components for unmatched recipes (note Custom Components are only placeholders for SBOM export - no vulnerability or other data is provided) - see [FAQs](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#faqs)
   - `CVE_PATCHES`    - Process locally patched CVEs from `cve_check` class (set in `DEFAULT` mode) - See [CVE Patching](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#cve-patching)
-  - `KERNEL_VULNS`   - Process kernel modules and mark vulns as unaffected where associated modules do not exist in the kernel
+  - `KERNEL_VULNS`   - Process kernel modules and mark vulns as unaffected where associated modules do not exist in the kernel - see [Kernel Processing](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#Kernel%20Identification%20and%20CVE%20Patching)
   - `ALL`            - Includes `OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS` (but not `SIG_SCAN_ALL`)
 
 Notes:
@@ -369,6 +369,7 @@ Note that lower-order values are overridden by higher-order values (e.g., a dist
 -----
 
 ## CVE Patching
+### CVE Patching - Up to Yocto v6
 
 The Yocto `cve_check` class processes Bitbake dependencies within the development environment, generating a list of CVEs identified from the NVD for *all* packages in that environment.
 
@@ -383,6 +384,44 @@ Then, **rebuild your project** (e.g., using `bitbake core-image-sato`) to run th
 The script should automatically locate the `cve-check` output file (usually under `poky/tmp/deploy/images/licenses`), but you can also specify the file using the `--cve_check_file CVE_CHECK_FILE` parameter.
 
 The `CVE_PATCHES` mode enables this feature which is included in the `DEFAULT` mode. Remove `CVE_PATCHES` from the list of modes to disable.
+
+### CVE Patching - From Yocto v6
+
+The Yocto `cve_check` class has been removed from Yocto v6+, and needs to use the `core/yocto/sbom-cve-check` fragment.
+
+You need to add the following to your Yocto build configuration to generate the CVE check log output. Add the following line to your `build/<image>/conf/local.conf` (or similar) file:
+
+```
+OE_FRAGMENTS += "core/yocto/sbom-cve-check"
+```
+
+Then, **rebuild your project** (e.g., using `bitbake core-image-sato`) to run the CVE check action and generate the required CVE log files without a full rebuild.
+
+The script should automatically locate the `cve-check` output file (usually under `build/tmp/deploy/images/<arch>`), but you can also specify the file using the `--cve_check_file CVE_CHECK_FILE` parameter.
+
+The `CVE_PATCHES` mode enables this feature which is included in the `DEFAULT` mode. Remove `CVE_PATCHES` from the list of modes to disable.
+
+-----
+
+## Kernel Identification and CVE Patching
+
+Use of `--modes IMAGE_MANIFEST` will inspect the recipes in the image_license.manifest file, which can include the Linux Kernel - `linux-yocto` for standard builds. Note that the kernel recipe can also be within the standard recipes in 'license.manifest' meaning it would be added without specifying the `IMAGE_MANIFEST` mode.
+
+If you use a different recipe for the Linux Kernel, then you can specify it using `--kernel_recipe kernel-recipe`.
+
+A custom kernel recipe could either be:
+- A local custom recipe - in which case you should also use the `CPE_COMPS` mode to ensure that the Linux Kernel is added to the BD project or
+- A template OE recipe (from layers.openembedded.org) which is a downstream fork of the Linux Kernel or linux-yocto recipe - this recipe should be added to the BD project automatically - see note 1 below.
+
+The `KERNEL_VULNS` mode will process the kernel recipe to try to determine which kernel modules exist in the image, and then mark CVEs as 'Known Not Affected' for excluded modules. This step uses the [bd_kernel_vulns](https://github.com/blackducksoftware/bd_kernel_vulns) utility to perform the processing, but first extracts the list of loadable kernel modules from the kernel image - see note 2 below.
+
+NOTES:
+1.  If you have used a template OE recipe for the kernel which is a downstream fork of the Linux Kernel, it may not have any vulnerabilities notified at the origin - forked projects are responsible for reporting vulnerabilities downstream and this does not happen automatically.
+In this case you may need to add the Linux Kernel component to the Yocto project manually, and use the [bd_kernel_vulns](https://github.com/blackducksoftware/bd_kernel_vulns) utility standalone to process kernel vulns.
+
+
+2. If you have defined some modules as built-in kernel components (using CONFIG_<OPTION>=y), then they will not be identified in the kernel image and will not be used to process existing kernel modules, meaning that CVEs for the built-in modules may be marked as 'Known Not Affected' spuriously.
+In this case you can use the `--kernel_vulns_remediation_status STATUS` option to specify a different remediation status for dismissed kernel vulnerabilities, perhaps selecting the `NEEDS_REVIEW` status and supporting manual review. Alternatively, you can skip using the `KERNEL_VULNS` mode in this script, and use the `bd_kernel_vulns` utility directly, specifying the correct list of kernel modules as an input file.
 
 -----
 
