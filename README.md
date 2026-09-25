@@ -472,6 +472,9 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 * **v1.4.6**
    * Added API call to unmap existing code locations from a project version (via --unmap) when the project already exists
    * Added --fail_on_unmatched_recipes option (NONE/ANY/OE_RECIPES) to return an error and exit code -1 if recipes are unmatched in the PHASE 6 BOM report
+   * Added support for locating the Yocto v6 `sbom-cve-check` CVE check output file, in addition to the existing Yocto v5 `.cve` file
+   * Fixed CVE check file not being found when `--target` is not specified (auto-detected `license.manifest` flow)
+   * Documented the Yocto v6 CVE-check fragment (`core/yocto/sbom-cve-check`) and added the Kernel Identification and CVE Patching section
 * **v1.4.5**
    * Added --kernel_vulns_remediation_status and --kernel_vulns_remediation_justification options to pass to bd_kernel_vulns
 * **v1.4.4**
