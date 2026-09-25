@@ -18,10 +18,10 @@ classifiers = [
 ]
 dependencies = [
     "blackduck==1.1.3",
-    "bd-kernel-vulns==v1.0.6",
+    "bd-kernel-vulns==1.1.3",
     "requests==2.32.*",
     "semver==3.0.4",
-    "aiohttp==3.13.3"
+    "aiohttp==3.13.4"
 ]
 
 [project.urls]
