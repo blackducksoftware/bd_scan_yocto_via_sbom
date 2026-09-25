@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.4.7"
+script_version = "v1.4.8"
 
 
 class Config:
