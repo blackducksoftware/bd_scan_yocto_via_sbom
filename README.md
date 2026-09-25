@@ -1,6 +1,6 @@
 -----
 
-# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.4.6
+# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.4.7
 
 -----
 
@@ -413,15 +413,17 @@ A custom kernel recipe could either be:
 - A local custom recipe - in which case you should also use the `CPE_COMPS` mode to ensure that the Linux Kernel is added to the BD project or
 - A template OE recipe (from layers.openembedded.org) which is a downstream fork of the Linux Kernel or linux-yocto recipe - this recipe should be added to the BD project automatically - see note 1 below.
 
-The `KERNEL_VULNS` mode will process the kernel recipe to try to determine which kernel modules exist in the image, and then mark CVEs as 'Known Not Affected' for excluded modules. This step uses the [bd_kernel_vulns](https://github.com/blackducksoftware/bd_kernel_vulns) utility to perform the processing, but first extracts the list of loadable kernel modules from the kernel image - see note 2 below.
+The `KERNEL_VULNS` mode will process the kernel recipe to try to determine which kernel modules exist in the build, and then mark CVEs as 'Known Not Affected' for excluded modules. This step uses the [bd_kernel_vulns](https://github.com/blackducksoftware/bd_kernel_vulns) utility to perform the processing, but first identifies the kernel modules from the kernel build directory - see note 2 below.
+
+To identify the kernel modules, the script runs `bitbake -e virtual/kernel` and reads the `B=` value to find the kernel build directory. It then lists both loadable kernel modules (`*.ko` files found under that directory) and built-in kernel modules (from the `modules.builtin` file in that directory).
 
 NOTES:
 1.  If you have used a template OE recipe for the kernel which is a downstream fork of the Linux Kernel, it may not have any vulnerabilities notified at the origin - forked projects are responsible for reporting vulnerabilities downstream and this does not happen automatically.
 In this case you may need to add the Linux Kernel component to the Yocto project manually, and use the [bd_kernel_vulns](https://github.com/blackducksoftware/bd_kernel_vulns) utility standalone to process kernel vulns.
 
 
-2. If you have defined some modules as built-in kernel components (using CONFIG_<OPTION>=y), then they will not be identified in the kernel image and will not be used to process existing kernel modules, meaning that CVEs for the built-in modules may be marked as 'Known Not Affected' spuriously.
-In this case you can use the `--kernel_vulns_remediation_status STATUS` option to specify a different remediation status for dismissed kernel vulnerabilities, perhaps selecting the `NEEDS_REVIEW` status and supporting manual review. Alternatively, you can skip using the `KERNEL_VULNS` mode in this script, and use the `bd_kernel_vulns` utility directly, specifying the correct list of kernel modules as an input file.
+2. This step requires `bitbake` to be available and the kernel to have already been built, so that the build directory (and its `modules.builtin` file) exist. If `bitbake -e virtual/kernel` fails, the `B=` value cannot be found, or the build directory does not exist, the script reports an error and skips kernel module identification (CVEs will not be marked as 'Known Not Affected' for any modules in that case).
+If `modules.builtin` is not present, built-in modules cannot be identified and a warning is logged; you can use the `--kernel_vulns_remediation_status STATUS` option to specify a different remediation status for dismissed kernel vulnerabilities, perhaps selecting the `NEEDS_REVIEW` status and supporting manual review. Alternatively, you can skip using the `KERNEL_VULNS` mode in this script, and use the `bd_kernel_vulns` utility directly, specifying the correct list of kernel modules as an input file.
 
 -----
 
@@ -465,9 +467,14 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 ## Release Notes
 
+* **v1.4.7**
+   * Kernel module identification (`KERNEL_VULNS` mode) now uses `bitbake -e virtual/kernel` to locate the kernel build directory, identifying both loadable (`*.ko`) and built-in (`modules.builtin`) kernel modules, instead of extracting `.ko` files from the deployed kernel image tarball
 * **v1.4.6**
    * Added API call to unmap existing code locations from a project version (via --unmap) when the project already exists
    * Added --fail_on_unmatched_recipes option (NONE/ANY/OE_RECIPES) to return an error and exit code -1 if recipes are unmatched in the PHASE 6 BOM report
+   * Added support for locating the Yocto v6 `sbom-cve-check` CVE check output file, in addition to the existing Yocto v5 `.cve` file
+   * Fixed CVE check file not being found when `--target` is not specified (auto-detected `license.manifest` flow)
+   * Documented the Yocto v6 CVE-check fragment (`core/yocto/sbom-cve-check`) and added the Kernel Identification and CVE Patching section
 * **v1.4.5**
    * Added --kernel_vulns_remediation_status and --kernel_vulns_remediation_justification options to pass to bd_kernel_vulns
 * **v1.4.4**

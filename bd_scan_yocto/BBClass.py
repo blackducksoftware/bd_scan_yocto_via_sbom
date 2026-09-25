@@ -6,7 +6,6 @@ import os
 from .RecipeClass import Recipe
 import tempfile
 import glob
-import tarfile
 
 # from .ConfigClass import Config
 # from .RecipeListClass import RecipeList
@@ -529,26 +528,74 @@ class BB:
         return
 
     @staticmethod
+    def run_shell_cmd(command: str, cwd: str = None):
+        try:
+            ret = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=120, cwd=cwd)
+            if ret.returncode != 0:
+                logging.error(f"Run command '{command}' failed with error {ret.returncode} - {ret.stderr}")
+                return False, ''
+            return True, ret.stdout
+        except Exception as e:
+            logging.error(f"Run command '{command}' failed with error {e}")
+            return False, ''
+
+    @staticmethod
     def process_kernel_files(conf: "Config"):
         kernel_source_list = []
+
         try:
-            for kfile in conf.kernel_files:
-                if kfile.endswith(".tgz"):
-                    tpath = os.path.join(conf.deploy_dir, "images", conf.machine.replace('_', '-'), '**', kfile)
-                    kfilelist = sorted(glob.glob(tpath, recursive=True), key=os.path.getmtime, reverse=True)
-                    if len(kfilelist) == 0 or not os.path.isfile(kfilelist[0]):
-                        continue
-                    with tarfile.open(kfilelist[0], 'r') as tar:
-                        # Use getnames() to get a list of all member names
-                        file_names = tar.getnames()
-                        for fname in file_names:
-                            if fname.endswith('.ko'):
-                                kernel_source_list.append(fname.replace('.ko', '.c'))
+            ret, out = BB.run_cmd(["bitbake", "-e", "virtual/kernel"])
+            if not ret:
+                logging.error("Cannot run 'bitbake -e virtual/kernel' - unable to identify kernel modules")
+                return []
+
+            build_dir = ''
+            for line in out.split('\n'):
+                if line.startswith('B='):
+                    build_dir = line.split('=', 1)[1].strip().strip('"')
+
+            if not build_dir:
+                logging.error("Cannot find 'B=' value in 'bitbake -e virtual/kernel' output - "
+                               "unable to determine kernel build directory")
+                return []
+
+            if not os.path.isdir(build_dir):
+                logging.error(f"Kernel build directory '{build_dir}' (from B=) does not exist - "
+                              f"unable to identify kernel modules")
+                return []
+
+            logging.info(f"Kernel build directory (B): {build_dir}")
+
+            ret, out = BB.run_shell_cmd(
+                r"find . -name '*.ko' | sed -e 's/\.ko/\.c/' -e 's/^\.\///'", cwd=build_dir)
+            if not ret:
+                logging.error(f"Cannot list loadable kernel modules (.ko files) in '{build_dir}'")
+            else:
+                loadable_list = [line.strip() for line in out.split('\n') if line.strip()]
+                kernel_source_list.extend(loadable_list)
+                logging.info(f"Found {len(loadable_list)} loadable kernel module source file(s) "
+                             f"in '{build_dir}'")
+
+            builtin_file = os.path.join(build_dir, 'modules.builtin')
+            if not os.path.isfile(builtin_file):
+                logging.warning(f"Built-in modules file '{builtin_file}' not found - "
+                                 f"skipping built-in kernel module identification")
+            else:
+                ret, out = BB.run_shell_cmd(
+                    r"cat modules.builtin | sed -e 's/\.ko/\.c/' -e 's/^\.\///'", cwd=build_dir)
+                if not ret:
+                    logging.error(f"Cannot list built-in kernel modules from '{builtin_file}'")
+                else:
+                    builtin_list = [line.strip() for line in out.split('\n') if line.strip()]
+                    kernel_source_list.extend(builtin_list)
+                    logging.info(f"Found {len(builtin_list)} built-in kernel module source file(s) "
+                                 f"in '{builtin_file}'")
+
+            if len(kernel_source_list) == 0:
+                logging.error(f"No kernel module source files identified in '{build_dir}' - "
+                              f"check the kernel has been built")
+
             return kernel_source_list
-        except FileNotFoundError as e:
-            logging.error(f"Can't open kernel tgz file - {e}\n")
-        except tarfile.ReadError as e:
-            print(f"Failed to read '{e}'. It may not be a valid tar file.")
         except Exception as e:
-            logging.error(f"Unidentified error - {e}\n")
+            logging.error(f"Unidentified error identifying kernel modules - {e}\n")
         return []
