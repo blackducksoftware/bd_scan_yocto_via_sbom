@@ -12,6 +12,7 @@ import asyncio
 from .ComponentListClass import ComponentList
 from .ComponentClass import Component
 from .VulnListClass import VulnList
+from .RecipeClass import Recipe
 # from .RecipeListClass import RecipeList
 # from .ConfigClass import Config
 # from .SBOMClass import SBOM
@@ -25,6 +26,7 @@ class BOM:
         self.vulnlist = VulnList()
         self.CVEPatchedVulnDict = {}
         self.CVEIgnoredVulnDict = {}
+        self.CVEProductCPEDict = {}
         self.bdver_dict = None
         self.projver = None
 
@@ -433,10 +435,25 @@ class BOM:
 
             patched_vulns = {}
             ignored_vulns = {}
+            product_cpes = {}
 
             if data and 'package' in data:
                 # Parse each JSON object separately
                 for obj in data['package']:
+                    pkg_name = obj.get('name', '')
+                    products = obj.get('products', [])
+                    if pkg_name and products:
+                        cpes = []
+                        for prod in products:
+                            prod_str = prod.get('product', '') if isinstance(prod, dict) else ''
+                            if not prod_str:
+                                continue
+                            cpe = self._build_cpe_from_product(prod_str, obj.get('version', ''))
+                            if cpe not in cpes:
+                                cpes.append(cpe)
+                        if cpes:
+                            product_cpes[pkg_name] = cpes
+
                     if 'issue' in obj:
                         issues = obj['issue']
                         for issue in issues:
@@ -459,6 +476,8 @@ class BOM:
 
                 self.CVEPatchedVulnDict = patched_vulns
                 self.CVEIgnoredVulnDict = ignored_vulns
+                self.CVEProductCPEDict = product_cpes
+                logging.info(f"      {len(product_cpes)} package(s) with product/CPE data loaded from cve_check file")
 
             logging.info(f"      {len(patched_vulns) + len(ignored_vulns)} total patched and ignored CVEs loaded from "
                          f"cve_check file (CVEs not identified in project yet)")
@@ -468,6 +487,94 @@ class BOM:
         except Exception as e:
             logging.error(f"Unable to process CVE file {cve_file}: {e}")
         return False
+
+    @staticmethod
+    def _build_cpe_from_product(product_str, version):
+        # cve_check 'products' entries are CVE_PRODUCT values - either 'product' or
+        # 'vendor:product' - build a CPE 2.2 URI binding e.g. cpe:/a:vendor:product:version
+        # (BD sbom-fields endpoint expects this format, not the 2.3 formatted-string style
+        # used elsewhere in this script for /api/cpes searches)
+        if ':' in product_str:
+            vendor, product = product_str.split(':', 1)
+        else:
+            vendor, product = product_str, product_str
+
+        cpe = f"cpe:/a:{vendor}:{product}"
+        if version:
+            cpe += f":{Recipe.clean_version(version)}"
+        return cpe
+
+    def _put_component_cpe(self, component_version_href, cpe):
+        url = f"{component_version_href}/sbom-fields"
+        headers = {
+            'Accept': 'application/vnd.blackducksoftware.component-detail-5+json',
+            'Content-Type': 'application/vnd.blackducksoftware.component-detail-5+json',
+        }
+        try:
+            res = self.bd.session.put(url, json={'cpe': cpe}, headers=headers)
+            if res.ok:
+                return True
+            logging.warning(f"- Unable to set CPE on component '{component_version_href}' - "
+                            f"status code {res.status_code}")
+        except Exception as e:
+            logging.warning(f"- Error setting CPE on component '{component_version_href}' - {e}")
+        return False
+
+    def update_custom_component_cpes(self, conf: "Config", reclist: "RecipeList"):
+        # PHASE 7 - update custom components with CPEs extracted from the cve_check file.
+        # By default only applied to custom components created earlier in this run
+        # (recipe.custom_component); --create_customcomp_cpes extends this to custom
+        # components that already existed in the project before this run.
+        if not self.CVEProductCPEDict:
+            logging.info("- No product/CPE data available from cve_check file (not present in a text-format "
+                         "'.cve' file, or no products reported) - skipping")
+            return 0
+
+        updated = 0
+        skipped = 0
+        for recipe in reclist.recipes:
+            if recipe.custom_component:
+                is_target = True
+            elif conf.create_customcomp_cpes and recipe.matched_in_bom and not recipe.cpe_component:
+                comp = self.complist.find_component_by_name(recipe.compname)
+                is_target = comp is not None and comp.is_custom()
+            else:
+                is_target = False
+
+            if not is_target:
+                continue
+
+            cpes = self.CVEProductCPEDict.get(recipe.name)
+            if not cpes:
+                continue
+
+            comp = self.complist.find_component_by_name(recipe.compname)
+            if comp is None:
+                logging.warning(f"- Unable to find component for custom component recipe "
+                                f"'{recipe.name}/{recipe.version}' - skipping CPE update")
+                skipped += 1
+                continue
+
+            href = comp.get_href()
+            if not href:
+                logging.warning(f"- No component-version href available for custom component "
+                                f"'{recipe.name}/{recipe.version}' - skipping CPE update")
+                skipped += 1
+                continue
+
+            cpe = cpes[0]
+            if len(cpes) > 1:
+                logging.debug(f"Recipe '{recipe.name}' has {len(cpes)} CPE candidates from cve_check file - "
+                              f"using first: '{cpe}'")
+
+            if self._put_component_cpe(href, cpe):
+                logging.info(f"- Set CPE '{cpe}' on custom component '{recipe.name}/{recipe.version}'")
+                updated += 1
+            else:
+                skipped += 1
+
+        logging.info(f"- {updated} custom component(s) updated with CPE from cve_check file ({skipped} skipped)")
+        return updated
 
     def run_detect_sigscan(self, conf: "Config", tdir, extra_opt=''):
         import shutil

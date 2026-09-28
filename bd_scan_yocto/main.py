@@ -175,6 +175,10 @@ def main():
         # bom.get_proj()
         if bom.process_cve_file(conf.cve_check_file, reclist):
             bom.process_patched_cves(conf)
+
+        logging.info("")
+        logging.info("Updating custom component CPEs from cve_check file ...")
+        bom.update_custom_component_cpes(conf, reclist)
     else:
         logging.info("Skipped - mode CVE_PATCHES not specified or no cve_check output file identified")
 

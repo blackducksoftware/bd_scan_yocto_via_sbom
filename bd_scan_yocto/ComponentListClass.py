@@ -96,3 +96,9 @@ class ComponentList:
             if href:
                 arr.append(href)
         return arr
+
+    def find_component_by_name(self, name):
+        for comp in self.components:
+            if comp.name == name:
+                return comp
+        return None

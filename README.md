@@ -1,6 +1,6 @@
 -----
 
-# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.4.8
+# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.4.9
 
 -----
 
@@ -68,6 +68,8 @@ This utility addresses these gaps by creating a comprehensive Black Duck SCA pro
 For guidance on optimizing Yocto project scans with this utility, refer to the **Best Practice Recommendations** section below.
 
 Note the addition of new `--modes` parameter in v1.2.0+ to control scans to be performed (legacy scan parameters still supported) - see Scan Mode section below.
+
+Also note the introduction of a new feature in v1.4.9 which adds CPEs to custom components in the CUSTOM_COMPS mode when they are created in the scan (or for all existing custom comps in the project if the '--create_customcomp_cpes' option is specified).
 
 ### Why is This Script Needed?
 
@@ -307,6 +309,7 @@ Create BD-SCA project version from Yocto project
   * `--exclude_layers LAYER_LIST`: Exclude specified layers from BOM (comma-delimited).
   * `--filter_recipes_by_licenses EXPR`: Filter recipes from processing based on license strings in the license manifest files (comma-delimited, case-insensitive substring match). For example, `--filter_recipes_by_licenses "CLOSED,Proprietary"` will skip any recipe whose license entry contains "CLOSED" or "Proprietary". Filtered recipes are reported in the log and excluded from all subsequent processing.
   * `--ignore_licenses`: Ignore licenses when creating custom components (Use this option if Phase 5 SBOM upload fails when trying to add custom components - custom components will have Unknown license).
+  * `--create_customcomp_cpes`: Extend PHASE 7 CPE extraction/update (see [CVE Patching](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#cve-patching)) to also apply to custom components that already existed in the project before this run. By default, CPEs are only applied to custom components newly created during the current run.
 
 ### Script Behavior Parameters - OPTIONAL:
 
@@ -401,6 +404,12 @@ The script should automatically locate the `cve-check` output file (usually unde
 
 The `CVE_PATCHES` mode enables this feature which is included in the `DEFAULT` mode. Remove `CVE_PATCHES` from the list of modes to disable.
 
+### Updating Custom Components with CPEs
+
+When the `cve_check` output file is in JSON format (`cve-summary.json` or the Yocto v6 `sbom-cve-check` output), each package entry can include `products` data (derived from the recipe's `CVE_PRODUCT` value) used by `cve_check` to look up CVEs against the NVD. PHASE 7 extracts this product data and builds a CPE for each package, then uses it to update the CPE field of any matching Custom Component in the Black Duck project via the Black Duck API (`PUT .../sbom-fields`), so that the custom component can subsequently be matched/enriched against the NVD.
+
+By default, this update is only applied to custom components **newly created during the current run** (i.e., those created in PHASE 5 via `CUSTOM_COMPS` mode). Specify `--create_customcomp_cpes` to also apply CPEs to custom components that **already existed** in the project before this run. This has no effect on components matched from the OE data, signature scan, or CPE lookup, and CPEs cannot be extracted from the legacy text-format `.cve` file (which does not include product data).
+
 -----
 
 ## Kernel Identification and CVE Patching
@@ -467,6 +476,12 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 ## Release Notes
 
+* **v1.4.9**
+   * PHASE 7 now extracts CPEs for packages from the `cve_check` JSON output's `products` data and updates matching Custom Components in the Black Duck project with the extracted CPE, applied by default to custom components newly created in the current run
+   * Added `--create_customcomp_cpes` option to also apply this CPE update to custom components that already existed in the project before the current run
+   * Custom-component detection (used by `--create_customcomp_cpes`) now correctly recognizes existing Custom Components - Black Duck represents these with an `origins` entry whose `externalNamespace` is `unknown` rather than no `origins` at all
+* **v1.4.8**
+   * Skipped version
 * **v1.4.7**
    * Kernel module identification (`KERNEL_VULNS` mode) now uses `bitbake -e virtual/kernel` to locate the kernel build directory, identifying both loadable (`*.ko`) and built-in (`modules.builtin`) kernel modules, instead of extracting `.ko` files from the deployed kernel image tarball
 * **v1.4.6**
