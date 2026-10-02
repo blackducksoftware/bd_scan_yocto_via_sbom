@@ -83,3 +83,12 @@ class Component:
         if self.data and 'componentVersion' in self.data:
             return self.data['componentVersion']
         return ''
+
+    def is_custom(self):
+        # A component created locally (e.g. via SBOM autocreate) rather than matched against the
+        # Black Duck knowledgebase has either no origins, or origins with externalNamespace 'unknown'
+        # (BD's marker for a component not linked to a recognised KB namespace)
+        origins = self.data.get('origins')
+        if not origins:
+            return True
+        return all(o.get('externalNamespace') == 'unknown' for o in origins)

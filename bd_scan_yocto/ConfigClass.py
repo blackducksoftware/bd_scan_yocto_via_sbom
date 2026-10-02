@@ -4,7 +4,7 @@ import os
 import sys
 from .OEClass import OE
 
-script_version = "v1.4.8"
+script_version = "v1.4.9"
 
 
 class Config:
@@ -76,6 +76,11 @@ class Config:
         parser.add_argument("-c", "--cve_check_file", type=str,
                             help="OPTIONAL CVE check output file to mark locally patched CVEs as patched in project",
                             default="")
+        parser.add_argument("--create_customcomp_cpes",
+                            help="OPTIONAL Extend CPE extraction/update (PHASE 7, from cve_check JSON file) to also "
+                                 "apply to custom components that already existed in the project before this run "
+                                 "(by default only custom components newly created during this run are updated)",
+                            action='store_true')
         parser.add_argument("--build_dir", type=str,
                             help="OPTIONAL Alternative build folder (usually determined from Bitbake env)",
                             default="")
@@ -234,6 +239,7 @@ class Config:
         self.exclude_layers = []
         self.filter_recipes_by_licenses = []
         self.ignore_licenses = args.ignore_licenses
+        self.create_customcomp_cpes = args.create_customcomp_cpes
         self.skip_layers = False
 
         terminate = False

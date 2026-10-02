@@ -39,10 +39,14 @@ class Recipe:
         return ret_version
 
     def clean_version_string(self):
+        return Recipe.clean_version(self.version)
+
+    @staticmethod
+    def clean_version(version):
         # Remove +git*
         # Remove -snapshot*
         # ret_version = re.sub(r"\+git.*", r"+gitX", version, flags=re.IGNORECASE)
-        varr = re.split("[+_~-]", self.version)
+        varr = re.split("[+_~-]", version)
         ret_version = varr[0]
         return ret_version
 
