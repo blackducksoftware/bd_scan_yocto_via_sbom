@@ -224,6 +224,7 @@ class BB:
             with open(lic_manifest_file, "r") as lfile:
                 lines = lfile.readlines()
                 ver = ''
+                package_name = ''
                 recipe_name = ''
                 prev_recipe = ''
                 licstring = ''
@@ -234,17 +235,22 @@ class BB:
                     # LICENSE: License
                     #
                     line = line.strip()
-                    if line.startswith("PACKAGE VERSION:"):
-                        ver = line.split(': ')[1]
+                    if line.startswith("PACKAGE NAME:"):
+                        package_name = line.partition(':')[2].strip()
+                    elif line.startswith("PACKAGE VERSION:"):
+                        ver = line.partition(':')[2].strip()
                     elif line.startswith("VERSION:"):
-                        ver = line.split(': ')[1]
+                        ver = line.partition(':')[2].strip()
                     elif line.startswith("RECIPE NAME:"):
-                        recipe_name = line.split(': ')[1]
+                        recipe_name = line.partition(':')[2].strip()
                     elif line.startswith("LICENSE:"):
-                        licstring = line.split(': ')[1]
+                        licstring = line.partition(':')[2].strip()
+                        if not licstring:
+                            logging.warning(f"Empty license for package '{package_name}' "
+                                            f"version '{ver}' (recipe '{recipe_name}')")
                     elif line.startswith("FILES:"):
                         if prev_recipe == conf.kernel_recipe:
-                            kfiles = line.split(': ')[1]
+                            kfiles = line.partition(':')[2].strip()
                             conf.kernel_files = kfiles.split(' ')
 
                     if recipe_name and ver and licstring:
