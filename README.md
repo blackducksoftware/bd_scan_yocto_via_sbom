@@ -1,6 +1,6 @@
 -----
 
-# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.4.9
+# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.4.10
 
 -----
 
@@ -476,6 +476,9 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 ## Release Notes
 
+* **v1.4.10**
+   * Fixed license manifest processing stopping on recipes with an empty `LICENSE` entry - these recipes are now processed with no license and a warning is logged
+   * PHASE 8 (`KERNEL_VULNS` mode) is skipped when `--skip_bitbake` is specified, since the kernel build directory requires `bitbake -e virtual/kernel`
 * **v1.4.9**
    * PHASE 7 now extracts CPEs for packages from the `cve_check` JSON output's `products` data and updates matching Custom Components in the Black Duck project with the extracted CPE, applied by default to custom components newly created in the current run
    * Added `--create_customcomp_cpes` option to also apply this CPE update to custom components that already existed in the project before the current run

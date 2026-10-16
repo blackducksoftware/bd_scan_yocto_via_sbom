@@ -227,6 +227,7 @@ class BB:
                 recipe_name = ''
                 prev_recipe = ''
                 licstring = ''
+                license_seen = False
                 for line in lines:
                     # PACKAGE NAME: name
                     # PACKAGE VERSION: ver
@@ -235,19 +236,23 @@ class BB:
                     #
                     line = line.strip()
                     if line.startswith("PACKAGE VERSION:"):
-                        ver = line.split(': ')[1]
+                        ver = line.partition(':')[2].strip()
                     elif line.startswith("VERSION:"):
-                        ver = line.split(': ')[1]
+                        ver = line.partition(':')[2].strip()
                     elif line.startswith("RECIPE NAME:"):
-                        recipe_name = line.split(': ')[1]
+                        recipe_name = line.partition(':')[2].strip()
                     elif line.startswith("LICENSE:"):
-                        licstring = line.split(': ')[1]
+                        licstring = line.partition(':')[2].strip()
+                        license_seen = True
+                        if not licstring:
+                            logging.warning(f"Empty LICENSE entry for recipe '{recipe_name}' in "
+                                            f"{lic_manifest_file} - recipe processed with no license")
                     elif line.startswith("FILES:"):
                         if prev_recipe == conf.kernel_recipe:
-                            kfiles = line.split(': ')[1]
+                            kfiles = line.partition(':')[2].strip()
                             conf.kernel_files = kfiles.split(' ')
 
-                    if recipe_name and ver and licstring:
+                    if recipe_name and ver and license_seen:
                         packages_total += 1
                         # expression = re.sub(r'\b([\w.-]+)\b\s*&\s*\b([\w.-]+)\b', r'(\1 AND \2)', licstring)
                         expression = licstring.replace(' & ', ' AND ')
@@ -278,6 +283,7 @@ class BB:
                         prev_recipe = recipe_name
                         recipe_name = ''
                         licstring = ''
+                        license_seen = False
 
                 logging.info(f"- {packages_total} packages found in {lic_manifest_file} ({recipes_total} recipes)")
 
