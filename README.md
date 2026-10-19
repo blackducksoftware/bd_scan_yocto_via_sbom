@@ -1,6 +1,6 @@
 -----
 
-# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.4.9
+# Black Duck SCA Scan Yocto Script - `bd_scan_yocto_via_sbom.py` v1.4.10
 
 -----
 
@@ -36,6 +36,12 @@ Once complete, the individual recipe projects can be **combined into the main Yo
 - Automatically by configuring Detect with a parent project using the  
   [`--detect.project.parent.name`](https://documentation.blackduck.com/bundle/detect/page/properties/configuration/project.html#parent-project-name-advanced) option.
 
+## Notes on SBOM export from Yocto projects
+
+In July 2026, the PURL standard was extended to add a new 'yocto' type/origin.
+Black Duck SCA has used the openembedded origin for Yocto recipes for more than 10 years which more accurately represents the origin for
+Yocto recipes (which is openembedded.org). Consequently, SBOMs exported from BD-SCA will use the openembedded origin, and when distributing BD-SCA SBOMs for use by other organisations, the output SBOMs should be modified to represent the recent change to the PURL standard.
+
 -----
 
 ## Quick Start
@@ -69,7 +75,7 @@ For guidance on optimizing Yocto project scans with this utility, refer to the *
 
 Note the addition of new `--modes` parameter in v1.2.0+ to control scans to be performed (legacy scan parameters still supported) - see Scan Mode section below.
 
-Also note the introduction of a new feature in v1.4.9 which adds CPEs to custom components in the CUSTOM_COMPS mode when they are created in the scan (or for all existing custom comps in the project if the '--create_customcomp_cpes' option is specified).
+Also note the introduction of a new feature in v1.4.9 which adds CPEs to custom components in the CUSTOM_COMPS mode when they are created in the scan (and for all existing custom comps in the project if the '--create_customcomp_cpes' option is specified).
 
 ### Why is This Script Needed?
 
@@ -213,8 +219,8 @@ You have a few options for installing this utility:
 
 For optimal Yocto scan results, review the following:
 
-1.  **Check required scan modes using `--modes`:** - the default scans (if --modes not specified) are `OE_RECIPES,SIG_SCAN,CVE_PATCHES` (same as `--modes DEFAULT`) - see [Scan Modes](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#scan-modes) below.<br>
-2.  **Optionally override Bitbake Environment Values:** By default, the utility calls `Bitbake -e` to extract environment and layer information, and will refer to the latest Yocto build. You can override values including `license.manifest`, `machine`, `target`, `download_dir`, `package_dir`, and `image_package_type` using command-line parameters.
+1.  **Check required scan modes using `--modes`:** - the default scans (if --modes not specified) are `OE_RECIPES,SIG_SCAN,CVE_PATCHES` (which is equivalent to `--modes DEFAULT`) - see [Scan Modes](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#scan-modes) below.<br>
+2.  **Optionally override Bitbake Environment Values:** By default, the utility calls `bitbake -e` to extract environment and layer information, and will refer to the latest Yocto build. You can override values including `license.manifest`, `machine`, `target`, `download_dir`, `package_dir`, and `image_package_type` using command-line parameters.
 3.  **Generate a Recipe Report:** Use the `--recipe_report REPFILE` parameter to create a report of matched and unmatched recipes in the Bill of Materials (BOM), required for analysis and debugging. **IMPORTANT** Unmatched IDs shown the BD project version are only from the 1st scan stage and should not be used to determine missing recipes if you use scan modes in addition to OE_RECIPES - see [FAQs](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#faqs).
 4. **Cache OE Data:** The `--oe_data_folder FOLDER` parameter allows you to cache downloaded OE data (approx. 300MB) and reuse it in subsequent runs, saving download time. OE data doesn't change very frequently.
 5. **Apply Patched CVEs to BD Project:** Add the `cve_check` class to your Bitbake `local.conf` to identify patched CVEs. Ensure **PHASE 7** picks up the `cve-check` file. Optionally, specify the output CVE check file using `--cve_check_file FILE` if an alternative location is needed. See [CVE Patching](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#cve-patching) for more information.
@@ -245,18 +251,9 @@ Explanation of modes:
   - `ALL`            - Includes `OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS` (but not `SIG_SCAN_ALL`)
 
 Notes:
-  - `DEFAULT` is assumed if `--modes` not specified.
+  - Mode `DEFAULT` is assumed if `--modes` not specified.
   - To add scan modes to the default set use, for example `--modes DEFAULT,IMAGE_MANIFEST,KERNEL_VULNS`.
   - To add `SIG_SCAN_ALL` mode (scanning all packages) to `ALL` scan mode use `--modes ALL,SIG_SCAN_ALL`.
-
-Mapping of legacy (pre-v1.2.0) scan control parameters to scan modes: 
-   * `--process_image_manifest` = mode `IMAGE_MANIFEST`
-   * `--scan_all_packages` = mode `SIG_SCAN_ALL`
-   * `--add_comps_by_cpe` = mode `CPE_COMPS`
-   * `--process_kernel_vulns` = mode `KERNEL_VULNS`
-   * `--sbom_create_custom_components` = mode `CUSTOM_COMPS`
-
-Specifying legacy parameters in addition to `--modes` will override scan modes defined in the modes list (including modes in `DEFAULT`).
 
 -----
 
@@ -359,7 +356,7 @@ Server credentials can also be specified using the standard environment variable
 
 ### Example Distance Calculations for `--max_oe_version_difference`
 
-When no exact match, use this option to find the most recent previous recipe version up to the specified distance against OE data.
+When no exact match for specific recipes, use this option to find the most recent previous recipe version up to the specified distance against OE data.
 Setting this value allows close (previous) recipe version matching. The value must be in `MAJOR.MINOR.PATCH` format (e.g., `0.10.0`). 
 **CAUTION**: Setting this value too high may cause components to be matched against older recipes in the OE data, potentially leading to different vulnerability reports. It's generally better to maintain a close relationship between matched versions and project versions. Consider values in the range `0.0.1` to `0.0.10`.
 
@@ -372,7 +369,7 @@ Note that lower-order values are overridden by higher-order values (e.g., a dist
 -----
 
 ## CVE Patching
-### CVE Patching - Up to Yocto v6
+### CVE Patching - Up to Yocto v5.*
 
 The Yocto `cve_check` class processes Bitbake dependencies within the development environment, generating a list of CVEs identified from the NVD for *all* packages in that environment.
 
@@ -476,6 +473,9 @@ For custom C/C++ recipes or recipes built with other languages and package manag
 
 ## Release Notes
 
+* **v1.4.10**
+   * Fixed license manifest processing stopping on recipes with an empty `LICENSE` entry - these recipes are now processed with no license and a warning is logged
+   * PHASE 8 (`KERNEL_VULNS` mode) is skipped when `--skip_bitbake` is specified, since the kernel build directory requires `bitbake -e virtual/kernel`
 * **v1.4.9**
    * PHASE 7 now extracts CPEs for packages from the `cve_check` JSON output's `products` data and updates matching Custom Components in the Black Duck project with the extracted CPE, applied by default to custom components newly created in the current run
    * Added `--create_customcomp_cpes` option to also apply this CPE update to custom components that already existed in the project before the current run

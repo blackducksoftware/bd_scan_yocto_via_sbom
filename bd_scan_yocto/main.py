@@ -185,7 +185,9 @@ def main():
     logging.info("")
     logging.info("--- PHASE 8 - PROCESS KERNEL VULNS ---------------------------------------")
     logging.info("")
-    if conf.process_kernel_vulns:
+    if conf.process_kernel_vulns and conf.skip_bitbake:
+        logging.info("Skipped - --skip_bitbake specified (kernel modules require 'bitbake -e virtual/kernel')")
+    elif conf.process_kernel_vulns:
         if bom.check_kernel_in_bom():
             logging.info("Ignoring Kernel vulnerabilities for modules not included in kernel build ...")
             kfilelist = bb.process_kernel_files(conf)
