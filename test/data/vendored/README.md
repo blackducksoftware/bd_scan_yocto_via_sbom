@@ -117,7 +117,7 @@ Expected result: 0 Go module dependencies.
 - **Fetch date:** 2026-11-02
 - **Real or synthesised:** REAL — fetched from public git repo
 
-Plain C recipe. `SRC_URI` contains only `https://`, `file://` and `git://` entries
+Plain C recipe. `SRC_URI` contains only HTTPS, file, and git entries
 for patches. No `crate://` or `gomod://` entries. Expected result: 0 dependencies.
 
 ---

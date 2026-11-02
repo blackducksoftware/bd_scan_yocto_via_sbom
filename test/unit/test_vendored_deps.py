@@ -488,7 +488,8 @@ class TestFixtureSanitisation:
              r'proxy\.golang\.org|sum\.golang\.org|github\.com|'
              r'raw\.githubusercontent\.com|google\.golang\.org|'
              r'gopkg\.in|cloud\.google\.com|honnef\.co|'
-             r'golang\.org|gitlab\.com)(/|$|")'],
+             r'golang\.org|gitlab\.com|zlib\.net|doc\.rust-lang\.org|'
+             r'rust-lang\.org)(/|$|")'],
             input=r1.stdout, capture_output=True, text=True
         )
         assert r2.returncode != 0 or not r2.stdout.strip(), (

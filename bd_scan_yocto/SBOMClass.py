@@ -3,9 +3,12 @@ import datetime
 import uuid
 import json
 import tempfile
+from typing import TYPE_CHECKING
 
-# from .RecipeClass import Recipe
-# from .RecipeListClass import RecipeList
+if TYPE_CHECKING:  # pragma: no cover
+    from .RecipeClass import Recipe
+    from .RecipeListClass import RecipeList
+    from .vendored_deps import VendoredDep
 
 
 class SBOM:
@@ -15,6 +18,9 @@ class SBOM:
         hex_string = self.create_spdx_ident()
         self.namespace = f"https://blackducksoftware.github.io/spdx/{proj}-{hex_string}"
         self.file = ''
+        # Cache (name, version) → SPDXID for cross-recipe vendored-dep dedup.
+        # One SPDX package per unique (name, version), one relationship per parent.
+        self._dep_spdxid_cache: dict = {}
 
         mytime = datetime.datetime.now()
 
@@ -139,6 +145,54 @@ class SBOM:
             "spdxElementId": self.quote(f"SPDXRef-package-{spdxid}"),
             "relationshipType": "DYNAMIC_LINK",
             "relatedSpdxElement": self.quote(f"SPDXRef-package-{self.package_id}")
+        }
+        self.json["relationships"].append(rel_json)
+        # Store the generated SPDXID back on the recipe so callers can
+        # reference it when adding child (vendored) packages.
+        recipe.spdxid = f"SPDXRef-package-{spdxid}"
+
+    def add_vendored_dep(self, dep: "VendoredDep", recipe_spdxid: str):
+        """
+        Add a vendored Rust crate or Go module as an SPDX package linked
+        to its parent recipe via a CONTAINS relationship.
+
+        *dep* is a VendoredDep from bd_scan_yocto.vendored_deps.
+        *recipe_spdxid* is the SPDXID string of the parent recipe package
+        (stored on Recipe.spdxid after add_recipe() returns).
+
+        Cross-recipe deduplication: when the same (name, version) pair has
+        already been added by a different recipe, the existing package entry
+        is reused and only a new CONTAINS relationship is appended.  This
+        produces exactly one SPDX package per unique dependency and one
+        relationship per parent recipe, as required by the SPDX spec.
+        """
+        cache_key = (dep.name, dep.version)
+        if cache_key in self._dep_spdxid_cache:
+            spdxid = self._dep_spdxid_cache[cache_key]
+        else:
+            spdxid = self.create_spdx_ident()
+            self._dep_spdxid_cache[cache_key] = spdxid
+            package_json = {
+                "SPDXID": self.quote(f"SPDXRef-package-{spdxid}"),
+                "downloadLocation": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": self.quote(dep.purl),
+                        "referenceType": "purl"
+                    }
+                ],
+                "filesAnalyzed": False,
+                "licenseConcluded": "NOASSERTION",
+                "licenseDeclared": "NOASSERTION",
+                "name": self.quote(dep.name),
+                "versionInfo": self.quote(dep.version),
+            }
+            self.json["packages"].append(package_json)
+        rel_json = {
+            "spdxElementId": self.quote(recipe_spdxid),
+            "relationshipType": "CONTAINS",
+            "relatedSpdxElement": self.quote(f"SPDXRef-package-{spdxid}"),
         }
         self.json["relationships"].append(rel_json)
 

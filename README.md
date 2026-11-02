@@ -248,12 +248,14 @@ Explanation of modes:
   - `CUSTOM_COMPS`   - Create Custom Components for unmatched recipes (note Custom Components are only placeholders for SBOM export - no vulnerability or other data is provided) - see [FAQs](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#faqs)
   - `CVE_PATCHES`    - Process locally patched CVEs from `cve_check` class (set in `DEFAULT` mode) - See [CVE Patching](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#cve-patching)
   - `KERNEL_VULNS`   - Process kernel modules and mark vulns as unaffected where associated modules do not exist in the kernel - see [Kernel Processing](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom#kernel-identification-and-cve-patching)
-  - `ALL`            - Includes `OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS` (but not `SIG_SCAN_ALL`)
+  - `VENDORED_DEPS`  - Enumerate vendored Rust crates (`crate://`) and Go modules (`gomod://`, `gomodgit://`) declared in recipe `.inc` files and add them as SPDX packages with `pkg:cargo/` or `pkg:golang/` PURLs. Requires `OE_RECIPES`. The BBLAYERS paths from the Bitbake environment are searched for matching `-crates.inc` and `-go-mods.inc` include files. **Not included in `ALL` or `DEFAULT`** — must be explicitly enabled with `--modes VENDORED_DEPS` or `--modes OE_RECIPES,VENDORED_DEPS`.
+  - `ALL`            - Includes `OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS` (but not `SIG_SCAN_ALL` or `VENDORED_DEPS`)
 
 Notes:
   - Mode `DEFAULT` is assumed if `--modes` not specified.
   - To add scan modes to the default set use, for example `--modes DEFAULT,IMAGE_MANIFEST,KERNEL_VULNS`.
   - To add `SIG_SCAN_ALL` mode (scanning all packages) to `ALL` scan mode use `--modes ALL,SIG_SCAN_ALL`.
+  - To use `VENDORED_DEPS` with the default modes use `--modes DEFAULT,VENDORED_DEPS`.
 
 -----
 
@@ -286,7 +288,7 @@ Create BD-SCA project version from Yocto project
 
 ### Scan Mode Configuration Parameter - OPTIONAL:
 
-  * `--modes MODES`: A comma-delimited list of scan modes (no spaces) selected from [ALL,DEFAULT,OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,SIG_SCAN_ALL,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS] - see [Scan Modes](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#scan-modes).
+  * `--modes MODES`: A comma-delimited list of scan modes (no spaces) selected from [ALL,DEFAULT,OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,SIG_SCAN_ALL,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS,VENDORED_DEPS] - see [Scan Modes](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#scan-modes).
 
 ### Yocto Project Configuration Parameters - OPTIONAL:
 
@@ -307,6 +309,8 @@ Create BD-SCA project version from Yocto project
   * `--filter_recipes_by_licenses EXPR`: Filter recipes from processing based on license strings in the license manifest files (comma-delimited, case-insensitive substring match). For example, `--filter_recipes_by_licenses "CLOSED,Proprietary"` will skip any recipe whose license entry contains "CLOSED" or "Proprietary". Filtered recipes are reported in the log and excluded from all subsequent processing.
   * `--ignore_licenses`: Ignore licenses when creating custom components (Use this option if Phase 5 SBOM upload fails when trying to add custom components - custom components will have Unknown license).
   * `--create_customcomp_cpes`: Extend PHASE 7 CPE extraction/update (see [CVE Patching](https://github.com/blackducksoftware/bd_scan_yocto_via_sbom?tab=readme-ov-file#cve-patching)) to also apply to custom components that already existed in the project before this run. By default, CPEs are only applied to custom components newly created during the current run.
+  * `--vendored_deps_recipes RECIPE_LIST`: Comma-separated list of recipe names whose vendored Rust/Go dependencies should be added to the SBOM when `--modes VENDORED_DEPS` is active. If omitted, all recipes in `license.manifest` are considered. Recipes not found in the manifest are warned and skipped.
+  * `--vendored_deps_output FILE`: Write a JSON file listing all enumerated vendored dependencies (one object per entry). This is an optional audit artefact; the main SBOM is always produced regardless.
 
 ### Script Behavior Parameters - OPTIONAL:
 
