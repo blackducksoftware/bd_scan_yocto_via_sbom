@@ -1,0 +1,1379 @@
+[
+  {
+    "ecosystem": "golang",
+    "name": "cloud.google.com/go",
+    "version": "v0.111.0",
+    "purl": "pkg:golang/cloud.google.com/go@v0.111.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "cloud.google.com/go",
+    "version": "v0.26.0",
+    "purl": "pkg:golang/cloud.google.com/go@v0.26.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "cloud.google.com/go/compute",
+    "version": "v1.23.3",
+    "purl": "pkg:golang/cloud.google.com/go/compute@v1.23.3",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "cloud.google.com/go/compute/metadata",
+    "version": "v0.2.3",
+    "purl": "pkg:golang/cloud.google.com/go/compute/metadata@v0.2.3",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "cloud.google.com/go/iam",
+    "version": "v1.1.5",
+    "purl": "pkg:golang/cloud.google.com/go/iam@v1.1.5",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "cloud.google.com/go/kms",
+    "version": "v1.15.6",
+    "purl": "pkg:golang/cloud.google.com/go/kms@v1.15.6",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "cloud.google.com/go/longrunning",
+    "version": "v0.5.4",
+    "purl": "pkg:golang/cloud.google.com/go/longrunning@v0.5.4",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "cloud.google.com/go/security",
+    "version": "v1.15.5",
+    "purl": "pkg:golang/cloud.google.com/go/security@v1.15.5",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/BurntSushi/toml",
+    "version": "v0.3.1",
+    "purl": "pkg:golang/github.com/BurntSushi/toml@v0.3.1",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/census-instrumentation/opencensus-proto",
+    "version": "v0.2.1",
+    "purl": "pkg:golang/github.com/census-instrumentation/opencensus-proto@v0.2.1",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/client9/misspell",
+    "version": "v0.3.4",
+    "purl": "pkg:golang/github.com/client9/misspell@v0.3.4",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/cncf/udpa/go",
+    "version": "v0.0.0-20191209042840-269d4d468f6f",
+    "purl": "pkg:golang/github.com/cncf/udpa/go@v0.0.0-20191209042840-269d4d468f6f",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/davecgh/go-spew",
+    "version": "v1.1.0",
+    "purl": "pkg:golang/github.com/davecgh/go-spew@v1.1.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/davecgh/go-spew",
+    "version": "v1.1.1",
+    "purl": "pkg:golang/github.com/davecgh/go-spew@v1.1.1",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/envoyproxy/go-control-plane",
+    "version": "v0.9.0",
+    "purl": "pkg:golang/github.com/envoyproxy/go-control-plane@v0.9.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/envoyproxy/go-control-plane",
+    "version": "v0.9.1-0.20191026205805-5f8ba28d4473",
+    "purl": "pkg:golang/github.com/envoyproxy/go-control-plane@v0.9.1-0.20191026205805-5f8ba28d4473",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/envoyproxy/go-control-plane",
+    "version": "v0.9.4",
+    "purl": "pkg:golang/github.com/envoyproxy/go-control-plane@v0.9.4",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/envoyproxy/protoc-gen-validate",
+    "version": "v0.1.0",
+    "purl": "pkg:golang/github.com/envoyproxy/protoc-gen-validate@v0.1.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/felixge/httpsnoop",
+    "version": "v1.0.4",
+    "purl": "pkg:golang/github.com/felixge/httpsnoop@v1.0.4",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/ghodss/yaml",
+    "version": "v1.0.0",
+    "purl": "pkg:golang/github.com/ghodss/yaml@v1.0.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/go-logr/logr",
+    "version": "v1.2.2",
+    "purl": "pkg:golang/github.com/go-logr/logr@v1.2.2",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/go-logr/logr",
+    "version": "v1.4.1",
+    "purl": "pkg:golang/github.com/go-logr/logr@v1.4.1",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/go-logr/stdr",
+    "version": "v1.2.2",
+    "purl": "pkg:golang/github.com/go-logr/stdr@v1.2.2",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/golang/glog",
+    "version": "v0.0.0-20160126235308-23def4e6c14b",
+    "purl": "pkg:golang/github.com/golang/glog@v0.0.0-20160126235308-23def4e6c14b",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/golang/groupcache",
+    "version": "v0.0.0-20200121045136-8c9f03a8e57e",
+    "purl": "pkg:golang/github.com/golang/groupcache@v0.0.0-20200121045136-8c9f03a8e57e",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/golang/groupcache",
+    "version": "v0.0.0-20210331224755-41bb18bfe9da",
+    "purl": "pkg:golang/github.com/golang/groupcache@v0.0.0-20210331224755-41bb18bfe9da",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/golang/mock",
+    "version": "v1.1.1",
+    "purl": "pkg:golang/github.com/golang/mock@v1.1.1",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/golang/protobuf",
+    "version": "v1.2.0",
+    "purl": "pkg:golang/github.com/golang/protobuf@v1.2.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/golang/protobuf",
+    "version": "v1.3.2",
+    "purl": "pkg:golang/github.com/golang/protobuf@v1.3.2",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/golang/protobuf",
+    "version": "v1.4.0",
+    "purl": "pkg:golang/github.com/golang/protobuf@v1.4.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/golang/protobuf",
+    "version": "v1.4.0-rc.1",
+    "purl": "pkg:golang/github.com/golang/protobuf@v1.4.0-rc.1",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/golang/protobuf",
+    "version": "v1.4.0-rc.1.0.20200221234624-67d41d38c208",
+    "purl": "pkg:golang/github.com/golang/protobuf@v1.4.0-rc.1.0.20200221234624-67d41d38c208",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/golang/protobuf",
+    "version": "v1.4.0-rc.2",
+    "purl": "pkg:golang/github.com/golang/protobuf@v1.4.0-rc.2",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/golang/protobuf",
+    "version": "v1.4.0-rc.4.0.20200313231945-b860323f09d0",
+    "purl": "pkg:golang/github.com/golang/protobuf@v1.4.0-rc.4.0.20200313231945-b860323f09d0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/golang/protobuf",
+    "version": "v1.4.1",
+    "purl": "pkg:golang/github.com/golang/protobuf@v1.4.1",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/golang/protobuf",
+    "version": "v1.4.3",
+    "purl": "pkg:golang/github.com/golang/protobuf@v1.4.3",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/golang/protobuf",
+    "version": "v1.5.0",
+    "purl": "pkg:golang/github.com/golang/protobuf@v1.5.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/golang/protobuf",
+    "version": "v1.5.2",
+    "purl": "pkg:golang/github.com/golang/protobuf@v1.5.2",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/golang/protobuf",
+    "version": "v1.5.3",
+    "purl": "pkg:golang/github.com/golang/protobuf@v1.5.3",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/google/go-cmp",
+    "version": "v0.2.0",
+    "purl": "pkg:golang/github.com/google/go-cmp@v0.2.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/google/go-cmp",
+    "version": "v0.3.0",
+    "purl": "pkg:golang/github.com/google/go-cmp@v0.3.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/google/go-cmp",
+    "version": "v0.3.1",
+    "purl": "pkg:golang/github.com/google/go-cmp@v0.3.1",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/google/go-cmp",
+    "version": "v0.4.0",
+    "purl": "pkg:golang/github.com/google/go-cmp@v0.4.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/google/go-cmp",
+    "version": "v0.5.0",
+    "purl": "pkg:golang/github.com/google/go-cmp@v0.5.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/google/go-cmp",
+    "version": "v0.5.3",
+    "purl": "pkg:golang/github.com/google/go-cmp@v0.5.3",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/google/go-cmp",
+    "version": "v0.5.5",
+    "purl": "pkg:golang/github.com/google/go-cmp@v0.5.5",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/google/s2a-go",
+    "version": "v0.1.7",
+    "purl": "pkg:golang/github.com/google/s2a-go@v0.1.7",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/google/uuid",
+    "version": "v1.1.2",
+    "purl": "pkg:golang/github.com/google/uuid@v1.1.2",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/googleapis/enterprise-certificate-proxy",
+    "version": "v0.3.2",
+    "purl": "pkg:golang/github.com/googleapis/enterprise-certificate-proxy@v0.3.2",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/googleapis/gax-go/v2",
+    "version": "v2.12.0",
+    "purl": "pkg:golang/github.com/googleapis/gax-go/v2@v2.12.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/pmezard/go-difflib",
+    "version": "v1.0.0",
+    "purl": "pkg:golang/github.com/pmezard/go-difflib@v1.0.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/prometheus/client_model",
+    "version": "v0.0.0-20190812154241-14fe0d1b01d4",
+    "purl": "pkg:golang/github.com/prometheus/client_model@v0.0.0-20190812154241-14fe0d1b01d4",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/smallstep/pkcs7",
+    "version": "v0.0.0-20231107075624-be1870d87d13",
+    "purl": "pkg:golang/github.com/smallstep/pkcs7@v0.0.0-20231107075624-be1870d87d13",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/stretchr/objx",
+    "version": "v0.1.0",
+    "purl": "pkg:golang/github.com/stretchr/objx@v0.1.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/stretchr/objx",
+    "version": "v0.4.0",
+    "purl": "pkg:golang/github.com/stretchr/objx@v0.4.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/stretchr/objx",
+    "version": "v0.5.0",
+    "purl": "pkg:golang/github.com/stretchr/objx@v0.5.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/stretchr/testify",
+    "version": "v1.7.1",
+    "purl": "pkg:golang/github.com/stretchr/testify@v1.7.1",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/stretchr/testify",
+    "version": "v1.8.0",
+    "purl": "pkg:golang/github.com/stretchr/testify@v1.8.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/stretchr/testify",
+    "version": "v1.8.1",
+    "purl": "pkg:golang/github.com/stretchr/testify@v1.8.1",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/usbarmory/tamago",
+    "version": "v0.0.0-20221201111136-9bb9b42304fa",
+    "purl": "pkg:golang/github.com/usbarmory/tamago@v0.0.0-20221201111136-9bb9b42304fa",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "github.com/yuin/goldmark",
+    "version": "v1.4.13",
+    "purl": "pkg:golang/github.com/yuin/goldmark@v1.4.13",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "go.opencensus.io",
+    "version": "v0.24.0",
+    "purl": "pkg:golang/go.opencensus.io@v0.24.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc",
+    "version": "v0.47.0",
+    "purl": "pkg:golang/go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc@v0.47.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp",
+    "version": "v0.47.0",
+    "purl": "pkg:golang/go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp@v0.47.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "go.opentelemetry.io/otel",
+    "version": "v1.22.0",
+    "purl": "pkg:golang/go.opentelemetry.io/otel@v1.22.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "go.opentelemetry.io/otel/metric",
+    "version": "v1.22.0",
+    "purl": "pkg:golang/go.opentelemetry.io/otel/metric@v1.22.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "go.opentelemetry.io/otel/trace",
+    "version": "v1.22.0",
+    "purl": "pkg:golang/go.opentelemetry.io/otel/trace@v1.22.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/crypto",
+    "version": "v0.0.0-20190308221718-c2843e01d9a2",
+    "purl": "pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/crypto",
+    "version": "v0.0.0-20200622213623-75b288015ac9",
+    "purl": "pkg:golang/golang.org/x/crypto@v0.0.0-20200622213623-75b288015ac9",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/crypto",
+    "version": "v0.0.0-20210921155107-089bfa567519",
+    "purl": "pkg:golang/golang.org/x/crypto@v0.0.0-20210921155107-089bfa567519",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/crypto",
+    "version": "v0.18.0",
+    "purl": "pkg:golang/golang.org/x/crypto@v0.18.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/exp",
+    "version": "v0.0.0-20190121172915-509febef88a4",
+    "purl": "pkg:golang/golang.org/x/exp@v0.0.0-20190121172915-509febef88a4",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/lint",
+    "version": "v0.0.0-20181026193005-c67002cb31c3",
+    "purl": "pkg:golang/golang.org/x/lint@v0.0.0-20181026193005-c67002cb31c3",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/lint",
+    "version": "v0.0.0-20190227174305-5b3e6a55c961",
+    "purl": "pkg:golang/golang.org/x/lint@v0.0.0-20190227174305-5b3e6a55c961",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/lint",
+    "version": "v0.0.0-20190313153728-d0100b6bd8b3",
+    "purl": "pkg:golang/golang.org/x/lint@v0.0.0-20190313153728-d0100b6bd8b3",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/mod",
+    "version": "v0.6.0-dev.0.20220419223038-86c51ed26bb4",
+    "purl": "pkg:golang/golang.org/x/mod@v0.6.0-dev.0.20220419223038-86c51ed26bb4",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/net",
+    "version": "v0.0.0-20180724234803-3673e40ba225",
+    "purl": "pkg:golang/golang.org/x/net@v0.0.0-20180724234803-3673e40ba225",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/net",
+    "version": "v0.0.0-20180826012351-8a410e7b638d",
+    "purl": "pkg:golang/golang.org/x/net@v0.0.0-20180826012351-8a410e7b638d",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/net",
+    "version": "v0.0.0-20190213061140-3a22650c66bd",
+    "purl": "pkg:golang/golang.org/x/net@v0.0.0-20190213061140-3a22650c66bd",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/net",
+    "version": "v0.0.0-20190311183353-d8887717615a",
+    "purl": "pkg:golang/golang.org/x/net@v0.0.0-20190311183353-d8887717615a",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/net",
+    "version": "v0.0.0-20190404232315-eb5bcb51f2a3",
+    "purl": "pkg:golang/golang.org/x/net@v0.0.0-20190404232315-eb5bcb51f2a3",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/net",
+    "version": "v0.0.0-20190620200207-3b0461eec859",
+    "purl": "pkg:golang/golang.org/x/net@v0.0.0-20190620200207-3b0461eec859",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/net",
+    "version": "v0.0.0-20201110031124-69a78807bb2b",
+    "purl": "pkg:golang/golang.org/x/net@v0.0.0-20201110031124-69a78807bb2b",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/net",
+    "version": "v0.0.0-20210226172049-e18ecbb05110",
+    "purl": "pkg:golang/golang.org/x/net@v0.0.0-20210226172049-e18ecbb05110",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/net",
+    "version": "v0.0.0-20220722155237-a158d28d115b",
+    "purl": "pkg:golang/golang.org/x/net@v0.0.0-20220722155237-a158d28d115b",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/net",
+    "version": "v0.20.0",
+    "purl": "pkg:golang/golang.org/x/net@v0.20.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/oauth2",
+    "version": "v0.0.0-20180821212333-d2e6202438be",
+    "purl": "pkg:golang/golang.org/x/oauth2@v0.0.0-20180821212333-d2e6202438be",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/oauth2",
+    "version": "v0.16.0",
+    "purl": "pkg:golang/golang.org/x/oauth2@v0.16.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/sync",
+    "version": "v0.0.0-20180314180146-1d60e4601c6f",
+    "purl": "pkg:golang/golang.org/x/sync@v0.0.0-20180314180146-1d60e4601c6f",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/sync",
+    "version": "v0.0.0-20181108010431-42b317875d0f",
+    "purl": "pkg:golang/golang.org/x/sync@v0.0.0-20181108010431-42b317875d0f",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/sync",
+    "version": "v0.0.0-20190423024810-112230192c58",
+    "purl": "pkg:golang/golang.org/x/sync@v0.0.0-20190423024810-112230192c58",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/sync",
+    "version": "v0.0.0-20220722155255-886fb9371eb4",
+    "purl": "pkg:golang/golang.org/x/sync@v0.0.0-20220722155255-886fb9371eb4",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/sync",
+    "version": "v0.6.0",
+    "purl": "pkg:golang/golang.org/x/sync@v0.6.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/sys",
+    "version": "v0.0.0-20180830151530-49385e6e1522",
+    "purl": "pkg:golang/golang.org/x/sys@v0.0.0-20180830151530-49385e6e1522",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/sys",
+    "version": "v0.0.0-20190215142949-d0b11bdaac8a",
+    "purl": "pkg:golang/golang.org/x/sys@v0.0.0-20190215142949-d0b11bdaac8a",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/sys",
+    "version": "v0.0.0-20190412213103-97732733099d",
+    "purl": "pkg:golang/golang.org/x/sys@v0.0.0-20190412213103-97732733099d",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/sys",
+    "version": "v0.0.0-20200930185726-fdedc70b468f",
+    "purl": "pkg:golang/golang.org/x/sys@v0.0.0-20200930185726-fdedc70b468f",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/sys",
+    "version": "v0.0.0-20201119102817-f84b799fce68",
+    "purl": "pkg:golang/golang.org/x/sys@v0.0.0-20201119102817-f84b799fce68",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/sys",
+    "version": "v0.0.0-20210615035016-665e8c7367d1",
+    "purl": "pkg:golang/golang.org/x/sys@v0.0.0-20210615035016-665e8c7367d1",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/sys",
+    "version": "v0.0.0-20220520151302-bc2c85ada10a",
+    "purl": "pkg:golang/golang.org/x/sys@v0.0.0-20220520151302-bc2c85ada10a",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/sys",
+    "version": "v0.0.0-20220722155257-8c9f86f7a55f",
+    "purl": "pkg:golang/golang.org/x/sys@v0.0.0-20220722155257-8c9f86f7a55f",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/sys",
+    "version": "v0.16.0",
+    "purl": "pkg:golang/golang.org/x/sys@v0.16.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/term",
+    "version": "v0.0.0-20201126162022-7de9c90e9dd1",
+    "purl": "pkg:golang/golang.org/x/term@v0.0.0-20201126162022-7de9c90e9dd1",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/term",
+    "version": "v0.0.0-20210927222741-03fcf44c2211",
+    "purl": "pkg:golang/golang.org/x/term@v0.0.0-20210927222741-03fcf44c2211",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/text",
+    "version": "v0.14.0",
+    "purl": "pkg:golang/golang.org/x/text@v0.14.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/text",
+    "version": "v0.3.0",
+    "purl": "pkg:golang/golang.org/x/text@v0.3.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/text",
+    "version": "v0.3.3",
+    "purl": "pkg:golang/golang.org/x/text@v0.3.3",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/text",
+    "version": "v0.3.7",
+    "purl": "pkg:golang/golang.org/x/text@v0.3.7",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/text",
+    "version": "v0.3.8",
+    "purl": "pkg:golang/golang.org/x/text@v0.3.8",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/time",
+    "version": "v0.5.0",
+    "purl": "pkg:golang/golang.org/x/time@v0.5.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/tools",
+    "version": "v0.0.0-20180917221912-90fa682c2a6e",
+    "purl": "pkg:golang/golang.org/x/tools@v0.0.0-20180917221912-90fa682c2a6e",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/tools",
+    "version": "v0.0.0-20190114222345-bf090417da8b",
+    "purl": "pkg:golang/golang.org/x/tools@v0.0.0-20190114222345-bf090417da8b",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/tools",
+    "version": "v0.0.0-20190226205152-f727befe758c",
+    "purl": "pkg:golang/golang.org/x/tools@v0.0.0-20190226205152-f727befe758c",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/tools",
+    "version": "v0.0.0-20190311212946-11955173bddd",
+    "purl": "pkg:golang/golang.org/x/tools@v0.0.0-20190311212946-11955173bddd",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/tools",
+    "version": "v0.0.0-20190524140312-2c0ae7006135",
+    "purl": "pkg:golang/golang.org/x/tools@v0.0.0-20190524140312-2c0ae7006135",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/tools",
+    "version": "v0.0.0-20191119224855-298f0cb1881e",
+    "purl": "pkg:golang/golang.org/x/tools@v0.0.0-20191119224855-298f0cb1881e",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/tools",
+    "version": "v0.1.12",
+    "purl": "pkg:golang/golang.org/x/tools@v0.1.12",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/xerrors",
+    "version": "v0.0.0-20190717185122-a985d3407aa7",
+    "purl": "pkg:golang/golang.org/x/xerrors@v0.0.0-20190717185122-a985d3407aa7",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/xerrors",
+    "version": "v0.0.0-20191204190536-9bdfabe68543",
+    "purl": "pkg:golang/golang.org/x/xerrors@v0.0.0-20191204190536-9bdfabe68543",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/api",
+    "version": "v0.160.0",
+    "purl": "pkg:golang/google.golang.org/api@v0.160.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/appengine",
+    "version": "v1.1.0",
+    "purl": "pkg:golang/google.golang.org/appengine@v1.1.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/appengine",
+    "version": "v1.4.0",
+    "purl": "pkg:golang/google.golang.org/appengine@v1.4.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/appengine",
+    "version": "v1.6.8",
+    "purl": "pkg:golang/google.golang.org/appengine@v1.6.8",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/genproto",
+    "version": "v0.0.0-20180817151627-c66870c02cf8",
+    "purl": "pkg:golang/google.golang.org/genproto@v0.0.0-20180817151627-c66870c02cf8",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/genproto",
+    "version": "v0.0.0-20190819201941-24fa4b261c55",
+    "purl": "pkg:golang/google.golang.org/genproto@v0.0.0-20190819201941-24fa4b261c55",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/genproto",
+    "version": "v0.0.0-20200526211855-cb27e3aa2013",
+    "purl": "pkg:golang/google.golang.org/genproto@v0.0.0-20200526211855-cb27e3aa2013",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/genproto",
+    "version": "v0.0.0-20240116215550-a9fa1716bcac",
+    "purl": "pkg:golang/google.golang.org/genproto@v0.0.0-20240116215550-a9fa1716bcac",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/genproto/googleapis/api",
+    "version": "v0.0.0-20240125205218-1f4bbc51befe",
+    "purl": "pkg:golang/google.golang.org/genproto/googleapis/api@v0.0.0-20240125205218-1f4bbc51befe",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/genproto/googleapis/rpc",
+    "version": "v0.0.0-20240116215550-a9fa1716bcac",
+    "purl": "pkg:golang/google.golang.org/genproto/googleapis/rpc@v0.0.0-20240116215550-a9fa1716bcac",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/grpc",
+    "version": "v1.19.0",
+    "purl": "pkg:golang/google.golang.org/grpc@v1.19.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/grpc",
+    "version": "v1.23.0",
+    "purl": "pkg:golang/google.golang.org/grpc@v1.23.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/grpc",
+    "version": "v1.25.1",
+    "purl": "pkg:golang/google.golang.org/grpc@v1.25.1",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/grpc",
+    "version": "v1.27.0",
+    "purl": "pkg:golang/google.golang.org/grpc@v1.27.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/grpc",
+    "version": "v1.33.2",
+    "purl": "pkg:golang/google.golang.org/grpc@v1.33.2",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/grpc",
+    "version": "v1.61.0",
+    "purl": "pkg:golang/google.golang.org/grpc@v1.61.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/protobuf",
+    "version": "v0.0.0-20200109180630-ec00e32a8dfd",
+    "purl": "pkg:golang/google.golang.org/protobuf@v0.0.0-20200109180630-ec00e32a8dfd",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/protobuf",
+    "version": "v0.0.0-20200221191635-4d8936d0db64",
+    "purl": "pkg:golang/google.golang.org/protobuf@v0.0.0-20200221191635-4d8936d0db64",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/protobuf",
+    "version": "v0.0.0-20200228230310-ab0ca4ff8a60",
+    "purl": "pkg:golang/google.golang.org/protobuf@v0.0.0-20200228230310-ab0ca4ff8a60",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/protobuf",
+    "version": "v1.20.1-0.20200309200217-e05f789c0967",
+    "purl": "pkg:golang/google.golang.org/protobuf@v1.20.1-0.20200309200217-e05f789c0967",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/protobuf",
+    "version": "v1.21.0",
+    "purl": "pkg:golang/google.golang.org/protobuf@v1.21.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/protobuf",
+    "version": "v1.22.0",
+    "purl": "pkg:golang/google.golang.org/protobuf@v1.22.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/protobuf",
+    "version": "v1.23.0",
+    "purl": "pkg:golang/google.golang.org/protobuf@v1.23.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/protobuf",
+    "version": "v1.23.1-0.20200526195155-81db48ad09cc",
+    "purl": "pkg:golang/google.golang.org/protobuf@v1.23.1-0.20200526195155-81db48ad09cc",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/protobuf",
+    "version": "v1.25.0",
+    "purl": "pkg:golang/google.golang.org/protobuf@v1.25.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/protobuf",
+    "version": "v1.26.0",
+    "purl": "pkg:golang/google.golang.org/protobuf@v1.26.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/protobuf",
+    "version": "v1.26.0-rc.1",
+    "purl": "pkg:golang/google.golang.org/protobuf@v1.26.0-rc.1",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "google.golang.org/protobuf",
+    "version": "v1.32.0",
+    "purl": "pkg:golang/google.golang.org/protobuf@v1.32.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "gopkg.in/check.v1",
+    "version": "v0.0.0-20161208181325-20d25e280405",
+    "purl": "pkg:golang/gopkg.in/check.v1@v0.0.0-20161208181325-20d25e280405",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "gopkg.in/yaml.v2",
+    "version": "v2.4.0",
+    "purl": "pkg:golang/gopkg.in/yaml.v2@v2.4.0",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "gopkg.in/yaml.v3",
+    "version": "v3.0.0-20200313102051-9f266ea9e77c",
+    "purl": "pkg:golang/gopkg.in/yaml.v3@v3.0.0-20200313102051-9f266ea9e77c",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "gopkg.in/yaml.v3",
+    "version": "v3.0.1",
+    "purl": "pkg:golang/gopkg.in/yaml.v3@v3.0.1",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "honnef.co/go/tools",
+    "version": "v0.0.0-20190102054323-c2f93a96b099",
+    "purl": "pkg:golang/honnef.co/go/tools@v0.0.0-20190102054323-c2f93a96b099",
+    "parent_recipes": [
+      "crucible"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "honnef.co/go/tools",
+    "version": "v0.0.0-20190523083050-ea95bdfd59fc",
+    "purl": "pkg:golang/honnef.co/go/tools@v0.0.0-20190523083050-ea95bdfd59fc",
+    "parent_recipes": [
+      "crucible"
+    ]
+  }
+]

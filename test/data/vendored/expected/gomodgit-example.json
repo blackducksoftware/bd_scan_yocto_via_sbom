@@ -1,0 +1,29 @@
+[
+  {
+    "ecosystem": "golang",
+    "name": "github.com/google/uuid",
+    "version": "v1.6.0",
+    "purl": "pkg:golang/github.com/google/uuid@v1.6.0",
+    "parent_recipes": [
+      "gomodgit-example"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/net",
+    "version": "v0.24.0",
+    "purl": "pkg:golang/golang.org/x/net@v0.24.0",
+    "parent_recipes": [
+      "gomodgit-example"
+    ]
+  },
+  {
+    "ecosystem": "golang",
+    "name": "golang.org/x/text",
+    "version": "v0.15.0",
+    "purl": "pkg:golang/golang.org/x/text@v0.15.0",
+    "parent_recipes": [
+      "gomodgit-example"
+    ]
+  }
+]
