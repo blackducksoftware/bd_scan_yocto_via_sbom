@@ -257,6 +257,19 @@ Notes:
   - To add `SIG_SCAN_ALL` mode (scanning all packages) to `ALL` scan mode use `--modes ALL,SIG_SCAN_ALL`.
   - To use `VENDORED_DEPS` with the default modes use `--modes DEFAULT,VENDORED_DEPS`.
 
+### VENDORED_DEPS Mode: Known Limitations
+
+The `VENDORED_DEPS` mode enumerates vendored Rust crates and Go modules from auto-generated recipe include files (`-crates.inc`, `-go-mods.inc`, `-go-mod.inc`, `-go-modules.inc`) that use the `crate://`, `gomod://`, or `gomodgit://` URI schemes.
+
+**Recipes without generated manifests** (e.g., recipes using plain `inherit go` with a checked-in `vendor/` directory and no auto-generated `.inc` file) are not enumerated by `VENDORED_DEPS` because there is no machine-readable manifest to parse.
+
+For these recipes, pair `bd_scan_yocto_via_sbom` with a dedicated language-aware SBOM tool:
+
+- **Go modules:** [`cyclonedx-gomod`](https://github.com/CycloneDX/cyclonedx-gomod), [`Syft`](https://github.com/anchore/syft), or `go list -m all` with manual SBOM generation
+- **Rust crates:** [`cargo-sbom`](https://docs.rs/cargo-sbom/latest/cargo_sbom/), [`cargo-auditable`](https://github.com/rustsec/cargo-auditable), [`Syft`](https://github.com/anchore/syft), or `cargo tree` with manual SBOM generation
+
+Generate an SBOM from the recipe source tree and merge it into the same Black Duck project version. Black Duck SCA supports multiple SBOM uploads per project version, so language-specific SBOMs can coexist alongside the output from `bd_scan_yocto_via_sbom`.
+
 -----
 
 ## Other Scan Options
