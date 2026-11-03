@@ -489,7 +489,7 @@ class TestFixtureSanitisation:
              r'raw\.githubusercontent\.com|google\.golang\.org|'
              r'gopkg\.in|cloud\.google\.com|honnef\.co|'
              r'golang\.org|gitlab\.com|zlib\.net|doc\.rust-lang\.org|'
-             r'rust-lang\.org)(/|$|")'],
+             r'rust-lang\.org|cryptography\.io|www\.crowdsec\.net)(/|$|")'],
             input=r1.stdout, capture_output=True, text=True
         )
         assert r2.returncode != 0 or not r2.stdout.strip(), (
