@@ -1,6 +1,8 @@
 import argparse
 import logging
 import os
+import pathlib
+import stat
 import sys
 from .OEClass import OE
 
@@ -32,7 +34,8 @@ class Config:
         parser.add_argument("--modes", type=str,
                             help="Specify scan modes to include - comma-separated list from 'ALL,DEFAULT,"
                                  "OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,SIG_SCAN_ALL,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,"
-                                 "KERNEL_VULNS'. (DEFAULT = OE_RECIPES,SIG_SCAN,CVE_PATCHES)",
+                                 "KERNEL_VULNS,VENDORED_DEPS'. (DEFAULT = OE_RECIPES,SIG_SCAN,CVE_PATCHES; "
+                                 "VENDORED_DEPS requires OE_RECIPES and is excluded from ALL)",
                             default="")
 
         parser.add_argument("-t", "--target", type=str,
@@ -186,6 +189,17 @@ class Config:
                             help="Do not use license text from license.manifest to create Custom Components (use"
                                  "where PHASE 5 SBOM cannot be uploaded due to invalid SPDX license definitions)",
                             action='store_true')
+        parser.add_argument("--vendored_deps_recipes", type=str,
+                            help="OPTIONAL Comma-separated list of recipe names whose vendored Rust/Go dependencies "
+                                 "should be added to the SBOM (mode VENDORED_DEPS must be enabled). "
+                                 "Recipes must already appear in license.manifest. If omitted, all recipes "
+                                 "in the manifest are scanned for -crates.inc / -go-mods.inc files.",
+                            default="")
+        parser.add_argument("--vendored_deps_output", type=str,
+                            help="OPTIONAL Write a separate JSON file containing the enumerated vendored "
+                                 "dependencies (one object per dep). The main SBOM is always produced; "
+                                 "this is an additional debug/audit artefact.",
+                            default="")
 
         args = parser.parse_args()
 
@@ -235,6 +249,10 @@ class Config:
         self.kernel_files = []
         self.process_oe_recipes = False
         self.process_cves = False
+        self.process_vendored_deps = False
+        self.vendored_deps_recipes = []
+        self.vendored_deps_output = ''
+        self.bblayers = []
         self.exclude_recipes = []
         self.exclude_layers = []
         self.filter_recipes_by_licenses = []
@@ -268,10 +286,11 @@ class Config:
             logging.info(f"    --{arg}={getattr(args, arg)}")
 
         # Check modes
-        # ALL,DEFAULT,OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,SIG_SCAN_ALL,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,KERNEL_VULNS
+        # ALL,DEFAULT,OE_RECIPES,IMAGE_MANIFEST,SIG_SCAN,SIG_SCAN_ALL,CVE_PATCHES,CPE_COMPS,CUSTOM_COMPS,
+        # KERNEL_VULNS,VENDORED_DEPS
 
         # modes = ("ALL","DEFAULT","OE_RECIPES","IMAGE_MANIFEST","SIG_SCAN","SIG_SCAN_ALL","CVE_PATCHES","CPE_COMPS",
-        # "CUSTOM_COMPS","KERNEL_VULNS")
+        # "CUSTOM_COMPS","KERNEL_VULNS","VENDORED_DEPS")
         mode_dict = {
             "OE_RECIPES": "process_oe_recipes",
             "IMAGE_MANIFEST": "process_image_manifest",
@@ -280,7 +299,8 @@ class Config:
             "CVE_PATCHES": "process_cves",
             "CPE_COMPS": "run_cpe_components",
             "CUSTOM_COMPS": "run_custom_components",
-            "KERNEL_VULNS": "process_kernel_vulns"
+            "KERNEL_VULNS": "process_kernel_vulns",
+            "VENDORED_DEPS": "process_vendored_deps",
         }
 
         if args.modes != '':
@@ -289,7 +309,7 @@ class Config:
                 if mode == 'ALL':
                     # logging.debug(f" - Setting ALL scan modes")
                     for key in mode_dict.keys():
-                        if key != 'SIG_SCAN_ALL':
+                        if key not in ('SIG_SCAN_ALL', 'VENDORED_DEPS'):
                             modes_to_set.append(key)
                             # setattr(self, mode_dict[val], True)
                 elif mode == 'DEFAULT':
@@ -363,14 +383,14 @@ class Config:
             self.bd_api = args.blackduck_api_token
         elif api is not None:
             self.bd_api = api
-            logging.info(f"BLACKDUCK_API_TOKEN value read from environment")
+            logging.info("BLACKDUCK_API_TOKEN value read from environment")
         elif bd_connect:
             logging.error("Black Duck API Token not specified")
             terminate = True
 
         trustcert = os.environ.get('BLACKDUCK_TRUST_CERT')
         if trustcert == 'true':
-            logging.info(f"BLACKDUCK_TRUST_CERT value read from environment")
+            logging.info("BLACKDUCK_TRUST_CERT value read from environment")
             self.bd_trustcert = True
         elif args.blackduck_trust_cert:
             self.bd_trustcert = True
@@ -396,7 +416,7 @@ class Config:
                 terminate = True
             else:
                 if not self.target:
-                    logging.error(f"Target --target required if --task_depends_dot_file specified")
+                    logging.error("Target --target required if --task_depends_dot_file specified")
                     terminate = True
                 else:
                     self.task_depends_dot_file = args.task_depends_dot_file
@@ -479,7 +499,7 @@ class Config:
         #     terminate = True
 
         if self.process_kernel_vulns and not self.process_image_manifest:
-            logging.warning(f"Mode KERNEL_VULNS requires IMAGE_MANIFEST - setting IMAGE_MANIFEST")
+            logging.warning("Mode KERNEL_VULNS requires IMAGE_MANIFEST - setting IMAGE_MANIFEST")
             self.process_image_manifest = True
 
         if self.scan_all_packages and not self.run_sig_scan:
@@ -499,6 +519,70 @@ class Config:
         if args.filter_recipes_by_licenses != '':
             self.filter_recipes_by_licenses = args.filter_recipes_by_licenses.split(',')
 
+        if args.vendored_deps_recipes != '':
+            self.vendored_deps_recipes = [
+                r.strip() for r in args.vendored_deps_recipes.split(',') if r.strip()
+            ]
+
+        if args.vendored_deps_output != '':
+            vdo_path = pathlib.Path(args.vendored_deps_output).expanduser().resolve()
+            vdo_parent = vdo_path.parent
+            vdo_ok = True
+            if vdo_path.exists():
+                logging.error(
+                    f"Specified --vendored_deps_output '{vdo_path}' already exists - EXITING"
+                )
+                terminate = True
+                vdo_ok = False
+            if vdo_ok and not vdo_parent.is_dir():
+                logging.error(
+                    f"Parent directory '{vdo_parent}' for --vendored_deps_output "
+                    f"does not exist - EXITING"
+                )
+                terminate = True
+                vdo_ok = False
+            if vdo_ok and not os.access(vdo_parent, os.W_OK):
+                logging.error(
+                    f"Parent directory '{vdo_parent}' for --vendored_deps_output "
+                    f"is not writable - EXITING"
+                )
+                terminate = True
+                vdo_ok = False
+            if vdo_ok:
+                # Reject device nodes, named pipes, and symlinks into /proc|/sys|/dev
+                try:
+                    vdo_st = os.stat(vdo_parent)
+                    if stat.S_ISCHR(vdo_st.st_mode) or stat.S_ISBLK(vdo_st.st_mode) \
+                            or stat.S_ISFIFO(vdo_st.st_mode):
+                        logging.error(
+                            f"--vendored_deps_output parent '{vdo_parent}' is a "
+                            f"device or pipe - EXITING"
+                        )
+                        terminate = True
+                        vdo_ok = False
+                except OSError:
+                    pass
+            if vdo_ok:
+                vdo_real = str(vdo_path)
+                for restricted in ('/proc/', '/sys/', '/dev/'):
+                    if vdo_real.startswith(restricted):
+                        logging.error(
+                            f"--vendored_deps_output path '{vdo_real}' is inside "
+                            f"a restricted directory - EXITING"
+                        )
+                        terminate = True
+                        vdo_ok = False
+                        break
+            if vdo_ok:
+                self.vendored_deps_output = str(vdo_path)
+
+        if self.process_vendored_deps and not self.process_oe_recipes:
+            logging.warning(
+                "Mode VENDORED_DEPS requires OE_RECIPES - disabling VENDORED_DEPS "
+                "(enable OE_RECIPES to use this mode)"
+            )
+            self.process_vendored_deps = False
+
         if terminate:
             sys.exit(2)
         return
@@ -512,7 +596,7 @@ class Config:
 
             # Is e an integer?
             try:
-                num = int(e)
+                int(e)
                 root = n
             except ValueError:
                 root = filename

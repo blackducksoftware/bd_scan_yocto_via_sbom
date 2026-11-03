@@ -4,6 +4,13 @@ from .BOMClass import BOM
 from .OEClass import OE
 from .BBClass import BB
 from .ConfigClass import Config
+from .vendored_deps import (
+    parse_src_uri,
+    validate_recipe_name,
+    warn_missing_recipe_names,
+)
+import dataclasses
+import json
 import logging
 import sys
 
@@ -18,7 +25,7 @@ def main():
     conf = Config()
     bb = BB()
     if not conf.skip_bitbake:
-        logging.info(f"Checking Bitbake environment ...")
+        logging.info("Checking Bitbake environment ...")
         if not bb.check_bitbake():
             logging.error("Terminating")
             sys.exit(2)
@@ -78,6 +85,89 @@ def main():
     if conf.process_oe_recipes:
         sbom = SBOM(conf.bd_project, conf.bd_version)
         sbom.process_recipes(reclist.recipes)
+
+        if conf.process_vendored_deps:
+            logging.info("Processing vendored Rust/Go dependencies ...")
+            try:
+                # Determine which recipes to scan
+                recipe_names_in_manifest = {r.name for r in reclist.recipes}
+                if conf.vendored_deps_recipes:
+                    # Validate each user-supplied name before it reaches any subprocess
+                    filter_names = []
+                    for rname in conf.vendored_deps_recipes:
+                        if validate_recipe_name(rname):
+                            filter_names.append(rname)
+                        else:
+                            logging.warning(
+                                f"Ignoring invalid recipe name {rname!r} from "
+                                f"--vendored_deps_recipes"
+                            )
+                    warn_missing_recipe_names(filter_names, recipe_names_in_manifest)
+                    recipes_to_scan = [
+                        r for r in reclist.recipes if r.name in filter_names
+                    ]
+                else:
+                    recipes_to_scan = list(reclist.recipes)
+
+                # Build a run-level dedup set for unknown-scheme warnings
+                seen_unknown: set = set()
+                all_deps = []
+
+                for recipe in recipes_to_scan:
+                    if not (recipe.spdxid and
+                            recipe.spdxid.startswith('SPDXRef-package-')):
+                        continue
+                    inc_files = BB.get_recipe_inc_files(
+                        recipe.name, conf.bblayers
+                    )
+                    for inc_path in inc_files:
+                        try:
+                            with open(inc_path, encoding='utf-8', errors='strict') as fh:
+                                text = fh.read()
+                        except (OSError, UnicodeDecodeError) as exc:
+                            logging.warning(
+                                f"Cannot read inc file '{inc_path}': {exc}"
+                            )
+                            continue
+                        deps = parse_src_uri(
+                            text, recipe.name,
+                            seen_unknown_schemes=seen_unknown,
+                        )
+                        for dep in deps:
+                            sbom.add_vendored_dep(dep, recipe.spdxid)
+                            all_deps.append(dep)
+
+                # Deduplicate by (name, version) for accurate summary count;
+                # SBOM already deduplicates via _dep_spdxid_cache but all_deps
+                # retains one entry per recipe occurrence.
+                unique_deps = list({(d.name, d.version): d for d in all_deps}.values())
+                logging.info(
+                    f"- {len(unique_deps)} vendored dependencies added to SBOM"
+                )
+
+                if conf.vendored_deps_output and unique_deps:
+                    try:
+                        with open(conf.vendored_deps_output, 'w', encoding='utf-8') as vf:
+                            json.dump(
+                                [dataclasses.asdict(d) for d in unique_deps],
+                                vf, indent=2,
+                            )
+                        logging.info(
+                            f"Vendored dependencies written to "
+                            f"'{conf.vendored_deps_output}'"
+                        )
+                    except OSError as exc:
+                        logging.warning(
+                            f"Could not write vendored_deps_output "
+                            f"'{conf.vendored_deps_output}': {exc}"
+                        )
+
+            except Exception as exc:
+                logging.warning(
+                    f"VENDORED_DEPS processing failed - continuing without "
+                    f"vendored dependencies: {exc}"
+                )
+
         if not sbom.output(conf.output_file):
             logging.error("Unable to create SBOM file")
             sys.exit(2)
@@ -118,7 +208,7 @@ def main():
                     logging.info(f"- {reclist.unmatched} Recipes not matched so far")
 
                 else:
-                    logging.error(f"Unable to run Signature scan on package and download files")
+                    logging.error("Unable to run Signature scan on package and download files")
                     sys.exit(2)
             else:
                 logging.info("No files to scan - skipping")
@@ -208,7 +298,7 @@ def main():
         else:
             logging.info("Kernel component not found in project - skipping")
     else:
-        logging.info(f"Skipped - mode KERNEL_VULNS not specified")
+        logging.info("Skipped - mode KERNEL_VULNS not specified")
 
     logging.info("")
     logging.info("bd_scan_yocto_via_sbom DONE")
