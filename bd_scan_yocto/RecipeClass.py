@@ -71,7 +71,7 @@ class Recipe:
         # ver = self.version.split('+')[0]
         ver = self.clean_version_string()
         name = self.name
-        if conf.kernel_recipe in self.name:
+        if self.name in conf.kernel_recipe:
             name = 'linux_kernel'
 
         cpe = f"cpe:2.3:a:*:{name}:{ver}:*:*:*:*:*:*:*"
