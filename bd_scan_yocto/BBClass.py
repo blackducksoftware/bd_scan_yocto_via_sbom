@@ -3,12 +3,15 @@ import logging
 import sys
 import re
 import os
+from typing import TYPE_CHECKING
+
 from .RecipeClass import Recipe
 import tempfile
 import glob
 
-# from .ConfigClass import Config
-# from .RecipeListClass import RecipeList
+if TYPE_CHECKING:  # pragma: no cover
+    from .ConfigClass import Config
+    from .RecipeListClass import RecipeList
 
 
 class BB:
@@ -23,7 +26,7 @@ class BB:
         elif conf.bitbake_layers_file:
             layers_file = conf.bitbake_layers_file
         elif not conf.skip_layers:
-            logging.error(f"Error --skip_bitbake and no bitbake_layers_file specified - terminating")
+            logging.error("Error --skip_bitbake and no bitbake_layers_file specified - terminating")
             return False
 
         if not self.check_files(conf):
@@ -81,7 +84,20 @@ class BB:
         return lfile.name
 
     def process_bitbake_env(self, conf: "Config"):
-        lines = self.run_bitbake_env().split('\n')
+        raw_out = self.run_bitbake_env()
+        lines = raw_out.split('\n')
+
+        # Extract BBLAYERS from the full output (may span multiple lines
+        # joined by backslash-newline continuations).
+        m = re.search(
+            r'^BBLAYERS="(.*?)"',
+            raw_out,
+            re.MULTILINE | re.DOTALL,
+        )
+        if m:
+            # Split on whitespace; filter out empty strings
+            conf.bblayers = [p for p in m.group(1).split() if p]
+            logging.info(f"Bitbake Env: bblayers={conf.bblayers}")
 
         rpm_dir = ''
         ipk_dir = ''
@@ -341,8 +357,8 @@ class BB:
             if conf.image_license_manifest != '' and os.path.isfile(conf.image_license_manifest):
                 logging.info(f"Will process image license manifest file '{conf.image_license_manifest}'")
             else:
-                logging.warning(f"--process_image_manifest specified but unable to locate image_license.manifest "
-                                f"file - Will skip processing image manifest")
+                logging.warning("--process_image_manifest specified but unable to locate image_license.manifest "
+                                "file - Will skip processing image manifest")
                 conf.process_image_manifest = False
 
         # v5 CVE JSON is at build/tmp/log/cve/cve-summary.json
@@ -544,6 +560,39 @@ class BB:
         except Exception as e:
             logging.error(f"Run command '{command}' failed with error {e}")
             return False, ''
+
+    @staticmethod
+    def get_recipe_inc_files(recipe_name: str, bblayers: list) -> list:
+        """
+        Search each path in *bblayers* recursively for .inc files that
+        carry the vendored-dependency SRC_URI entries for *recipe_name*.
+
+        Recognised filename patterns (relative to any layer directory):
+          **/<recipe_name>-crates.inc          — Rust crates
+          **/<recipe_name>-go-mods.inc         — Go modules (common)
+          **/<recipe_name>-go-mod.inc          — Go modules (alternate)
+          **/<recipe_name>-go-modules.inc      — Go modules (alternate)
+          **/<recipe_name>-go-modules-*.inc    — Go modules (versioned alt)
+
+        Returns a sorted list of absolute path strings for all matching files.
+        """
+        patterns = [
+            f"**/{recipe_name}-crates.inc",
+            f"**/{recipe_name}-go-mods.inc",
+            f"**/{recipe_name}-go-mod.inc",
+            f"**/{recipe_name}-go-modules.inc",
+            f"**/{recipe_name}-go-modules-*.inc",
+        ]
+        found = []
+        for layer_path in bblayers:
+            if not os.path.isdir(layer_path):
+                continue
+            for pattern in patterns:
+                matches = glob.glob(
+                    os.path.join(layer_path, pattern), recursive=True
+                )
+                found.extend(matches)
+        return sorted(set(found))
 
     @staticmethod
     def process_kernel_files(conf: "Config"):

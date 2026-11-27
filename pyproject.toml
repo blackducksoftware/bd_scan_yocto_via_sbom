@@ -24,6 +24,13 @@ dependencies = [
     "aiohttp==3.13.4"
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4.0",
+    "spdx-tools>=0.8.0",
+]
+
 [project.urls]
 Homepage = "https://github.com/blackducksoftware/bd_scan_yocto_via_sbom"
 Issues = "https://github.com/blackducksoftware/bd_scan_yocto_via_sbom/issues"
