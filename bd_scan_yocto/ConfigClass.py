@@ -6,7 +6,7 @@ import stat
 import sys
 from .OEClass import OE
 
-script_version = "v1.4.10"
+script_version = "v1.4.11"
 
 
 class Config:
